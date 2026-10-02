@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { BOOK_CATEGORIES } from "@/lib/categories";
+import { BOOK_CATEGORIES } from "@/categories";
 
 const MAX_FILE = 50 * 1024 * 1024;
 const MAX_COVER = 8 * 1024 * 1024;
