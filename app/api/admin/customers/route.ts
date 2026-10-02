@@ -1,8 +1,7 @@
-
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient, requireAdmin } from "@/lib/admin";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { isAdmin } = await requireAdmin();
 
@@ -13,111 +12,152 @@ export async function GET(request: Request) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search")?.trim() || "";
+    const supabase = createAdminClient();
 
-    const admin = createAdminClient();
+    const search = request.nextUrl.searchParams
+      .get("search")
+      ?.trim()
+      .toLowerCase();
 
-    const { data: profiles, error: profilesError } = await admin
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, full_name, email, role, created_at")
+      .select("id, full_name, email, created_at")
       .order("created_at", { ascending: false });
 
     if (profilesError) {
+      console.error("Admin customers profiles error:", profilesError);
+
       return NextResponse.json(
-        { error: "Unable to load customers." },
+        {
+          error: "Unable to load customers.",
+          details: profilesError.message,
+        },
         { status: 500 }
       );
     }
 
-    const userIds = (profiles ?? []).map((profile) => profile.id);
+    const customers = profiles ?? [];
+
+    const filteredCustomers = search
+      ? customers.filter((customer) => {
+          const name = customer.full_name?.toLowerCase() ?? "";
+          const email = customer.email?.toLowerCase() ?? "";
+
+          return (
+            name.includes(search) ||
+            email.includes(search)
+          );
+        })
+      : customers;
+
+    const userIds = filteredCustomers.map(
+      (customer) => customer.id
+    );
 
     let orders: Array<{
+      id: string;
       user_id: string | null;
-      amount: number | string | null;
+      amount: number | string;
       status: string;
+      created_at: string;
     }> = [];
 
     if (userIds.length > 0) {
-      const { data: orderData, error: ordersError } = await admin
-        .from("orders")
-        .select("user_id, amount, status")
-        .in("user_id", userIds);
+      const { data: orderData, error: ordersError } =
+        await supabase
+          .from("orders")
+          .select(
+            "id, user_id, amount, status, created_at"
+          )
+          .in("user_id", userIds)
+          .order("created_at", {
+            ascending: false,
+          });
 
       if (ordersError) {
+        console.error(
+          "Admin customers orders error:",
+          ordersError
+        );
+
         return NextResponse.json(
-          { error: "Unable to load customer orders." },
+          {
+            error: "Unable to load customer order information.",
+            details: ordersError.message,
+          },
           { status: 500 }
         );
       }
 
-      orders = (orderData ?? []) as typeof orders;
+      orders = orderData ?? [];
     }
 
-    const orderStats = new Map<
+    const ordersByUser = new Map<
       string,
       {
-        orders: number;
-        paidOrders: number;
-        spent: number;
+        ordersCount: number;
+        paidOrdersCount: number;
+        totalSpent: number;
+        lastOrderAt: string | null;
       }
     >();
 
     for (const order of orders) {
       if (!order.user_id) continue;
 
-      const current = orderStats.get(order.user_id) ?? {
-        orders: 0,
-        paidOrders: 0,
-        spent: 0,
+      const current = ordersByUser.get(order.user_id) ?? {
+        ordersCount: 0,
+        paidOrdersCount: 0,
+        totalSpent: 0,
+        lastOrderAt: null,
       };
 
-      current.orders += 1;
+      current.ordersCount += 1;
 
       if (order.status === "paid") {
-        current.paidOrders += 1;
-        current.spent += Number(order.amount ?? 0);
+        current.paidOrdersCount += 1;
+        current.totalSpent += Number(order.amount ?? 0);
       }
 
-      orderStats.set(order.user_id, current);
+      if (
+        !current.lastOrderAt ||
+        new Date(order.created_at).getTime() >
+          new Date(current.lastOrderAt).getTime()
+      ) {
+        current.lastOrderAt = order.created_at;
+      }
+
+      ordersByUser.set(order.user_id, current);
     }
 
-    let customers = (profiles ?? []).map((profile) => {
-      const stats = orderStats.get(profile.id) ?? {
-        orders: 0,
-        paidOrders: 0,
-        spent: 0,
+    const result = filteredCustomers.map((customer) => {
+      const stats = ordersByUser.get(customer.id) ?? {
+        ordersCount: 0,
+        paidOrdersCount: 0,
+        totalSpent: 0,
+        lastOrderAt: null,
       };
 
       return {
-        ...profile,
-        orders_count: stats.orders,
-        paid_orders_count: stats.paidOrders,
-        total_spent: stats.spent,
+        id: customer.id,
+        full_name: customer.full_name,
+        email: customer.email,
+        created_at: customer.created_at,
+        orders_count: stats.ordersCount,
+        paid_orders_count: stats.paidOrdersCount,
+        total_spent: stats.totalSpent,
+        last_order_at: stats.lastOrderAt,
       };
     });
 
-    if (search) {
-      const normalizedSearch = search.toLowerCase();
-
-      customers = customers.filter((customer) => {
-        return (
-          String(customer.full_name ?? "")
-            .toLowerCase()
-            .includes(normalizedSearch) ||
-          String(customer.email ?? "")
-            .toLowerCase()
-            .includes(normalizedSearch)
-        );
-      });
-    }
-
     return NextResponse.json({
       success: true,
-      customers,
-      total: customers.length,
+      customers: result,
+      total: result.length,
     });
   } catch (error) {
+    console.error("Admin customers API error:", error);
+
     return NextResponse.json(
       {
         error:
