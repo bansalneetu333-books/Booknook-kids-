@@ -1,94 +1,52 @@
-import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
 
-export const runtime = "nodejs";
+import { NextResponse } from "next/server";
+import { createAdminClient, requireAdmin } from "@/lib/admin";
 
 export async function GET(request: Request) {
   try {
-    const { supabase, user, isAdmin } = await requireAdmin();
+    const { isAdmin } = await requireAdmin();
 
-    if (!user || !isAdmin) {
+    if (!isAdmin) {
       return NextResponse.json(
-        { error: "Admin access required." },
+        { error: "Unauthorized." },
         { status: 403 }
       );
     }
 
     const { searchParams } = new URL(request.url);
-
     const search = searchParams.get("search")?.trim() || "";
 
-    // ------------------------------------------------------------
-    // 1. Load profiles
-    // ------------------------------------------------------------
-    let profileQuery = supabase
+    const admin = createAdminClient();
+
+    const { data: profiles, error: profilesError } = await admin
       .from("profiles")
-      .select("id,full_name,email,role")
-      .order("full_name", { ascending: true });
-
-    if (search) {
-      const escapedSearch = search
-        .replace(/\\/g, "\\\\")
-        .replace(/%/g, "\\%")
-        .replace(/_/g, "\\_")
-        .replace(/,/g, "");
-
-      profileQuery = profileQuery.or(
-        `full_name.ilike.%${escapedSearch}%,email.ilike.%${escapedSearch}%`
-      );
-    }
-
-    const { data: profiles, error: profilesError } =
-      await profileQuery;
+      .select("id, full_name, email, role, created_at")
+      .order("created_at", { ascending: false });
 
     if (profilesError) {
-      console.error(
-        "Admin customers profile lookup error:",
-        profilesError
-      );
-
       return NextResponse.json(
-        { error: profilesError.message },
+        { error: "Unable to load customers." },
         { status: 500 }
       );
     }
 
-    const customerProfiles = (profiles ?? []).filter(
-      (profile) => profile.role !== "admin"
-    );
+    const userIds = (profiles ?? []).map((profile) => profile.id);
 
-    const userIds = customerProfiles.map((profile) => profile.id);
-
-    // ------------------------------------------------------------
-    // 2. Load orders for these customers
-    // ------------------------------------------------------------
     let orders: Array<{
-      id: string;
       user_id: string | null;
+      amount: number | string | null;
       status: string;
-      amount: number | string;
-      currency: string;
-      created_at: string;
     }> = [];
 
     if (userIds.length > 0) {
-      const { data: orderData, error: ordersError } =
-        await supabase
-          .from("orders")
-          .select(
-            "id,user_id,status,amount,currency,created_at"
-          )
-          .in("user_id", userIds)
-          .order("created_at", { ascending: false });
+      const { data: orderData, error: ordersError } = await admin
+        .from("orders")
+        .select("user_id, amount, status")
+        .in("user_id", userIds);
 
       if (ordersError) {
-        console.error(
-          "Admin customers orders lookup error:",
-          ordersError
-        );
-
         return NextResponse.json(
-          { error: ordersError.message },
+          { error: "Unable to load customer orders." },
           { status: 500 }
         );
       }
@@ -96,122 +54,70 @@ export async function GET(request: Request) {
       orders = (orderData ?? []) as typeof orders;
     }
 
-    // ------------------------------------------------------------
-    // 3. Build customer purchase summaries
-    // ------------------------------------------------------------
-    const orderSummaryByUser = new Map<
+    const orderStats = new Map<
       string,
       {
-        totalOrders: number;
+        orders: number;
         paidOrders: number;
-        pendingOrders: number;
-        failedOrders: number;
-        totalSpent: number;
-        lastOrderAt: string | null;
+        spent: number;
       }
     >();
 
     for (const order of orders) {
-      if (!order.user_id) {
-        continue;
-      }
+      if (!order.user_id) continue;
 
-      const existing = orderSummaryByUser.get(order.user_id) ?? {
-        totalOrders: 0,
+      const current = orderStats.get(order.user_id) ?? {
+        orders: 0,
         paidOrders: 0,
-        pendingOrders: 0,
-        failedOrders: 0,
-        totalSpent: 0,
-        lastOrderAt: null,
+        spent: 0,
       };
 
-      existing.totalOrders += 1;
+      current.orders += 1;
 
       if (order.status === "paid") {
-        existing.paidOrders += 1;
-        existing.totalSpent += Number(order.amount) || 0;
+        current.paidOrders += 1;
+        current.spent += Number(order.amount ?? 0);
       }
 
-      if (order.status === "pending") {
-        existing.pendingOrders += 1;
-      }
-
-      if (order.status === "failed") {
-        existing.failedOrders += 1;
-      }
-
-      if (
-        !existing.lastOrderAt ||
-        new Date(order.created_at).getTime() >
-          new Date(existing.lastOrderAt).getTime()
-      ) {
-        existing.lastOrderAt = order.created_at;
-      }
-
-      orderSummaryByUser.set(order.user_id, existing);
+      orderStats.set(order.user_id, current);
     }
 
-    // ------------------------------------------------------------
-    // 4. Format customer response
-    // ------------------------------------------------------------
-    const customers = customerProfiles.map((profile) => {
-      const summary = orderSummaryByUser.get(profile.id) ?? {
-        totalOrders: 0,
+    let customers = (profiles ?? []).map((profile) => {
+      const stats = orderStats.get(profile.id) ?? {
+        orders: 0,
         paidOrders: 0,
-        pendingOrders: 0,
-        failedOrders: 0,
-        totalSpent: 0,
-        lastOrderAt: null,
+        spent: 0,
       };
 
       return {
-        id: profile.id,
-        fullName: profile.full_name,
-        email: profile.email,
-        role: profile.role,
-
-        orders: {
-          total: summary.totalOrders,
-          paid: summary.paidOrders,
-          pending: summary.pendingOrders,
-          failed: summary.failedOrders,
-        },
-
-        totalSpent: summary.totalSpent,
-        lastOrderAt: summary.lastOrderAt,
+        ...profile,
+        orders_count: stats.orders,
+        paid_orders_count: stats.paidOrders,
+        total_spent: stats.spent,
       };
     });
 
-    // ------------------------------------------------------------
-    // 5. Overall summary
-    // ------------------------------------------------------------
-    const summary = {
-      totalCustomers: customers.length,
+    if (search) {
+      const normalizedSearch = search.toLowerCase();
 
-      customersWithPurchases: customers.filter(
-        (customer) => customer.orders.paid > 0
-      ).length,
-
-      totalPaidOrders: customers.reduce(
-        (total, customer) => total + customer.orders.paid,
-        0
-      ),
-
-      totalRevenue: customers.reduce(
-        (total, customer) => total + customer.totalSpent,
-        0
-      ),
-    };
+      customers = customers.filter((customer) => {
+        return (
+          String(customer.full_name ?? "")
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          String(customer.email ?? "")
+            .toLowerCase()
+            .includes(normalizedSearch)
+        );
+      });
+    }
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       customers,
-      count: customers.length,
-      summary,
+      total: customers.length,
     });
   } catch (error) {
-    console.error("Admin customers API error:", error);
-
     return NextResponse.json(
       {
         error:
