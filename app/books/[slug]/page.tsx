@@ -1,141 +1,208 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiteHeader } from "@/components/site-header";
-import { getBookBySlug } from "@/lib/books";
-import { getCurrentUser, ownsBook } from "@/lib/library";
-import { DownloadButton } from "@/components/download-button";
-import WishlistButton from "@/components/wishlist-button";
-import { publicCoverUrl } from "@/lib/storage";
+
+import { BookCard } from "@/components/book-card";
+import { WishlistButton } from "@/components/wishlist-button";
+import { getBookBySlug, getPublishedBooks } from "@/lib/books";
+
+type BookPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
 
 export default async function BookDetailsPage({
-  params
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+  params,
+}: BookPageProps) {
   const { slug } = await params;
 
   const book = await getBookBySlug(slug);
 
-  if (!book) notFound();
+  if (!book) {
+    notFound();
+  }
 
-  const user = await getCurrentUser();
-  const owned = user ? await ownsBook(book.id) : false;
-  const coverUrl = publicCoverUrl(book.cover_path);
+  const allBooks = await getPublishedBooks();
+
+  const relatedBooks = allBooks
+    .filter(
+      (item) =>
+        item.id !== book.id &&
+        item.genre === book.genre
+    )
+    .slice(0, 4);
+
+  const coverUrl = book.cover_path
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/${book.cover_path}`
+    : null;
 
   return (
-    <>
-      <SiteHeader />
+    <main className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-pink-50">
+      {/* Breadcrumb */}
+      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+        <Link
+          href="/books"
+          className="text-sm font-semibold text-slate-600 transition hover:text-violet-700"
+        >
+          ← Back to Books
+        </Link>
+      </div>
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div className="grid gap-10 md:grid-cols-[280px_1fr]">
-          <div className="aspect-[3/4] overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-100 via-sky-100 to-amber-100 shadow-sm">
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={`Cover of ${book.title}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="grid h-full place-items-center p-8 text-center">
-                <span
-                  className="text-7xl"
-                  aria-hidden="true"
-                >
-                  📚
+      {/* Book details */}
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+          <div className="grid gap-0 lg:grid-cols-2">
+            {/* Cover */}
+            <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
+              <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+                <div className="relative aspect-[3/4]">
+                  {coverUrl ? (
+                    <Image
+                      src={coverUrl}
+                      alt={book.title}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 90vw, 500px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+                      <div className="mb-5 text-7xl">
+                        📚
+                      </div>
+
+                      <h2 className="text-xl font-extrabold text-slate-800">
+                        {book.title}
+                      </h2>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Information */}
+            <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
+              {book.genre && (
+                <span className="w-fit rounded-full bg-violet-100 px-3 py-1.5 text-xs font-bold text-violet-700">
+                  {book.genre}
+                </span>
+              )}
+
+              <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                {book.title}
+              </h1>
+
+              {book.author && (
+                <p className="mt-3 text-base text-slate-500">
+                  By{" "}
+                  <span className="font-semibold text-slate-700">
+                    {book.author}
+                  </span>
+                </p>
+              )}
+
+              {book.age_category && (
+                <p className="mt-2 text-sm text-slate-500">
+                  Recommended age:{" "}
+                  <span className="font-semibold text-slate-700">
+                    {book.age_category}
+                  </span>
+                </p>
+              )}
+
+              {book.description && (
+                <div className="mt-7">
+                  <h2 className="text-lg font-extrabold text-slate-900">
+                    About this book
+                  </h2>
+
+                  <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-600 sm:text-base">
+                    {book.description}
+                  </p>
+                </div>
+              )}
+
+              <div className="my-8 border-t border-slate-200" />
+
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-500">
+                    Digital ebook
+                  </p>
+
+                  <p className="mt-1 text-3xl font-extrabold text-slate-900">
+                    {Number(book.price) > 0
+                      ? `₹${Number(book.price).toFixed(2)}`
+                      : "Free"}
+                  </p>
+                </div>
+
+                <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700">
+                  Instant Access
                 </span>
               </div>
-            )}
+
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+                <Link
+                  href={`/checkout?bookId=${book.id}`}
+                  className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
+                >
+                  🛒 Buy Now
+                </Link>
+
+                <WishlistButton bookId={book.id} />
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+                <h3 className="font-extrabold text-slate-900">
+                  What you get
+                </h3>
+
+                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                  <li>✓ Personal digital library</li>
+                  <li>✓ Online reading access</li>
+                  <li>✓ Reading progress saved</li>
+                  <li>✓ Secure book access</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Related books */}
+      {relatedBooks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wider text-violet-600">
+                More to explore
+              </p>
+
+              <h2 className="mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl">
+                You may also like
+              </h2>
+            </div>
+
+            <Link
+              href="/books"
+              className="text-sm font-bold text-violet-700 hover:text-violet-800"
+            >
+              View all →
+            </Link>
           </div>
 
-          <section>
-            <p className="font-semibold text-indigo-600">
-              {book.genre}
-            </p>
-
-            <h1 className="mt-2 text-4xl font-black md:text-5xl">
-              {book.title}
-            </h1>
-
-            <p className="mt-3 text-lg text-slate-500">
-              By {book.author}
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-2 text-sm">
-              <span className="rounded-full bg-slate-100 px-3 py-1">
-                Ages {book.age_category}
-              </span>
-
-              <span className="rounded-full bg-slate-100 px-3 py-1">
-                Digital EPUB
-              </span>
-            </div>
-
-            <p className="mt-8 max-w-3xl whitespace-pre-line text-lg leading-8 text-slate-700">
-              {book.description}
-            </p>
-
-            <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
-              {owned ? (
-                <>
-                  <p className="font-bold text-emerald-600">
-                    🎉 You already own this book!
-                  </p>
-
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <Link
-                      href={`/reader/${book.id}`}
-                      className="rounded-full bg-indigo-600 px-6 py-3 font-bold text-white"
-                    >
-                      📖 Read Now
-                    </Link>
-
-                    <Link
-                      href="/library"
-                      className="rounded-full border px-6 py-3 font-bold"
-                    >
-                      📚 My Library
-                    </Link>
-
-                    <DownloadButton bookId={book.id} />
-
-                    <WishlistButton bookId={book.id} />
-                  </div>
-                </>
-              ) : user ? (
-                <>
-                  <div className="text-3xl font-black">
-                    ₹{book.price}
-                  </div>
-
-                  <Link
-                    href={`/checkout?book=${book.id}`}
-                    className="mt-4 inline-block rounded-full bg-indigo-600 px-7 py-3 font-bold text-white"
-                  >
-                    Buy Now
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <div className="text-3xl font-black">
-                    ₹{book.price}
-                  </div>
-
-                  <p className="mt-2 text-sm text-slate-500">
-                    Create an account or login before purchasing.
-                  </p>
-
-                  <Link
-                    href={`/login?next=/books/${book.slug}`}
-                    className="mt-4 inline-block rounded-full bg-indigo-600 px-7 py-3 font-bold text-white"
-                  >
-                    Login to Buy
-                  </Link>
-                </>
-              )}
-            </div>
-          </section>
-        </div>
-      </main>
-    </>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {relatedBooks.map((relatedBook) => (
+              <BookCard
+                key={relatedBook.id}
+                book={relatedBook}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </main>
   );
 }
