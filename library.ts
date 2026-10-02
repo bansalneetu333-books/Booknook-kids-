@@ -2,15 +2,26 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function getCurrentUser() {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) return null;
-  return data.user;
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
 }
 
 export async function getMyLibrary() {
   const supabase = await createClient();
   const user = await getCurrentUser();
-  if (!user) return null;
+
+  if (!user) {
+    return null;
+  }
 
   const { data, error } = await supabase
     .from("order_items")
@@ -20,7 +31,7 @@ export async function getMyLibrary() {
       book_id,
       orders!inner (
         user_id,
-        payment_status,
+        status,
         created_at
       ),
       books (
@@ -35,44 +46,72 @@ export async function getMyLibrary() {
       )
     `)
     .eq("orders.user_id", user.id)
-    .eq("orders.payment_status", "paid")
+    .eq("orders.status", "paid")
     .order("id", { ascending: false });
 
-  if (error) throw new Error("Unable to load your library.");
+  if (error) {
+    console.error("Library lookup error:", error);
+    throw new Error("Unable to load your library.");
+  }
 
-  const bookIds = (data ?? []).map((item) => item.book_id);
+  const bookIds = (data ?? []).map(
+    (item) => item.book_id
+  );
+
   const progress =
     bookIds.length === 0
       ? []
       : (
           await supabase
             .from("reading_progress")
-            .select("book_id, location, progress_percentage, last_read_at")
+            .select(
+              "book_id, location, progress_percentage, last_read_at"
+            )
             .eq("user_id", user.id)
             .in("book_id", bookIds)
         ).data ?? [];
 
-  const progressMap = new Map(progress.map((p) => [p.book_id, p]));
+  const progressMap = new Map(
+    progress.map((item) => [
+      item.book_id,
+      item,
+    ])
+  );
 
   return (data ?? []).map((item) => ({
     ...item,
-    progress: progressMap.get(item.book_id) ?? null
+    progress:
+      progressMap.get(item.book_id) ?? null,
   }));
 }
 
 export async function ownsBook(bookId: string) {
   const supabase = await createClient();
   const user = await getCurrentUser();
-  if (!user) return false;
 
-  const { data } = await supabase
+  if (!user) {
+    return false;
+  }
+
+  const { data, error } = await supabase
     .from("order_items")
-    .select("id, orders!inner(user_id, payment_status)")
+    .select(
+      "id, orders!inner(user_id, status)"
+    )
     .eq("book_id", bookId)
     .eq("orders.user_id", user.id)
-    .eq("orders.payment_status", "paid")
+    .eq("orders.status", "paid")
     .limit(1)
     .maybeSingle();
+
+  if (error) {
+    console.error(
+      "Book ownership lookup error:",
+      error
+    );
+
+    return false;
+  }
 
   return Boolean(data);
 }
@@ -80,26 +119,44 @@ export async function ownsBook(bookId: string) {
 export async function getPurchaseHistory() {
   const supabase = await createClient();
   const user = await getCurrentUser();
-  if (!user) return null;
+
+  if (!user) {
+    return null;
+  }
 
   const { data, error } = await supabase
     .from("orders")
     .select(`
       id,
-      total_amount,
+      amount,
       currency,
       razorpay_order_id,
       razorpay_payment_id,
-      payment_status,
+      status,
       created_at,
       order_items (
         price,
-        books (title, slug)
+        books (
+          title,
+          slug
+        )
       )
     `)
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", {
+      ascending: false,
+    });
 
-  if (error) throw new Error("Unable to load purchase history.");
+  if (error) {
+    console.error(
+      "Purchase history lookup error:",
+      error
+    );
+
+    throw new Error(
+      "Unable to load purchase history."
+    );
+  }
+
   return data ?? [];
 }
