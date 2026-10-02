@@ -1,737 +1,596 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const ADMIN_EMAIL = "bansalneetu333@gmail.com";
-const RESEND_SECONDS = 60;
 
-type Mode = "login" | "signup" | "forgot" | "verify" | "reset";
-type LoginType = "customer" | "admin";
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return "Something went wrong. Please try again.";
+}
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<Mode>("login");
-  const [loginType, setLoginType] = useState<LoginType>("customer");
-  const [name, setName] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [mode, setMode] = useState<"login" | "forgot" | "update">("login");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [resendSeconds, setResendSeconds] = useState(0);
 
+  const supabase = createClient();
+
+  /*
+   * Check whether Supabase has already established a session.
+   *
+   * This is particularly important after the /auth/callback route
+   * exchanges the recovery/login code for a session.
+   */
   useEffect(() => {
-    if (resendSeconds <= 0) return;
+    let mounted = true;
 
-    const timer = window.setInterval(
-      () => setResendSeconds((v) => Math.max(0, v - 1)),
-      1000
-    );
+    async function checkSession() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-    return () => window.clearInterval(timer);
-  }, [resendSeconds]);
+        if (!mounted) return;
 
-  function clearMessages() {
-    setMessage("");
+        if (session?.user) {
+          const userEmail = session.user.email?.trim().toLowerCase();
+
+          if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+            router.replace("/admin");
+          } else {
+            router.replace("/library");
+          }
+
+          return;
+        }
+
+        const errorParam = searchParams.get("error");
+
+        if (errorParam) {
+          setError(decodeURIComponent(errorParam));
+        }
+
+        /*
+         * If Supabase redirected here after password recovery,
+         * the recovery session will normally already be available.
+         */
+        const type = searchParams.get("type");
+
+        if (type === "recovery") {
+          setMode("update");
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(getErrorMessage(err));
+        }
+      } finally {
+        if (mounted) {
+          setCheckingSession(false);
+        }
+      }
+    }
+
+    checkSession();
+
+    /*
+     * Supabase can establish a session after this page initially loads,
+     * so listen for auth changes as well.
+     */
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("update");
+        setMessage("Create your new password below.");
+        setError("");
+        return;
+      }
+
+      if (
+        event === "SIGNED_IN" &&
+        session?.user &&
+        !window.location.pathname.startsWith("/admin") &&
+        !window.location.pathname.startsWith("/library")
+      ) {
+        const userEmail = session.user.email?.trim().toLowerCase();
+
+        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+          router.replace("/admin");
+        } else {
+          router.replace("/library");
+        }
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router, searchParams, supabase.auth]);
+
+  /*
+   * Normal email/password login.
+   */
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setLoading(true);
     setError("");
-  }
-
-  function choose(type: LoginType) {
-    clearMessages();
-    setMode("login");
-    setLoginType(type);
-    setPassword("");
-
-    if (type === "admin") {
-      setEmail(ADMIN_EMAIL);
-    } else if (email.toLowerCase() === ADMIN_EMAIL) {
-      setEmail("");
-    }
-  }
-
-  function backToLogin() {
-    clearMessages();
-    setMode("login");
-    setPassword("");
-    setConfirmPassword("");
-    setOtp("");
-  }
-
-  async function handleLogin(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    clearMessages();
-    setLoading(true);
+    setMessage("");
 
     try {
-      const normalizedEmail = email.trim().toLowerCase();
+      const cleanEmail = email.trim().toLowerCase();
 
-      if (
-        loginType === "admin" &&
-        normalizedEmail !== ADMIN_EMAIL
-      ) {
-        setError("Use the admin email to enter Admin.");
-        return;
+      if (!cleanEmail) {
+        throw new Error("Please enter your email address.");
       }
 
-      if (
-        loginType === "customer" &&
-        normalizedEmail === ADMIN_EMAIL
-      ) {
-        setError("Choose Admin Login for this account.");
-        return;
+      if (!password) {
+        throw new Error("Please enter your password.");
       }
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: normalizedEmail,
-          password
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error ?? "Login failed.");
-        return;
-      }
-
-      await new Promise((resolve) =>
-        window.setTimeout(resolve, 80)
-      );
-
-      window.location.replace(
-        loginType === "admin" ? "/admin" : "/library"
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to login."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSignup(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    clearMessages();
-
-    const normalizedEmail = email.trim().toLowerCase();
-
-    if (normalizedEmail === ADMIN_EMAIL) {
-      setError("This email is reserved for Admin.");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const supabase = createClient();
-
-      const { data, error } =
-        await supabase.auth.signUp({
-          email: normalizedEmail,
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email: cleanEmail,
           password,
-          options: {
-            data: {
-              full_name: name.trim()
-            },
-            emailRedirectTo:
-              `${window.location.origin}/login`
-          }
         });
 
-      if (error) {
-        setError(error.message);
-        return;
+      if (signInError) {
+        throw signInError;
       }
 
-      setPassword("");
-      setConfirmPassword("");
-      setMode("login");
+      if (!data.user) {
+        throw new Error("Login was not completed. Please try again.");
+      }
 
-      setMessage(
-        data.session
-          ? "Account ready. You can log in now."
-          : "Account created. Check your email to confirm it, then log in."
-      );
+      const userEmail = data.user.email?.trim().toLowerCase();
+
+      if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+        router.replace("/admin");
+      } else {
+        router.replace("/library");
+      }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to create account."
-      );
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }
 
-  async function sendCode() {
-    const normalizedEmail = email.trim().toLowerCase();
+  /*
+   * Send Supabase's standard password-reset email.
+   *
+   * We deliberately use the canonical Supabase recovery flow here
+   * instead of pretending that the project has a custom 8-digit OTP
+   * implementation.
+   */
+  async function handleForgotPassword(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
 
-    if (!normalizedEmail) {
-      setError("Enter your email first.");
-      return;
-    }
-
-    clearMessages();
     setLoading(true);
+    setError("");
+    setMessage("");
 
     try {
-      const supabase = createClient();
+      const cleanEmail = email.trim().toLowerCase();
 
-      const { error } =
-        await supabase.auth.resetPasswordForEmail(
-          normalizedEmail,
-          {
-            redirectTo:
-              `${window.location.origin}/login`
-          }
+      if (!cleanEmail) {
+        throw new Error("Please enter your email address.");
+      }
+
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        window.location.origin;
+
+      const redirectTo = `${siteUrl}/auth/callback?next=/login`;
+
+      const { error: resetError } =
+        await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo,
+        });
+
+      if (resetError) {
+        throw resetError;
+      }
+
+      setMessage(
+        "Password reset instructions have been sent to your email. Please open the email and follow the secure link to create a new password."
+      );
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /*
+   * Set a new password after Supabase has established a recovery session.
+   */
+  async function handleUpdatePassword(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
+
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      if (!newPassword) {
+        throw new Error("Please enter a new password.");
+      }
+
+      if (newPassword.length < 6) {
+        throw new Error(
+          "Your password must be at least 6 characters long."
         );
-
-      if (error) {
-        setError(error.message);
-        return;
       }
 
-      setEmail(normalizedEmail);
-      setOtp("");
-      setResendSeconds(RESEND_SECONDS);
-      setMode("verify");
-
-      setMessage(
-        "If an account exists for this email, your 8-digit code is on its way."
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to send the code."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleVerify(
-    e: FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault();
-    clearMessages();
-
-    const token = otp
-      .replace(/\D/g, "")
-      .slice(0, 8);
-
-    if (token.length !== 8) {
-      setError("Enter the full 8-digit code.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const supabase = createClient();
-
-      const { error } =
-        await supabase.auth.verifyOtp({
-          email: email.trim().toLowerCase(),
-          token,
-          type: "recovery"
-        });
-
-      if (error) {
-        setError(error.message);
-        return;
+      if (newPassword !== confirmPassword) {
+        throw new Error("The passwords do not match.");
       }
 
-      setPassword("");
-      setConfirmPassword("");
-      setMode("reset");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      setMessage(
-        "Code checked. Make your new password."
-      );
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to check the code."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+      if (!session) {
+        throw new Error(
+          "Your password-reset session has expired. Please request a new reset email."
+        );
+      }
 
-  async function handleReset(
-    e: FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault();
-    clearMessages();
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const supabase = createClient();
-
-      const { error } =
+      const { error: updateError } =
         await supabase.auth.updateUser({
-          password
+          password: newPassword,
         });
 
-      if (error) {
-        setError(error.message);
-        return;
+      if (updateError) {
+        throw updateError;
       }
 
+      setNewPassword("");
+      setConfirmPassword("");
+      setMessage(
+        "Your password has been updated successfully. You can now sign in."
+      );
+
+      /*
+       * Sign out after changing the password so the user explicitly
+       * signs in with the new credentials.
+       */
       await supabase.auth.signOut();
 
-      setPassword("");
-      setConfirmPassword("");
       setMode("login");
-
-      setMessage(
-        "Password changed. Log in with your new password."
-      );
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to change the password."
-      );
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
   }
 
-  const input =
-    "mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100";
+  function showLogin() {
+    setMode("login");
+    setError("");
+    setMessage("");
+    setPassword("");
+  }
+
+  function showForgot() {
+    setMode("forgot");
+    setError("");
+    setMessage("");
+    setPassword("");
+  }
+
+  if (checkingSession) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-sky-200 border-t-sky-600" />
+          <p className="text-sm font-medium text-slate-600">
+            Checking your account...
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#dbeafe,transparent_35%),linear-gradient(135deg,#f8fafc,#eef2ff,#fff7ed)] px-4 py-10">
-      <div className="mx-auto flex min-h-[85vh] max-w-md items-center">
-        <div className="w-full rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8">
-
-          <div className="text-center">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-indigo-100 text-3xl">
+    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-purple-50 px-4 py-8 sm:py-12">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-md items-center justify-center">
+        <div className="w-full">
+          {/* Brand */}
+          <div className="mb-6 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-purple-600 text-3xl shadow-lg">
               📚
             </div>
 
-            <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">
-              Booknook Kids
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+              BookNook Kids
             </h1>
 
-            <p className="mt-1 text-sm text-slate-500">
-              Little stories. Big ideas. ✨
+            <p className="mt-2 text-sm text-slate-600">
+              Fun digital books and stories for curious young readers.
             </p>
           </div>
 
-          {mode === "login" && (
-            <div className="mt-7 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-1">
-              <button
-                type="button"
-                onClick={() => choose("customer")}
-                className={`rounded-xl px-3 py-3 text-sm font-black ${
-                  loginType === "customer"
-                    ? "bg-white text-indigo-600 shadow"
-                    : "text-slate-500"
-                }`}
-              >
-                Reader
-              </button>
+          {/* Card */}
+          <div className="rounded-3xl border border-white/70 bg-white p-6 shadow-xl sm:p-8">
+            {/* LOGIN */}
+            {mode === "login" && (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    Welcome back 👋
+                  </h2>
 
-              <button
-                type="button"
-                onClick={() => choose("admin")}
-                className={`rounded-xl px-3 py-3 text-sm font-black ${
-                  loginType === "admin"
-                    ? "bg-white text-violet-600 shadow"
-                    : "text-slate-500"
-                }`}
-              >
-                Admin
-              </button>
-            </div>
-          )}
+                  <p className="mt-1 text-sm text-slate-500">
+                    Sign in to continue reading.
+                  </p>
+                </div>
 
-          <div className="mt-7">
-            <h2 className="text-2xl font-black">
-              {mode === "login"
-                ? loginType === "admin"
-                  ? "Admin Login"
-                  : "Welcome back"
-                : mode === "signup"
-                ? "Join Booknook"
-                : mode === "forgot"
-                ? "Find your password"
-                : mode === "verify"
-                ? "Check your code"
-                : "New password"}
-            </h2>
+                {error && (
+                  <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
 
-            <p className="mt-1 text-sm text-slate-500">
-              {mode === "login"
-                ? loginType === "admin"
-                  ? "Open your dashboard."
-                  : "Pick up where you left off."
-                : "A simple, secure step."}
-            </p>
-          </div>
+                {message && (
+                  <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {message}
+                  </div>
+                )}
 
-          {error && (
-            <div className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-              {error}
-            </div>
-          )}
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="mb-1.5 block text-sm font-semibold text-slate-700"
+                    >
+                      Email address
+                    </label>
 
-          {message && (
-            <div className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-              {message}
-            </div>
-          )}
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                      disabled={loading}
+                    />
+                  </div>
 
-          {mode === "login" && (
-            <form
-              onSubmit={handleLogin}
-              className="mt-6 space-y-4"
-            >
-              <label className="block text-sm font-bold">
-                Email
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="mb-1.5 block text-sm font-semibold text-slate-700"
+                    >
+                      Password
+                    </label>
 
-                <input
-                  className={`${input} ${
-                    loginType === "admin"
-                      ? "bg-slate-100"
-                      : ""
-                  }`}
-                  type="email"
-                  value={email}
-                  readOnly={loginType === "admin"}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  autoComplete="email"
-                  required
-                />
-              </label>
+                    <input
+                      id="password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                      disabled={loading}
+                    />
+                  </div>
 
-              <label className="block text-sm font-bold">
-                Password
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={showForgot}
+                      className="text-sm font-semibold text-sky-600 hover:text-sky-700"
+                      disabled={loading}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
 
-                <input
-                  className={input}
-                  type="password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  autoComplete="current-password"
-                  required
-                />
-              </label>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-purple-600 px-5 py-3.5 font-bold text-white shadow-md transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? "Signing in..." : "Sign In"}
+                  </button>
+                </form>
 
-              <button
-                disabled={loading}
-                className="w-full rounded-2xl bg-indigo-600 px-4 py-3.5 font-black text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 disabled:opacity-60"
-              >
-                {loading
-                  ? "Opening…"
-                  : loginType === "admin"
-                  ? "Open Admin"
-                  : "Open Library"}
-              </button>
+                <div className="mt-6 rounded-2xl bg-slate-50 p-4 text-center">
+                  <p className="text-xs leading-5 text-slate-500">
+                    Your account determines where you go after signing in.
+                    The configured administrator account is automatically
+                    sent to the admin dashboard.
+                  </p>
+                </div>
+              </>
+            )}
 
-              <button
-                type="button"
-                onClick={() => {
-                  clearMessages();
-                  setMode("forgot");
-                }}
-                className="w-full py-2 text-sm font-bold text-indigo-600"
-              >
-                Forgot password?
-              </button>
+            {/* FORGOT PASSWORD */}
+            {mode === "forgot" && (
+              <>
+                <div className="mb-6">
+                  <button
+                    type="button"
+                    onClick={showLogin}
+                    className="mb-4 text-sm font-semibold text-sky-600 hover:text-sky-700"
+                    disabled={loading}
+                  >
+                    ← Back to sign in
+                  </button>
 
-              {loginType === "customer" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearMessages();
-                    setMode("signup");
-                  }}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 font-bold"
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    Reset your password
+                  </h2>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Enter your account email and we&apos;ll send you a secure
+                    password-reset link.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
+
+                {message && (
+                  <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {message}
+                  </div>
+                )}
+
+                <form
+                  onSubmit={handleForgotPassword}
+                  className="space-y-4"
                 >
-                  New here? Join
-                </button>
-              )}
-            </form>
-          )}
+                  <div>
+                    <label
+                      htmlFor="reset-email"
+                      className="mb-1.5 block text-sm font-semibold text-slate-700"
+                    >
+                      Email address
+                    </label>
 
-          {mode === "signup" && (
-            <form
-              onSubmit={handleSignup}
-              className="mt-6 space-y-4"
-            >
-              <label className="block text-sm font-bold">
-                Name
+                    <input
+                      id="reset-email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                      disabled={loading}
+                    />
+                  </div>
 
-                <input
-                  className={input}
-                  value={name}
-                  onChange={(e) =>
-                    setName(e.target.value)
-                  }
-                  autoComplete="name"
-                  required
-                />
-              </label>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-purple-600 px-5 py-3.5 font-bold text-white shadow-md transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading
+                      ? "Sending..."
+                      : "Send Reset Instructions"}
+                  </button>
+                </form>
+              </>
+            )}
 
-              <label className="block text-sm font-bold">
-                Email
+            {/* UPDATE PASSWORD */}
+            {mode === "update" && (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    Create a new password 🔐
+                  </h2>
 
-                <input
-                  className={input}
-                  type="email"
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  autoComplete="email"
-                  required
-                />
-              </label>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Enter and confirm your new password below.
+                  </p>
+                </div>
 
-              <label className="block text-sm font-bold">
-                Password
+                {error && (
+                  <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
 
-                <input
-                  className={input}
-                  type="password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  minLength={6}
-                  autoComplete="new-password"
-                  required
-                />
-              </label>
+                {message && (
+                  <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {message}
+                  </div>
+                )}
 
-              <label className="block text-sm font-bold">
-                Repeat
+                <form
+                  onSubmit={handleUpdatePassword}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label
+                      htmlFor="new-password"
+                      className="mb-1.5 block text-sm font-semibold text-slate-700"
+                    >
+                      New password
+                    </label>
 
-                <input
-                  className={input}
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) =>
-                    setConfirmPassword(e.target.value)
-                  }
-                  minLength={6}
-                  autoComplete="new-password"
-                  required
-                />
-              </label>
+                    <input
+                      id="new-password"
+                      type="password"
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                      disabled={loading}
+                    />
+                  </div>
 
-              <button
-                disabled={loading}
-                className="w-full rounded-2xl bg-indigo-600 px-4 py-3.5 font-black text-white disabled:opacity-60"
-              >
-                {loading ? "Making…" : "Join"}
-              </button>
+                  <div>
+                    <label
+                      htmlFor="confirm-password"
+                      className="mb-1.5 block text-sm font-semibold text-slate-700"
+                    >
+                      Confirm new password
+                    </label>
 
-              <button
-                type="button"
-                onClick={backToLogin}
-                className="w-full py-2 text-sm font-bold text-indigo-600"
-              >
-                Back
-              </button>
-            </form>
-          )}
+                    <input
+                      id="confirm-password"
+                      type="password"
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) =>
+                        setConfirmPassword(e.target.value)
+                      }
+                      placeholder="Enter the password again"
+                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-4 focus:ring-sky-100"
+                      disabled={loading}
+                    />
+                  </div>
 
-          {mode === "forgot" && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                void sendCode();
-              }}
-              className="mt-6 space-y-4"
-            >
-              <label className="block text-sm font-bold">
-                Email
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-purple-600 px-5 py-3.5 font-bold text-white shadow-md transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading
+                      ? "Updating password..."
+                      : "Update Password"}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
 
-                <input
-                  className={input}
-                  type="email"
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  autoComplete="email"
-                  required
-                />
-              </label>
-
-              <button
-                disabled={loading}
-                className="w-full rounded-2xl bg-indigo-600 px-4 py-3.5 font-black text-white disabled:opacity-60"
-              >
-                {loading ? "Sending…" : "Send Code"}
-              </button>
-
-              <button
-                type="button"
-                onClick={backToLogin}
-                className="w-full py-2 text-sm font-bold text-indigo-600"
-              >
-                Back
-              </button>
-            </form>
-          )}
-
-          {mode === "verify" && (
-            <form
-              onSubmit={handleVerify}
-              className="mt-6 space-y-4"
-            >
-              <label className="block text-sm font-bold">
-                Code
-
-                <input
-                  className={`${input} text-center text-2xl font-black tracking-[0.35em]`}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={otp}
-                  onChange={(e) =>
-                    setOtp(
-                      e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 8)
-                    )
-                  }
-                  maxLength={8}
-                  placeholder="00000000"
-                  required
-                />
-              </label>
-
-              <button
-                disabled={
-                  loading || otp.length !== 8
-                }
-                className="w-full rounded-2xl bg-indigo-600 px-4 py-3.5 font-black text-white disabled:opacity-50"
-              >
-                {loading ? "Checking…" : "Check Code"}
-              </button>
-
-              <button
-                type="button"
-                disabled={
-                  loading || resendSeconds > 0
-                }
-                onClick={() => void sendCode()}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 font-bold disabled:text-slate-400"
-              >
-                {resendSeconds
-                  ? `Resend in ${resendSeconds}s`
-                  : "Resend Code"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  clearMessages();
-                  setMode("forgot");
-                }}
-                className="w-full py-2 text-sm font-bold text-slate-500"
-              >
-                Change email
-              </button>
-            </form>
-          )}
-
-          {mode === "reset" && (
-            <form
-              onSubmit={handleReset}
-              className="mt-6 space-y-4"
-            >
-              <label className="block text-sm font-bold">
-                New password
-
-                <input
-                  className={input}
-                  type="password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  minLength={6}
-                  autoComplete="new-password"
-                  required
-                />
-              </label>
-
-              <label className="block text-sm font-bold">
-                Repeat password
-
-                <input
-                  className={input}
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) =>
-                    setConfirmPassword(e.target.value)
-                  }
-                  minLength={6}
-                  autoComplete="new-password"
-                  required
-                />
-              </label>
-
-              <button
-                disabled={loading}
-                className="w-full rounded-2xl bg-indigo-600 px-4 py-3.5 font-black text-white disabled:opacity-60"
-              >
-                {loading
-                  ? "Saving…"
-                  : "Save Password"}
-              </button>
-            </form>
-          )}
-
-          <a
-            href="/"
-            className="mt-7 block text-center text-xs font-semibold text-slate-400"
-          >
-            ← Back to Booknook
-          </a>
+          <p className="mt-6 text-center text-xs text-slate-400">
+            © {new Date().getFullYear()} BookNook Kids
+          </p>
         </div>
       </div>
     </main>
