@@ -1,26 +1,15 @@
 import { NextResponse } from "next/server";
-
 import { createClient } from "@/lib/supabase/server";
 import {
   createEpubSignedUrl,
   getActiveBookVersion,
+  publicCoverUrl,
 } from "@/lib/storage";
 
-export const runtime = "nodejs";
-
-const SIGNED_URL_EXPIRES_IN = 300;
-
-type AccessPayload = {
-  bookId?: string;
-};
-
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
 
-    /*
-     * Require a logged-in customer.
-     */
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -32,12 +21,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = (await request.json()) as AccessPayload;
-
-    const bookId =
-      typeof body.bookId === "string"
-        ? body.bookId.trim()
-        : "";
+    const url = new URL(request.url);
+    const bookId = url.searchParams.get("bookId");
 
     if (!bookId) {
       return NextResponse.json(
@@ -47,19 +32,64 @@ export async function POST(request: Request) {
     }
 
     /*
-     * Verify that the book exists and is published.
+     * Verify that the logged-in customer has actually
+     * purchased this book.
      */
-    const { data: book, error: bookError } = await supabase
-      .from("books")
-      .select("id,title,published")
-      .eq("id", bookId)
-      .maybeSingle();
+    const { data: ownership, error: ownershipError } =
+      await supabase
+        .from("order_items")
+        .select(
+          "id, book_id, orders!inner(user_id, status)"
+        )
+        .eq("book_id", bookId)
+        .eq("orders.user_id", user.id)
+        .eq("orders.status", "paid")
+        .limit(1)
+        .maybeSingle();
 
-    if (bookError) {
-      console.error("Reader book lookup error:", bookError);
+    if (ownershipError) {
+      console.error(
+        "Reader ownership lookup error:",
+        ownershipError
+      );
 
       return NextResponse.json(
-        { error: "Unable to verify the book." },
+        { error: "Unable to verify book ownership." },
+        { status: 500 }
+      );
+    }
+
+    if (!ownership) {
+      return NextResponse.json(
+        {
+          error:
+            "You do not own this book. Please purchase it first.",
+        },
+        { status: 403 }
+      );
+    }
+
+    /*
+     * Load the book.
+     */
+    const { data: book, error: bookError } =
+      await supabase
+        .from("books")
+        .select(
+          "id,title,slug,author,description,cover_path,published"
+        )
+        .eq("id", bookId)
+        .eq("published", true)
+        .maybeSingle();
+
+    if (bookError) {
+      console.error(
+        "Reader book lookup error:",
+        bookError
+      );
+
+      return NextResponse.json(
+        { error: "Unable to load the book." },
         { status: 500 }
       );
     }
@@ -71,78 +101,29 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!book.published) {
-      return NextResponse.json(
-        { error: "This book is not currently available." },
-        { status: 404 }
-      );
-    }
-
     /*
-     * Verify that the customer has paid for this book.
-     *
-     * This follows the same ownership relationship already
-     * used by the existing library code:
-     * order_items -> orders -> user.
+     * Load the active EPUB version.
      */
-    const { data: purchase, error: purchaseError } =
-      await supabase
-        .from("order_items")
-        .select(
-          "id,orders!inner(user_id,payment_status)"
-        )
-        .eq("book_id", bookId)
-        .eq("orders.user_id", user.id)
-        .eq("orders.payment_status", "paid")
-        .limit(1)
-        .maybeSingle();
+    const version = await getActiveBookVersion(bookId);
 
-    if (purchaseError) {
-      console.error(
-        "Reader ownership lookup error:",
-        purchaseError
-      );
-
-      return NextResponse.json(
-        { error: "Unable to verify your book access." },
-        { status: 500 }
-      );
-    }
-
-    if (!purchase) {
+    if (!version) {
       return NextResponse.json(
         {
           error:
-            "You do not own this book. Please purchase it first.",
-        },
-        { status: 403 }
-      );
-    }
-
-    /*
-     * Get the currently active EPUB version.
-     */
-    const activeVersion =
-      await getActiveBookVersion(bookId);
-
-    if (!activeVersion) {
-      return NextResponse.json(
-        {
-          error:
-            "This book does not have an active EPUB version yet.",
+            "This book does not currently have a readable version.",
         },
         { status: 404 }
       );
     }
 
     const epubPath =
-      activeVersion.epub_path;
+      version.epub_path || version.file_path;
 
     if (!epubPath) {
       return NextResponse.json(
         {
           error:
-            "The active book version does not have an EPUB file.",
+            "The readable book file is not available.",
         },
         { status: 404 }
       );
@@ -150,34 +131,25 @@ export async function POST(request: Request) {
 
     /*
      * Create a short-lived signed URL.
-     *
-     * The EPUB bucket remains private.
-     * Customers never receive the permanent storage path
-     * as a public file URL.
+     * The private ebook file itself is never made public.
      */
-    const epubUrl = await createEpubSignedUrl(
-      epubPath,
-      SIGNED_URL_EXPIRES_IN
-    );
+    const epubUrl =
+      await createEpubSignedUrl(epubPath, 300);
 
     /*
-     * Load the customer's saved reading position.
+     * Load saved reading progress.
      */
     const { data: progress, error: progressError } =
       await supabase
         .from("reading_progress")
         .select(
-          "location,progress_percentage,last_read_at"
+          "book_id,location,progress_percentage,last_read_at"
         )
         .eq("user_id", user.id)
         .eq("book_id", bookId)
         .maybeSingle();
 
     if (progressError) {
-      /*
-       * Do not prevent the reader from opening if the
-       * progress record cannot be read.
-       */
       console.error(
         "Reader progress lookup error:",
         progressError
@@ -185,22 +157,32 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      ok: true,
-      epubUrl,
-      expiresIn: SIGNED_URL_EXPIRES_IN,
+      success: true,
+
       book: {
         id: book.id,
         title: book.title,
+        slug: book.slug,
+        author: book.author,
+        description: book.description,
+        coverUrl: publicCoverUrl(book.cover_path),
       },
+
       version: {
-        id: activeVersion.id,
-        versionNumber: activeVersion.version_number,
+        id: version.id,
+        versionNumber: version.version_number,
+        fileType: version.file_type,
+        fileSize: version.file_size,
       },
+
+      epubUrl,
+
       progress: progress
         ? {
-            location: progress.location ?? null,
-            progress_percentage:
-              Number(progress.progress_percentage ?? 0),
+            location: progress.location,
+            progressPercentage:
+              progress.progress_percentage,
+            lastReadAt: progress.last_read_at,
           }
         : null,
     });
