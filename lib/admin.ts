@@ -1,7 +1,7 @@
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
 
-const ADMIN_EMAIL = "bansalneetu333@gmail.com";
+export const ADMIN_EMAIL = "bansalneetu333@gmail.com";
 
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -38,30 +38,34 @@ export async function requireAdmin() {
     };
   }
 
-  const admin = createAdminClient();
-
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id,full_name,email,role")
-    .eq("id", user.id)
-    .maybeSingle();
-
   const emailIsAdmin =
-    user.email?.toLowerCase() ===
-    ADMIN_EMAIL.toLowerCase();
+    user.email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  const roleIsAdmin =
-    profile?.role === "admin";
+  let profile: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+  } | null = null;
 
-  const isAdmin =
-    emailIsAdmin || roleIsAdmin;
+  try {
+    const admin = createAdminClient();
+
+    const { data } = await admin
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    profile = data;
+  } catch {
+    // Admin authorization is based on the configured admin email.
+    // A missing profile must not prevent the admin account from working.
+  }
 
   return {
-    supabase: isAdmin ? admin : supabase,
+    supabase: emailIsAdmin ? createAdminClient() : supabase,
     user,
     profile,
-    isAdmin,
+    isAdmin: emailIsAdmin,
   };
 }
-
-export { ADMIN_EMAIL };
