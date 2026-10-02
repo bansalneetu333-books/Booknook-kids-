@@ -1,0 +1,231 @@
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin";
+
+export const runtime = "nodejs";
+
+export async function GET(request: Request) {
+  try {
+    const { supabase, user, isAdmin } = await requireAdmin();
+
+    if (!user || !isAdmin) {
+      return NextResponse.json(
+        { error: "Admin access required." },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+
+    const status = searchParams.get("status")?.trim() || "";
+    const search = searchParams.get("search")?.trim() || "";
+
+    let query = supabase
+      .from("orders")
+      .select(
+        `
+        id,
+        user_id,
+        razorpay_order_id,
+        razorpay_payment_id,
+        status,
+        amount,
+        currency,
+        created_at,
+        updated_at,
+        order_items(
+          id,
+          book_id,
+          price,
+          created_at,
+          books(
+            id,
+            title,
+            slug,
+            author,
+            cover_path
+          )
+        )
+        `
+      )
+      .order("created_at", { ascending: false });
+
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    const { data: orders, error } = await query;
+
+    if (error) {
+      console.error("Admin orders lookup error:", error);
+
+      return NextResponse.json(
+        { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    // ------------------------------------------------------------
+    // Load customer profiles separately.
+    // This avoids assuming a foreign-key relationship from
+    // orders.user_id to profiles.id exists.
+    // ------------------------------------------------------------
+    const userIds = Array.from(
+      new Set(
+        (orders ?? [])
+          .map((order) => order.user_id)
+          .filter(
+            (id): id is string =>
+              typeof id === "string" && id.length > 0
+          )
+      )
+    );
+
+    const profilesById = new Map<
+      string,
+      {
+        id: string;
+        full_name: string | null;
+        email: string | null;
+      }
+    >();
+
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } =
+        await supabase
+          .from("profiles")
+          .select("id,full_name,email")
+          .in("id", userIds);
+
+      if (profilesError) {
+        console.warn(
+          "Admin orders profile lookup warning:",
+          profilesError
+        );
+      } else {
+        for (const profile of profiles ?? []) {
+          profilesById.set(profile.id, profile);
+        }
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Optional search
+    // ------------------------------------------------------------
+    const filteredOrders = (orders ?? []).filter((order) => {
+      if (!search) {
+        return true;
+      }
+
+      const profile = order.user_id
+        ? profilesById.get(order.user_id)
+        : null;
+
+      const searchableText = [
+        order.id,
+        order.razorpay_order_id,
+        order.razorpay_payment_id,
+        profile?.full_name,
+        profile?.email,
+        ...(order.order_items ?? []).flatMap((item) => {
+          const book = item.books;
+
+          return book
+            ? [book.title, book.author, book.slug]
+            : [];
+        }),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return searchableText.includes(search.toLowerCase());
+    });
+
+    // ------------------------------------------------------------
+    // Format response
+    // ------------------------------------------------------------
+    const formattedOrders = filteredOrders.map((order) => {
+      const profile = order.user_id
+        ? profilesById.get(order.user_id)
+        : null;
+
+      return {
+        id: order.id,
+        userId: order.user_id,
+
+        customer: profile
+          ? {
+              id: profile.id,
+              fullName: profile.full_name,
+              email: profile.email,
+            }
+          : null,
+
+        razorpayOrderId: order.razorpay_order_id,
+        razorpayPaymentId: order.razorpay_payment_id,
+
+        status: order.status,
+        amount: Number(order.amount),
+        currency: order.currency,
+
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+
+        items: (order.order_items ?? []).map((item) => ({
+          id: item.id,
+          bookId: item.book_id,
+          price: Number(item.price),
+          createdAt: item.created_at,
+
+          book: item.books
+            ? {
+                id: item.books.id,
+                title: item.books.title,
+                slug: item.books.slug,
+                author: item.books.author,
+                coverPath: item.books.cover_path,
+              }
+            : null,
+        })),
+      };
+    });
+
+    // ------------------------------------------------------------
+    // Summary
+    // ------------------------------------------------------------
+    const summary = {
+      totalOrders: formattedOrders.length,
+      paidOrders: formattedOrders.filter(
+        (order) => order.status === "paid"
+      ).length,
+      pendingOrders: formattedOrders.filter(
+        (order) => order.status === "pending"
+      ).length,
+      failedOrders: formattedOrders.filter(
+        (order) => order.status === "failed"
+      ).length,
+      paidRevenue: formattedOrders
+        .filter((order) => order.status === "paid")
+        .reduce((total, order) => total + order.amount, 0),
+    };
+
+    return NextResponse.json({
+      ok: true,
+      orders: formattedOrders,
+      count: formattedOrders.length,
+      summary,
+    });
+  } catch (error) {
+    console.error("Admin orders API error:", error);
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to load admin orders.",
+      },
+      { status: 500 }
+    );
+  }
+}
