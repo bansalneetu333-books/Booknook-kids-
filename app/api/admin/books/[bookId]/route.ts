@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 
-export const runtime = "nodejs";
-
 type RouteContext = {
   params: Promise<{
     bookId: string;
@@ -10,35 +8,34 @@ type RouteContext = {
 };
 
 export async function GET(
-  request: Request,
-  context: RouteContext
+  _request: Request,
+  { params }: RouteContext
 ) {
   try {
-    const { supabase, user, isAdmin } = await requireAdmin();
+    const { bookId } = await params;
 
-    if (!user || !isAdmin) {
-      return NextResponse.json(
-        { error: "Admin access required." },
-        { status: 403 }
-      );
-    }
-
-    const { bookId } = await context.params;
-
-    if (!bookId?.trim()) {
+    if (!bookId) {
       return NextResponse.json(
         { error: "Book ID is required." },
         { status: 400 }
       );
     }
 
-    // ------------------------------------------------------------
-    // 1. Load the book
-    // ------------------------------------------------------------
-    const { data: book, error: bookError } = await supabase
+    const { isAdmin } = await requireAdmin();
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 403 }
+      );
+    }
+
+    const { createAdminClient } = await import("@/lib/admin");
+    const supabase = createAdminClient();
+
+    const { data: book, error } = await supabase
       .from("books")
-      .select(
-        `
+      .select(`
         id,
         title,
         slug,
@@ -46,30 +43,26 @@ export async function GET(
         description,
         price,
         currency,
-        category_id,
-        genre,
-        age_category,
         cover_url,
         cover_path,
         epub_path,
+        category_id,
+        genre,
+        age_category,
         published,
         featured,
+        is_published,
+        is_featured,
         sort_order,
         created_at,
         updated_at
-        `
-      )
-      .eq("id", bookId.trim())
+      `)
+      .eq("id", bookId)
       .maybeSingle();
 
-    if (bookError) {
-      console.error(
-        "Admin book details lookup error:",
-        bookError
-      );
-
+    if (error) {
       return NextResponse.json(
-        { error: bookError.message },
+        { error: "Unable to load the book." },
         { status: 500 }
       );
     }
@@ -81,144 +74,217 @@ export async function GET(
       );
     }
 
-    // ------------------------------------------------------------
-    // 2. Load all versions separately.
-    // This avoids depending on a specific foreign-key relationship
-    // name in Supabase's nested select.
-    // ------------------------------------------------------------
-    const { data: versions, error: versionsError } =
-      await supabase
-        .from("book_versions")
-        .select(
-          `
-          id,
-          book_id,
-          version,
-          version_number,
-          file_url,
-          file_path,
-          file_type,
-          file_size,
-          is_current,
-          epub_path,
-          uploaded_at,
-          active,
-          created_at
-          `
-        )
-        .eq("book_id", book.id)
-        .order("created_at", { ascending: false });
-
-    if (versionsError) {
-      console.error(
-        "Admin book versions lookup error:",
-        versionsError
-      );
-
-      return NextResponse.json(
-        { error: versionsError.message },
-        { status: 500 }
-      );
-    }
-
-    // ------------------------------------------------------------
-    // 3. Determine active/current version
-    // ------------------------------------------------------------
-    const activeVersion =
-      (versions ?? []).find(
-        (version) => version.active === true
-      ) ??
-      (versions ?? []).find(
-        (version) => version.is_current === true
-      ) ??
-      null;
-
-    // ------------------------------------------------------------
-    // 4. Format versions
-    // ------------------------------------------------------------
-    const formattedVersions = (versions ?? []).map((version) => ({
-      id: version.id,
-      bookId: version.book_id,
-
-      version: version.version,
-      versionNumber: version.version_number,
-
-      fileUrl: version.file_url,
-      filePath: version.file_path,
-      fileType: version.file_type,
-      fileSize: version.file_size,
-
-      epubPath: version.epub_path,
-
-      isCurrent: version.is_current,
-      active: version.active,
-
-      uploadedAt: version.uploaded_at,
-      createdAt: version.created_at,
-    }));
-
-    // ------------------------------------------------------------
-    // 5. Return complete admin book details
-    // ------------------------------------------------------------
     return NextResponse.json({
-      ok: true,
-
-      book: {
-        id: book.id,
-        title: book.title,
-        slug: book.slug,
-        author: book.author,
-        description: book.description,
-
-        price: Number(book.price) || 0,
-        currency: book.currency || "INR",
-
-        categoryId: book.category_id,
-        genre: book.genre,
-        ageCategory: book.age_category,
-
-        coverUrl: book.cover_url,
-        coverPath: book.cover_path,
-
-        epubPath: book.epub_path,
-
-        published: book.published,
-        featured: book.featured,
-        sortOrder: book.sort_order,
-
-        createdAt: book.created_at,
-        updatedAt: book.updated_at,
-      },
-
-      versions: formattedVersions,
-
-      activeVersion: activeVersion
-        ? {
-            id: activeVersion.id,
-            version: activeVersion.version,
-            versionNumber: activeVersion.version_number,
-            filePath: activeVersion.file_path,
-            epubPath: activeVersion.epub_path,
-            fileType: activeVersion.file_type,
-            fileSize: activeVersion.file_size,
-            active: activeVersion.active,
-            isCurrent: activeVersion.is_current,
-            uploadedAt: activeVersion.uploaded_at,
-          }
-        : null,
+      success: true,
+      book,
     });
   } catch (error) {
-    console.error(
-      "Admin book details API error:",
-      error
-    );
-
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "Unable to load book details.",
+            : "Unable to load the book.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: RouteContext
+) {
+  try {
+    const { bookId } = await params;
+
+    if (!bookId) {
+      return NextResponse.json(
+        { error: "Book ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const { isAdmin } = await requireAdmin();
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+
+    const updates: Record<string, unknown> = {};
+
+    if (body.title !== undefined) {
+      updates.title = String(body.title).trim();
+    }
+
+    if (body.slug !== undefined) {
+      updates.slug = String(body.slug).trim();
+    }
+
+    if (body.author !== undefined) {
+      updates.author = String(body.author).trim();
+    }
+
+    if (body.description !== undefined) {
+      updates.description =
+        body.description === null
+          ? null
+          : String(body.description);
+    }
+
+    if (body.price !== undefined) {
+      const price = Number(body.price);
+
+      if (!Number.isFinite(price) || price < 0) {
+        return NextResponse.json(
+          { error: "Invalid book price." },
+          { status: 400 }
+        );
+      }
+
+      updates.price = price;
+    }
+
+    if (body.genre !== undefined) {
+      updates.genre = String(body.genre).trim();
+    }
+
+    if (body.age_category !== undefined) {
+      updates.age_category = String(body.age_category).trim();
+    }
+
+    if (body.category_id !== undefined) {
+      updates.category_id = body.category_id || null;
+    }
+
+    if (body.cover_path !== undefined) {
+      updates.cover_path = body.cover_path || null;
+    }
+
+    if (body.cover_url !== undefined) {
+      updates.cover_url = body.cover_url || null;
+    }
+
+    if (body.published !== undefined) {
+      updates.published = Boolean(body.published);
+    }
+
+    if (body.featured !== undefined) {
+      updates.featured = Boolean(body.featured);
+    }
+
+    if (body.sort_order !== undefined) {
+      const sortOrder = Number(body.sort_order);
+
+      if (!Number.isInteger(sortOrder)) {
+        return NextResponse.json(
+          { error: "Invalid sort order." },
+          { status: 400 }
+        );
+      }
+
+      updates.sort_order = sortOrder;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { error: "No changes were provided." },
+        { status: 400 }
+      );
+    }
+
+    updates.updated_at = new Date().toISOString();
+
+    const { createAdminClient } = await import("@/lib/admin");
+    const supabase = createAdminClient();
+
+    const { data: book, error } = await supabase
+      .from("books")
+      .update(updates)
+      .eq("id", bookId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json(
+        { error: "Unable to update the book." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      book,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to update the book.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: RouteContext
+) {
+  try {
+    const { bookId } = await params;
+
+    if (!bookId) {
+      return NextResponse.json(
+        { error: "Book ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const { isAdmin } = await requireAdmin();
+
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: "Unauthorized." },
+        { status: 403 }
+      );
+    }
+
+    const { createAdminClient } = await import("@/lib/admin");
+    const supabase = createAdminClient();
+
+    const { error } = await supabase
+      .from("books")
+      .delete()
+      .eq("id", bookId);
+
+    if (error) {
+      return NextResponse.json(
+        {
+          error:
+            "Unable to delete the book. It may have existing orders or related records.",
+        },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to delete the book.",
       },
       { status: 500 }
     );
