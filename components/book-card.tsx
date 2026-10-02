@@ -18,7 +18,7 @@ type BookCardProps = {
   };
 };
 
-export default function BookCard({ book }: BookCardProps) {
+export function BookCard({ book }: BookCardProps) {
   const cover =
     book.cover_url ||
     (book.cover_path
@@ -41,6 +41,7 @@ export default function BookCard({ book }: BookCardProps) {
             <div className="flex h-full items-center justify-center p-6 text-center">
               <div>
                 <div className="mb-3 text-5xl">📚</div>
+
                 <p className="font-bold text-slate-700">
                   {book.title}
                 </p>
@@ -88,3 +89,5 @@ export default function BookCard({ book }: BookCardProps) {
     </article>
   );
 }
+
+export default BookCard;
