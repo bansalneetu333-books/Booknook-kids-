@@ -1,75 +1,56 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Preferences = {
-  phone_number: string;
+  phone_number: string | null;
   opted_in: boolean;
   order_updates: boolean;
   book_updates: boolean;
   marketing_updates: boolean;
 };
 
-export default function WhatsAppSettingsPage() {
-  const [preferences, setPreferences] =
-    useState<Preferences>({
-      phone_number: "",
-      opted_in: false,
-      order_updates: true,
-      book_updates: false,
-      marketing_updates: false,
-    });
+export default function WhatsAppPreferencesPage() {
+  const [preferences, setPreferences] = useState<Preferences>({
+    phone_number: "",
+    opted_in: false,
+    order_updates: true,
+    book_updates: false,
+    marketing_updates: false,
+  });
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const [saving, setSaving] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  const [message, setMessage] =
-    useState("");
+  useEffect(() => {
+    loadPreferences();
+  }, []);
 
   async function loadPreferences() {
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
-        "/api/account/whatsapp",
-        {
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/account/whatsapp", {
+        cache: "no-store",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data?.error ||
-            "Unable to load WhatsApp settings."
-        );
+        throw new Error(data?.error || "Unable to load WhatsApp settings.");
       }
 
       if (data?.preferences) {
         setPreferences({
-          phone_number:
-            data.preferences.phone_number ||
-            "",
-          opted_in: Boolean(
-            data.preferences.opted_in
-          ),
-          order_updates:
-            data.preferences.order_updates !==
-            false,
-          book_updates: Boolean(
-            data.preferences.book_updates
-          ),
-          marketing_updates: Boolean(
-            data.preferences.marketing_updates
-          ),
+          phone_number: data.preferences.phone_number ?? "",
+          opted_in: Boolean(data.preferences.opted_in),
+          order_updates: data.preferences.order_updates !== false,
+          book_updates: Boolean(data.preferences.book_updates),
+          marketing_updates: Boolean(data.preferences.marketing_updates),
         });
       }
     } catch (err) {
@@ -83,99 +64,34 @@ export default function WhatsAppSettingsPage() {
     }
   }
 
-  useEffect(() => {
-    loadPreferences();
-  }, []);
-
-  async function savePreferences(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
-
-    const phone = preferences.phone_number.trim();
-
-    if (
-      preferences.opted_in &&
-      !phone
-    ) {
-      setError(
-        "Enter your WhatsApp number before enabling WhatsApp notifications."
-      );
-      return;
-    }
-
+  async function savePreferences() {
     try {
       setSaving(true);
-      setError("");
       setMessage("");
+      setError("");
 
-      const response = await fetch(
-        "/api/account/whatsapp",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            phone_number: phone,
-            opted_in:
-              preferences.opted_in,
-            order_updates:
-              preferences.opted_in &&
-              preferences.order_updates,
-            book_updates:
-              preferences.opted_in &&
-              preferences.book_updates,
-            marketing_updates:
-              preferences.opted_in &&
-              preferences.marketing_updates,
-          }),
-        }
-      );
+      const response = await fetch("/api/account/whatsapp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(preferences),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data?.error ||
-            "Unable to save WhatsApp settings."
+          data?.error || "Unable to save WhatsApp preferences."
         );
       }
 
-      setPreferences((current) => ({
-        ...current,
-        phone_number:
-          data?.preferences
-            ?.phone_number ??
-          phone,
-        opted_in: Boolean(
-          data?.preferences
-            ?.opted_in ??
-            preferences.opted_in
-        ),
-        order_updates:
-          data?.preferences
-            ?.order_updates ??
-          preferences.order_updates,
-        book_updates:
-          data?.preferences
-            ?.book_updates ??
-          preferences.book_updates,
-        marketing_updates:
-          data?.preferences
-            ?.marketing_updates ??
-          preferences.marketing_updates,
-      }));
-
-      setMessage(
-        "WhatsApp preferences saved successfully."
-      );
+      setMessage("Your WhatsApp preferences have been saved.");
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Unable to save WhatsApp settings."
+          : "Unable to save WhatsApp preferences."
       );
     } finally {
       setSaving(false);
@@ -184,241 +100,316 @@ export default function WhatsAppSettingsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl p-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-sm text-slate-500">
+      <main className="min-h-screen bg-slate-50 p-6">
+        <div className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm">
+          <div className="text-4xl">💬</div>
+          <p className="mt-4 font-semibold text-slate-600">
             Loading WhatsApp settings...
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
-      <div>
-        <p className="text-sm font-bold uppercase tracking-wider text-violet-600">
-          Account
-        </p>
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
 
-        <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
-          WhatsApp Settings
-        </h1>
+        <Link
+          href="/account"
+          className="text-sm font-bold text-violet-600 hover:text-violet-700"
+        >
+          ← Back to My Account
+        </Link>
 
-        <p className="mt-2 text-slate-500">
-          Choose which Booknook Kids updates you would like to
-          receive on WhatsApp.
-        </p>
-      </div>
+        <div className="mt-6">
+          <p className="text-sm font-bold uppercase tracking-wider text-violet-600">
+            WhatsApp
+          </p>
 
-      {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
-          {error}
+          <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
+            WhatsApp Preferences
+          </h1>
+
+          <p className="mt-2 max-w-2xl text-slate-500">
+            Connect WhatsApp to receive useful Booknook Kids updates about
+            your purchases, books and other notifications you choose.
+          </p>
         </div>
-      )}
 
-      {message && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
-          {message}
-        </div>
-      )}
+        <div className="mt-8 space-y-6">
 
-      <form
-        onSubmit={savePreferences}
-        className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-      >
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-3xl">
-            💬
-          </div>
+          {/* WhatsApp number */}
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
 
-          <div>
+            <div className="flex items-start gap-4">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-3xl">
+                💬
+              </div>
+
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">
+                  Your WhatsApp Number
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  Enter your WhatsApp number using the international country
+                  code.
+                </p>
+              </div>
+            </div>
+
+            <label
+              htmlFor="whatsapp-number"
+              className="mt-6 block text-sm font-bold text-slate-700"
+            >
+              WhatsApp Number
+            </label>
+
+            <input
+              id="whatsapp-number"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="+1 555 123 4567"
+              value={preferences.phone_number ?? ""}
+              onChange={(event) =>
+                setPreferences((current) => ({
+                  ...current,
+                  phone_number: event.target.value,
+                }))
+              }
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+            />
+
+            <div className="mt-3 rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-700">
+                🌎 International numbers are supported.
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                Include the country code. Examples: +1, +44, +91, +61.
+                Avoid adding spaces, brackets or hyphens if possible.
+              </p>
+            </div>
+
+          </section>
+
+          {/* Main opt-in */}
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">
+                  WhatsApp Notifications
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  Choose whether Booknook Kids may send WhatsApp
+                  notifications to you.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={preferences.opted_in}
+                onClick={() =>
+                  setPreferences((current) => ({
+                    ...current,
+                    opted_in: !current.opted_in,
+                  }))
+                }
+                className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+                  preferences.opted_in
+                    ? "bg-emerald-500"
+                    : "bg-slate-300"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
+                    preferences.opted_in
+                      ? "left-6"
+                      : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {!preferences.opted_in && (
+              <div className="mt-5 rounded-2xl bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-800">
+                  WhatsApp notifications are currently turned off.
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-amber-700">
+                  Turn them on if you want to receive the notification types
+                  selected below.
+                </p>
+              </div>
+            )}
+
+          </section>
+
+          {/* Notification types */}
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+
             <h2 className="text-xl font-extrabold text-slate-900">
-              Connect WhatsApp
+              Choose Your Updates
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-slate-500">
-              Add your WhatsApp number and choose which
-              notifications you want to receive.
+              You control which types of WhatsApp messages you receive.
             </p>
-          </div>
-        </div>
 
-        <div className="mt-8">
-          <label
-            htmlFor="whatsapp-number"
-            className="mb-2 block text-sm font-bold text-slate-700"
+            <div className="mt-6 space-y-4">
+
+              <PreferenceRow
+                icon="🧾"
+                title="Order Updates"
+                description="Important updates about purchases and orders."
+                checked={preferences.order_updates}
+                onChange={(checked) =>
+                  setPreferences((current) => ({
+                    ...current,
+                    order_updates: checked,
+                  }))
+                }
+              />
+
+              <PreferenceRow
+                icon="📚"
+                title="New Book & Book Updates"
+                description="Updates when new books are released or existing books are updated."
+                checked={preferences.book_updates}
+                onChange={(checked) =>
+                  setPreferences((current) => ({
+                    ...current,
+                    book_updates: checked,
+                  }))
+                }
+              />
+
+              <PreferenceRow
+                icon="✨"
+                title="Marketing & Special Updates"
+                description="Optional messages about promotions, special offers and Booknook Kids announcements."
+                checked={preferences.marketing_updates}
+                onChange={(checked) =>
+                  setPreferences((current) => ({
+                    ...current,
+                    marketing_updates: checked,
+                  }))
+                }
+              />
+
+            </div>
+
+          </section>
+
+          {/* Information */}
+          <section className="rounded-3xl border border-violet-100 bg-violet-50 p-6">
+
+            <h2 className="text-lg font-extrabold text-slate-900">
+              🔐 Your Choice & Privacy
+            </h2>
+
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+              <li>
+                • WhatsApp messages are sent only according to the preferences
+                you choose.
+              </li>
+
+              <li>
+                • Your WhatsApp number is used for Booknook Kids
+                communications you have enabled.
+              </li>
+
+              <li>
+                • You can change your preferences at any time.
+              </li>
+
+              <li>
+                • WhatsApp messages will not contain permanent private ebook
+                download links.
+              </li>
+            </ul>
+
+          </section>
+
+          {/* Messages */}
+          {message && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
+              ✅ {message}
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              ⚠️ {error}
+            </div>
+          )}
+
+          {/* Save */}
+          <button
+            type="button"
+            onClick={savePreferences}
+            disabled={saving}
+            className="w-full rounded-2xl bg-violet-600 px-6 py-4 text-base font-extrabold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            WhatsApp Number
-          </label>
+            {saving ? "Saving Preferences..." : "Save WhatsApp Preferences"}
+          </button>
 
-          <input
-            id="whatsapp-number"
-            type="tel"
-            value={preferences.phone_number}
-            onChange={(event) =>
-              setPreferences((current) => ({
-                ...current,
-                phone_number:
-                  event.target.value,
-              }))
-            }
-            placeholder="+91 98765 43210"
-            autoComplete="tel"
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
-          />
-
-          <p className="mt-2 text-xs text-slate-500">
-            Include your country code, for example +91 for India.
-          </p>
         </div>
-
-        <div className="mt-8 space-y-4">
-          <PreferenceToggle
-            checked={preferences.opted_in}
-            onChange={(checked) =>
-              setPreferences((current) => ({
-                ...current,
-                opted_in: checked,
-              }))
-            }
-            title="Allow WhatsApp notifications"
-            description="I agree to receive Booknook Kids WhatsApp messages according to the options below."
-          />
-
-          <div
-            className={`space-y-3 border-t border-slate-200 pt-5 ${
-              preferences.opted_in
-                ? ""
-                : "opacity-50"
-            }`}
-          >
-            <PreferenceToggle
-              checked={
-                preferences.order_updates
-              }
-              disabled={
-                !preferences.opted_in
-              }
-              onChange={(checked) =>
-                setPreferences(
-                  (current) => ({
-                    ...current,
-                    order_updates:
-                      checked,
-                  })
-                )
-              }
-              title="Order updates"
-              description="Receive purchase confirmations and information about accessing your books."
-            />
-
-            <PreferenceToggle
-              checked={
-                preferences.book_updates
-              }
-              disabled={
-                !preferences.opted_in
-              }
-              onChange={(checked) =>
-                setPreferences(
-                  (current) => ({
-                    ...current,
-                    book_updates:
-                      checked,
-                  })
-                )
-              }
-              title="New book and book updates"
-              description="Receive notifications when new books launch or your purchased books are updated."
-            />
-
-            <PreferenceToggle
-              checked={
-                preferences.marketing_updates
-              }
-              disabled={
-                !preferences.opted_in
-              }
-              onChange={(checked) =>
-                setPreferences(
-                  (current) => ({
-                    ...current,
-                    marketing_updates:
-                      checked,
-                  })
-                )
-              }
-              title="Offers and marketing"
-              description="Receive occasional Booknook Kids promotions, offers and announcements."
-            />
-          </div>
-        </div>
-
-        <div className="mt-8 rounded-2xl bg-slate-50 p-4">
-          <p className="text-xs leading-5 text-slate-500">
-            You can change these preferences at any time. Your
-            WhatsApp number will be used only for the notification
-            types you choose. Booknook Kids should send messages
-            through approved WhatsApp Business templates where
-            required.
-          </p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="mt-6 w-full rounded-xl bg-violet-600 px-5 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {saving
-            ? "Saving..."
-            : "Save WhatsApp Settings"}
-        </button>
-      </form>
-    </div>
+      </div>
+    </main>
   );
 }
 
-function PreferenceToggle({
-  checked,
-  disabled = false,
-  onChange,
+function PreferenceRow({
+  icon,
   title,
   description,
+  checked,
+  onChange,
 }: {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: (checked: boolean) => void;
+  icon: string;
   title: string;
   description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
 }) {
   return (
-    <label
-      className={`flex cursor-pointer items-start gap-4 rounded-2xl border border-slate-200 p-4 transition ${
-        disabled
-          ? "cursor-not-allowed"
-          : "hover:border-violet-200 hover:bg-violet-50/30"
-      }`}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(event) =>
-          onChange(event.target.checked)
-        }
-        className="mt-1 h-5 w-5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
-      />
+    <div className="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 p-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="text-2xl">{icon}</div>
 
-      <span>
-        <span className="block font-bold text-slate-800">
-          {title}
-        </span>
+        <div>
+          <h3 className="font-bold text-slate-900">
+            {title}
+          </h3>
 
-        <span className="mt-1 block text-sm leading-5 text-slate-500">
-          {description}
-        </span>
-      </span>
-    </label>
+          <p className="mt-1 text-sm leading-5 text-slate-500">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`relative mt-1 h-7 w-12 shrink-0 rounded-full transition ${
+          checked ? "bg-violet-600" : "bg-slate-300"
+        }`}
+      >
+        <span
+          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
+            checked ? "left-6" : "left-1"
+          }`}
+        />
+      </button>
+    </div>
   );
 }
