@@ -26,10 +26,6 @@ declare global {
       modal?: {
         ondismiss?: () => void;
       };
-      prefill?: {
-        name?: string;
-        email?: string;
-      };
       theme?: {
         color?: string;
       };
@@ -60,12 +56,14 @@ export function CheckoutButton({
       );
 
       if (existing) {
-        existing.addEventListener("load", () =>
-          resolve(Boolean(window.Razorpay))
-        );
-        existing.addEventListener("error", () =>
-          resolve(false)
-        );
+        existing.addEventListener("load", () => {
+          resolve(Boolean(window.Razorpay));
+        });
+
+        existing.addEventListener("error", () => {
+          resolve(false);
+        });
+
         return;
       }
 
@@ -76,10 +74,13 @@ export function CheckoutButton({
 
       script.async = true;
 
-      script.onload = () =>
+      script.onload = () => {
         resolve(Boolean(window.Razorpay));
+      };
 
-      script.onerror = () => resolve(false);
+      script.onerror = () => {
+        resolve(false);
+      };
 
       document.body.appendChild(script);
     });
@@ -123,6 +124,15 @@ export function CheckoutButton({
               `/checkout?bookId=${bookId}`
             )}`
           );
+
+          return;
+        }
+
+        if (
+          response.status === 409 &&
+          data?.alreadyPurchased
+        ) {
+          router.push("/library");
           return;
         }
 
@@ -132,15 +142,54 @@ export function CheckoutButton({
         );
       }
 
+      const razorpayOrderId =
+        data?.razorpay?.orderId;
+
+      const amount =
+        Number(data?.razorpay?.amount);
+
+      const currency =
+        data?.razorpay?.currency ||
+        "INR";
+
+      const orderId =
+        data?.order?.id;
+
+      /*
+       * The public Razorpay key is intentionally
+       * returned by the server. The secret key is
+       * never sent to the browser.
+       */
       const key =
         data?.keyId ||
-        data?.key ||
+        data?.razorpayKeyId ||
         process.env
           .NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
       if (!key) {
         throw new Error(
           "Razorpay configuration is missing."
+        );
+      }
+
+      if (!razorpayOrderId) {
+        throw new Error(
+          "Razorpay order was not created correctly."
+        );
+      }
+
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+        throw new Error(
+          "Invalid payment amount."
+        );
+      }
+
+      if (!orderId) {
+        throw new Error(
+          "Local order was not created correctly."
         );
       }
 
@@ -152,22 +201,36 @@ export function CheckoutButton({
 
       const options = {
         key,
-        amount: Number(data.amount),
-        currency: data.currency || "INR",
+
+        amount,
+
+        currency,
+
         name: "Booknook Kids",
+
         description:
-          title || "Booknook Kids ebook",
-        order_id: data.razorpayOrderId,
-        handler: async (payment: {
-          razorpay_order_id: string;
-          razorpay_payment_id: string;
-          razorpay_signature: string;
-        }) => {
+          title ||
+          "Booknook Kids ebook",
+
+        order_id:
+          razorpayOrderId,
+
+        handler: async (
+          payment: {
+            razorpay_order_id: string;
+            razorpay_payment_id: string;
+            razorpay_signature: string;
+          }
+        ) => {
           try {
             setMessage(
               "Verifying your payment…"
             );
 
+            /*
+             * These names intentionally match
+             * Razorpay's response and the API.
+             */
             const verifyResponse =
               await fetch(
                 "/api/checkout/verify",
@@ -178,13 +241,13 @@ export function CheckoutButton({
                       "application/json",
                   },
                   body: JSON.stringify({
-                    orderId:
-                      data.orderId,
-                    razorpayOrderId:
+                    razorpay_order_id:
                       payment.razorpay_order_id,
-                    razorpayPaymentId:
+
+                    razorpay_payment_id:
                       payment.razorpay_payment_id,
-                    razorpaySignature:
+
+                    razorpay_signature:
                       payment.razorpay_signature,
                   }),
                 }
@@ -206,37 +269,52 @@ export function CheckoutButton({
 
             router.push(
               `/library?payment=success&order=${encodeURIComponent(
-                data.orderId
+                orderId
               )}`
             );
           } catch (error) {
+            console.error(
+              "Payment verification error:",
+              error
+            );
+
             setMessage(
               error instanceof Error
                 ? error.message
                 : "Payment verification failed."
             );
-          } finally {
+
             setLoading(false);
           }
         },
+
         modal: {
           ondismiss: () => {
             setLoading(false);
+
             setMessage(
               "Payment window closed."
             );
           },
         },
+
         theme: {
           color: "#6366f1",
         },
       };
 
       const razorpay =
-        new window.Razorpay(options);
+        new window.Razorpay(
+          options
+        );
 
       razorpay.open();
     } catch (error) {
+      console.error(
+        "Checkout error:",
+        error
+      );
+
       setMessage(
         error instanceof Error
           ? error.message
@@ -271,3 +349,5 @@ export function CheckoutButton({
     </div>
   );
 }
+
+export default CheckoutButton;
