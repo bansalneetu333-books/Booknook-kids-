@@ -1,18 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth";
-import { getUserLibrary } from "@/lib/library";
+import { getMyLibrary } from "@/lib/library";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 
 export default async function LibraryPage() {
-  const { user } = await requireUser();
+  const books = await getMyLibrary();
 
-  if (!user) {
-    redirect("/login");
+  if (books === null) {
+    redirect("/login?next=/library");
   }
-
-  const books = await getUserLibrary(user.id);
 
   return (
     <>
@@ -55,8 +52,11 @@ export default async function LibraryPage() {
             </div>
           ) : (
             <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {books.map((book) => (
-                <BookCard key={book.id} book={book} />
+              {books.map((item) => (
+                <BookCard
+                  key={item.id}
+                  book={item.books}
+                />
               ))}
             </div>
           )}
