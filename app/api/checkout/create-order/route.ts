@@ -299,3 +299,92 @@ export async function POST(request: Request) {
     } = await supabase
       .from("orders")
       .update({
+        razorpay_order_id:
+          razorpayOrder.id,
+        updated_at:
+          new Date().toISOString(),
+      })
+      .eq(
+        "id",
+        localOrder.id
+      )
+      .select(
+        `
+          id,
+          razorpay_order_id,
+          status,
+          amount,
+          currency
+        `
+      )
+      .single();
+
+    if (
+      updateError ||
+      !updatedOrder
+    ) {
+      console.error(
+        "Unable to update local order:",
+        updateError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Razorpay order was created, but the local order could not be updated. Please contact support before trying again.",
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+
+      order: {
+        id: updatedOrder.id,
+        razorpayOrderId:
+          updatedOrder.razorpay_order_id,
+        amount:
+          Number(
+            updatedOrder.amount
+          ),
+        currency:
+          updatedOrder.currency,
+        status:
+          updatedOrder.status,
+      },
+
+      razorpay: {
+        orderId:
+          razorpayOrder.id,
+        amount:
+          razorpayOrder.amount,
+        currency:
+          razorpayOrder.currency,
+      },
+
+      book: {
+        id: book.id,
+        title: book.title,
+        price,
+        currency:
+          book.currency || "INR",
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Checkout create-order error:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to create checkout order.",
+      },
+      { status: 500 }
+    );
+  }
+}
