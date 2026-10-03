@@ -1,328 +1,205 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import { createAdminClient } from "@/lib/admin";
+import { verifyWebhookSignature } from "@/lib/razorpay";
 
-export const runtime = "nodejs";
-
-function verifyWebhookSignature(
-  body: string,
-  signature: string,
-  secret: string
-) {
-  const expectedSignature = crypto
-    .createHmac("sha256", secret)
-    .update(body)
-    .digest("hex");
-
-  const expectedBuffer = Buffer.from(expectedSignature, "utf8");
-  const receivedBuffer = Buffer.from(signature, "utf8");
-
-  if (expectedBuffer.length !== receivedBuffer.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
-}
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-
-    if (!webhookSecret) {
-      console.error("Missing RAZORPAY_WEBHOOK_SECRET.");
-
-      return NextResponse.json(
-        { error: "Webhook is not configured." },
-        { status: 500 }
-      );
-    }
-
-    // IMPORTANT:
-    // Read the raw request body before parsing JSON.
-    // Razorpay signature verification requires the exact raw payload.
+    // Webhook signatures must be calculated from the
+    // exact raw request body.
     const rawBody = await request.text();
 
-    const signature = request.headers.get(
-      "x-razorpay-signature"
-    );
+    const signature =
+      request.headers.get("x-razorpay-signature");
 
     if (!signature) {
       return NextResponse.json(
-        { error: "Missing Razorpay webhook signature." },
+        { error: "Missing Razorpay signature." },
         { status: 400 }
       );
     }
 
-    // ------------------------------------------------------------
-    // 1. Verify Razorpay webhook signature
-    // ------------------------------------------------------------
-    const validSignature = verifyWebhookSignature(
-      rawBody,
-      signature,
-      webhookSecret
-    );
+    const validSignature =
+      verifyWebhookSignature(rawBody, signature);
 
     if (!validSignature) {
-      console.warn("Invalid Razorpay webhook signature.");
-
       return NextResponse.json(
         { error: "Invalid webhook signature." },
         { status: 400 }
       );
     }
 
-    // ------------------------------------------------------------
-    // 2. Parse verified payload
-    // ------------------------------------------------------------
-    let payload: any;
-
-    try {
-      payload = JSON.parse(rawBody);
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid webhook payload." },
-        { status: 400 }
-      );
-    }
+    const payload = JSON.parse(rawBody);
 
     const event = payload?.event;
 
-    if (!event) {
-      return NextResponse.json(
-        { error: "Webhook event is missing." },
-        { status: 400 }
-      );
-    }
+    const paymentEntity =
+      payload?.payload?.payment?.entity;
 
-    // ------------------------------------------------------------
-    // 3. Handle successful payment
-    // ------------------------------------------------------------
-    if (event === "payment.captured" || event === "order.paid") {
-      const paymentEntity =
-        payload?.payload?.payment?.entity;
+    const orderEntity =
+      payload?.payload?.order?.entity;
 
-      const orderEntity =
-        payload?.payload?.order?.entity;
+    /*
+     * Razorpay normally sends the payment/order
+     * information inside payload.
+     *
+     * We support the main successful-payment event
+     * and safely acknowledge other verified events.
+     */
+    if (
+      event === "payment.captured" ||
+      event === "order.paid"
+    ) {
+      const razorpayOrderId =
+        paymentEntity?.order_id ??
+        orderEntity?.id;
 
       const razorpayPaymentId =
-        typeof paymentEntity?.id === "string"
-          ? paymentEntity.id
-          : "";
-
-      const razorpayOrderId =
-        typeof paymentEntity?.order_id === "string"
-          ? paymentEntity.order_id
-          : typeof orderEntity?.id === "string"
-            ? orderEntity.id
-            : "";
+        paymentEntity?.id ?? null;
 
       if (!razorpayOrderId) {
-        console.warn(
-          "Razorpay webhook does not contain an order ID."
-        );
-
-        return NextResponse.json({
-          ok: true,
-          ignored: true,
-          reason: "Missing Razorpay order ID.",
-        });
-      }
-
-      const supabase = createAdminClient();
-
-      // Find our local order.
-      const { data: order, error: orderError } =
-        await supabase
-          .from("orders")
-          .select(
-            "id,user_id,razorpay_order_id,razorpay_payment_id,status,amount,currency"
-          )
-          .eq("razorpay_order_id", razorpayOrderId)
-          .maybeSingle();
-
-      if (orderError) {
         console.error(
-          "Razorpay webhook order lookup error:",
-          orderError
+          "Razorpay webhook did not contain an order ID."
         );
 
         return NextResponse.json(
-          { error: "Unable to find local order." },
+          {
+            error:
+              "Razorpay order ID missing.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const admin =
+        createAdminClient();
+
+      const {
+        data: order,
+        error: findError,
+      } = await admin
+        .from("orders")
+        .select(
+          "id,user_id,status,razorpay_order_id,razorpay_payment_id"
+        )
+        .eq(
+          "razorpay_order_id",
+          razorpayOrderId
+        )
+        .maybeSingle();
+
+      if (findError) {
+        console.error(
+          "Webhook order lookup error:",
+          findError
+        );
+
+        return NextResponse.json(
+          {
+            error:
+              "Unable to look up order.",
+          },
           { status: 500 }
         );
       }
 
-      // The webhook may be received for an order created
-      // outside this application.
+      /*
+       * The webhook can arrive before the local
+       * order has been found/created in some unusual
+       * retry or configuration scenarios.
+       *
+       * Return 200 for a verified webhook so Razorpay
+       * does not repeatedly retry an event that this
+       * application cannot associate with an order.
+       */
       if (!order) {
         console.warn(
-          "Razorpay order not found in BookNook:",
+          "Verified Razorpay webhook received for unknown order:",
           razorpayOrderId
         );
 
         return NextResponse.json({
-          ok: true,
-          ignored: true,
-          reason: "Order not found.",
+          received: true,
+          matched: false,
         });
       }
 
-      // ----------------------------------------------------------
-      // 4. Idempotency
-      // ----------------------------------------------------------
+      /*
+       * Idempotency:
+       * If the order is already paid, do not perform
+       * another update.
+       */
       if (order.status === "paid") {
         return NextResponse.json({
-          ok: true,
+          received: true,
           alreadyProcessed: true,
           orderId: order.id,
         });
       }
 
-      // ----------------------------------------------------------
-      // 5. Mark order as paid
-      // ----------------------------------------------------------
-      const updateData: {
-        status: string;
-        updated_at: string;
-        razorpay_payment_id?: string;
-      } = {
-        status: "paid",
-        updated_at: new Date().toISOString(),
-      };
-
-      if (razorpayPaymentId) {
-        updateData.razorpay_payment_id =
-          razorpayPaymentId;
-      }
-
-      const { error: updateError } = await supabase
+      const {
+        data: updatedOrder,
+        error: updateError,
+      } = await admin
         .from("orders")
-        .update(updateData)
-        .eq("id", order.id);
+        .update({
+          status: "paid",
+          razorpay_payment_id:
+            razorpayPaymentId ??
+            order.razorpay_payment_id,
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq("id", order.id)
+        .select(
+          "id,status,razorpay_order_id,razorpay_payment_id"
+        )
+        .single();
 
       if (updateError) {
         console.error(
-          "Razorpay webhook order update error:",
+          "Webhook order update error:",
           updateError
         );
 
         return NextResponse.json(
-          { error: "Unable to update local order." },
+          {
+            error:
+              "Unable to update order.",
+          },
           { status: 500 }
         );
       }
 
       return NextResponse.json({
-        ok: true,
-        processed: true,
-        event,
-        orderId: order.id,
+        received: true,
+        updated: true,
+        order: updatedOrder,
       });
     }
 
-    // ------------------------------------------------------------
-    // 6. Handle failed payment
-    // ------------------------------------------------------------
-    if (event === "payment.failed") {
-      const paymentEntity =
-        payload?.payload?.payment?.entity;
-
-      const razorpayOrderId =
-        typeof paymentEntity?.order_id === "string"
-          ? paymentEntity.order_id
-          : "";
-
-      if (!razorpayOrderId) {
-        return NextResponse.json({
-          ok: true,
-          ignored: true,
-          reason: "Missing Razorpay order ID.",
-        });
-      }
-
-      const supabase = createAdminClient();
-
-      const { data: order, error: orderError } =
-        await supabase
-          .from("orders")
-          .select("id,status")
-          .eq("razorpay_order_id", razorpayOrderId)
-          .maybeSingle();
-
-      if (orderError) {
-        console.error(
-          "Razorpay failed payment lookup error:",
-          orderError
-        );
-
-        return NextResponse.json(
-          { error: "Unable to find local order." },
-          { status: 500 }
-        );
-      }
-
-      if (!order) {
-        return NextResponse.json({
-          ok: true,
-          ignored: true,
-          reason: "Order not found.",
-        });
-      }
-
-      // Never turn a successfully paid order back into failed.
-      if (order.status === "paid") {
-        return NextResponse.json({
-          ok: true,
-          alreadyPaid: true,
-        });
-      }
-
-      const { error: failedUpdateError } = await supabase
-        .from("orders")
-        .update({
-          status: "failed",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", order.id)
-        .neq("status", "paid");
-
-      if (failedUpdateError) {
-        console.error(
-          "Razorpay failed payment update error:",
-          failedUpdateError
-        );
-
-        return NextResponse.json(
-          { error: "Unable to update failed payment." },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({
-        ok: true,
-        processed: true,
-        event,
-        orderId: order.id,
-      });
-    }
-
-    // ------------------------------------------------------------
-    // 7. Other Razorpay events
-    // ------------------------------------------------------------
+    /*
+     * Other verified Razorpay events are acknowledged
+     * without changing the order.
+     */
     return NextResponse.json({
-      ok: true,
-      ignored: true,
-      event,
+      received: true,
+      processed: false,
+      event: event ?? null,
     });
   } catch (error) {
-    console.error("Razorpay webhook error:", error);
+    console.error(
+      "Razorpay webhook error:",
+      error
+    );
 
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
-            : "Unable to process Razorpay webhook.",
+            : "Webhook processing failed.",
       },
       { status: 500 }
     );
