@@ -1,65 +1,114 @@
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth";
-import { getUserPurchases } from "@/lib/orders";
+import Link from "next/link";
+
+import { getPurchaseHistory } from "@/lib/library";
 import { SiteHeader } from "@/components/site-header";
 
-export default async function PurchasesPage() {
-  const { user } = await requireUser();
+export const dynamic = "force-dynamic";
 
-  if (!user) {
+export default async function PurchasesPage() {
+  const purchases = await getPurchaseHistory();
+
+  if (!purchases) {
     redirect("/login");
   }
 
-  const purchases = await getUserPurchases(user.id);
-
   return (
-    <>
+    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-purple-50">
       <SiteHeader />
 
-      <main className="min-h-screen bg-slate-50 px-4 py-8">
-        <div className="mx-auto max-w-4xl">
-          <h1 className="text-4xl font-black">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <Link
+            href="/account"
+            className="text-sm font-semibold text-sky-600 hover:text-sky-700"
+          >
+            ← Back to account
+          </Link>
+
+          <h1 className="mt-4 text-3xl font-extrabold text-slate-900">
             Purchase History
           </h1>
 
-          <div className="mt-7 space-y-3">
-            {purchases.length === 0 ? (
-              <div className="rounded-3xl bg-white p-8 text-center shadow-sm">
-                <p className="text-4xl">🧾</p>
+          <p className="mt-2 text-slate-600">
+            Books you have purchased through BookNook Kids.
+          </p>
+        </div>
 
-                <p className="mt-3 font-bold text-slate-600">
-                  No purchases yet.
-                </p>
-              </div>
-            ) : (
-              purchases.map((purchase) => (
-                <div
-                  key={purchase.id}
-                  className="rounded-3xl bg-white p-5 shadow-sm"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-black">
-                        {purchase.book_title}
-                      </p>
+        {purchases.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <div className="text-5xl">📚</div>
 
+            <h2 className="mt-4 text-xl font-bold text-slate-900">
+              No purchases yet
+            </h2>
+
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+              Your purchased books will appear here after a successful
+              payment.
+            </p>
+
+            <Link
+              href="/library"
+              className="mt-6 inline-flex rounded-full bg-sky-600 px-6 py-3 font-bold text-white hover:bg-sky-700"
+            >
+              Browse My Library
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {purchases.map((purchase: any) => (
+              <div
+                key={purchase.id}
+                className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      Purchase
+                    </p>
+
+                    <p className="mt-1 font-bold text-slate-900">
+                      {purchase.book?.title ||
+                        purchase.title ||
+                        "Book purchase"}
+                    </p>
+
+                    {purchase.createdAt && (
                       <p className="mt-1 text-sm text-slate-500">
                         {new Date(
-                          purchase.created_at
-                        ).toLocaleDateString()}
+                          purchase.createdAt
+                        ).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </p>
-                    </div>
+                    )}
+                  </div>
 
-                    <p className="font-black text-indigo-600">
-                      ₹{purchase.amount}
-                    </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {purchase.amount !== undefined && (
+                      <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">
+                        ₹{Number(purchase.amount).toFixed(2)}
+                      </span>
+                    )}
+
+                    {purchase.book?.slug && (
+                      <Link
+                        href={`/books/${purchase.book.slug}`}
+                        className="rounded-full bg-sky-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-sky-700"
+                      >
+                        View Book
+                      </Link>
+                    )}
                   </div>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
-        </div>
-      </main>
-    </>
+        )}
+      </div>
+    </main>
   );
 }
