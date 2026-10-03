@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 
 type Version = {
   id: string;
+  version: string | null;
   version_number: string | null;
   file_type: string | null;
   file_size: number | null;
   active: boolean | null;
+  is_current: boolean | null;
   created_at: string;
 };
 
@@ -15,14 +17,24 @@ type Props = {
   bookId: string;
 };
 
-export default function VersionManager({ bookId }: Props) {
+export default function VersionManager({
+  bookId,
+}: Props) {
   const [versions, setVersions] = useState<Version[]>([]);
-  const [versionNumber, setVersionNumber] = useState("");
+  const [version, setVersion] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingVersions, setLoadingVersions] = useState(true);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [loadingVersions, setLoadingVersions] =
+    useState(true);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [error, setError] =
+    useState("");
 
   async function loadVersions() {
     try {
@@ -30,7 +42,9 @@ export default function VersionManager({ bookId }: Props) {
       setError("");
 
       const response = await fetch(
-        `/api/admin/books/version?bookId=${encodeURIComponent(bookId)}`,
+        `/api/admin/books/version?bookId=${encodeURIComponent(
+          bookId
+        )}`,
         {
           cache: "no-store",
         }
@@ -39,13 +53,22 @@ export default function VersionManager({ bookId }: Props) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "Unable to load versions.");
+        throw new Error(
+          data?.error ||
+            "Unable to load versions."
+        );
       }
 
-      setVersions(Array.isArray(data?.versions) ? data.versions : []);
+      setVersions(
+        Array.isArray(data?.versions)
+          ? data.versions
+          : []
+      );
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to load versions."
+        err instanceof Error
+          ? err.message
+          : "Unable to load versions."
       );
     } finally {
       setLoadingVersions(false);
@@ -53,70 +76,103 @@ export default function VersionManager({ bookId }: Props) {
   }
 
   useEffect(() => {
-    loadVersions();
+    void loadVersions();
   }, [bookId]);
 
-  async function handleUpload(event: React.FormEvent<HTMLFormElement>) {
+  async function handleUpload(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
-    if (!versionNumber.trim()) {
-      setError("Enter a version number.");
+    setError("");
+    setMessage("");
+
+    const cleanVersion =
+      version.trim();
+
+    if (!cleanVersion) {
+      setError(
+        "Enter a version number."
+      );
       return;
     }
 
     if (!file) {
-      setError("Select an EPUB or PDF file.");
+      setError(
+        "Select an EPUB file."
+      );
       return;
     }
 
-    const allowedTypes = [
-      "application/pdf",
-      "application/epub+zip",
-    ];
+    const fileName =
+      file.name.toLowerCase();
 
-    const fileName = file.name.toLowerCase();
-
-    const validExtension =
-      fileName.endsWith(".pdf") || fileName.endsWith(".epub");
-
-    if (!validExtension && !allowedTypes.includes(file.type)) {
-      setError("Only EPUB and PDF files are supported.");
+    if (!fileName.endsWith(".epub")) {
+      setError(
+        "Only EPUB files are supported for book versions."
+      );
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      setError("The ebook file must be 50 MB or smaller.");
+    if (
+      file.size <= 0 ||
+      file.size > 50 * 1024 * 1024
+    ) {
+      setError(
+        "The EPUB file must be between 1 byte and 50 MB."
+      );
       return;
     }
 
     try {
       setLoading(true);
-      setError("");
-      setMessage("");
 
       const formData = new FormData();
-      formData.append("bookId", bookId);
-      formData.append("versionNumber", versionNumber.trim());
-      formData.append("file", file);
 
-      const response = await fetch("/api/admin/books/version", {
-        method: "POST",
-        body: formData,
-      });
+      formData.append(
+        "bookId",
+        bookId
+      );
 
-      const data = await response.json();
+      formData.append(
+        "version",
+        cleanVersion
+      );
+
+      formData.append(
+        "epub",
+        file
+      );
+
+      const response = await fetch(
+        "/api/admin/books/version",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "Unable to upload the version.");
+        throw new Error(
+          data?.error ||
+            "Unable to upload the version."
+        );
       }
 
-      setMessage("New book version uploaded successfully.");
-      setVersionNumber("");
+      setMessage(
+        "New book version uploaded successfully."
+      );
+
+      setVersion("");
       setFile(null);
 
-      const input = document.getElementById(
-        "version-file"
-      ) as HTMLInputElement | null;
+      const input =
+        document.getElementById(
+          "version-file"
+        ) as HTMLInputElement | null;
 
       if (input) {
         input.value = "";
@@ -134,7 +190,9 @@ export default function VersionManager({ bookId }: Props) {
     }
   }
 
-  async function activateVersion(versionId: string) {
+  async function activateVersion(
+    versionId: string
+  ) {
     try {
       setLoading(true);
       setError("");
@@ -145,7 +203,8 @@ export default function VersionManager({ bookId }: Props) {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
           body: JSON.stringify({
             bookId,
@@ -154,13 +213,20 @@ export default function VersionManager({ bookId }: Props) {
         }
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || "Unable to activate version.");
+        throw new Error(
+          data?.error ||
+            "Unable to activate version."
+        );
       }
 
-      setMessage("Book version activated successfully.");
+      setMessage(
+        "Book version activated successfully."
+      );
+
       await loadVersions();
     } catch (err) {
       setError(
@@ -173,26 +239,35 @@ export default function VersionManager({ bookId }: Props) {
     }
   }
 
-  function formatFileSize(size: number | null) {
-    if (!size || size <= 0) return "—";
-
-    if (size < 1024 * 1024) {
-      return `${Math.round(size / 1024)} KB`;
+  function formatFileSize(
+    size: number | null
+  ) {
+    if (!size || size <= 0) {
+      return "—";
     }
 
-    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+    if (size < 1024 * 1024) {
+      return `${Math.round(
+        size / 1024
+      )} KB`;
+    }
+
+    return `${(
+      size /
+      (1024 * 1024)
+    ).toFixed(1)} MB`;
   }
 
   return (
     <div className="space-y-6">
+
       <div>
         <h2 className="text-xl font-extrabold text-slate-900">
           Book Versions
         </h2>
 
         <p className="mt-1 text-sm text-slate-500">
-          Upload a new EPUB or PDF version and choose which version customers
-          receive.
+          Upload a new EPUB version and choose which version customers receive.
         </p>
       </div>
 
@@ -201,6 +276,7 @@ export default function VersionManager({ bookId }: Props) {
         className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
       >
         <div className="grid gap-5 md:grid-cols-2">
+
           <div>
             <label
               htmlFor="version-number"
@@ -212,8 +288,12 @@ export default function VersionManager({ bookId }: Props) {
             <input
               id="version-number"
               type="text"
-              value={versionNumber}
-              onChange={(event) => setVersionNumber(event.target.value)}
+              value={version}
+              onChange={(event) =>
+                setVersion(
+                  event.target.value
+                )
+              }
               placeholder="Example: 1.1"
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
             />
@@ -224,23 +304,27 @@ export default function VersionManager({ bookId }: Props) {
               htmlFor="version-file"
               className="mb-2 block text-sm font-bold text-slate-700"
             >
-              EPUB / PDF File
+              EPUB File
             </label>
 
             <input
               id="version-file"
               type="file"
-              accept=".epub,.pdf,application/epub+zip,application/pdf"
+              accept=".epub,application/epub+zip"
               onChange={(event) =>
-                setFile(event.target.files?.[0] ?? null)
+                setFile(
+                  event.target.files?.[0] ??
+                    null
+                )
               }
               className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"
             />
 
             <p className="mt-2 text-xs text-slate-500">
-              Maximum file size: 50 MB.
+              EPUB only • Maximum 50 MB.
             </p>
           </div>
+
         </div>
 
         <button
@@ -248,7 +332,9 @@ export default function VersionManager({ bookId }: Props) {
           disabled={loading}
           className="mt-5 rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Uploading..." : "Upload New Version"}
+          {loading
+            ? "Uploading..."
+            : "Upload New Version"}
         </button>
       </form>
 
@@ -265,6 +351,7 @@ export default function VersionManager({ bookId }: Props) {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-slate-200">
+
         {loadingVersions ? (
           <div className="p-6 text-sm text-slate-500">
             Loading versions...
@@ -275,56 +362,88 @@ export default function VersionManager({ bookId }: Props) {
           </div>
         ) : (
           <div className="divide-y divide-slate-200">
-            {versions.map((version) => (
-              <div
-                key={version.id}
-                className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-extrabold text-slate-900">
-                      Version {version.version_number || "—"}
-                    </h3>
 
-                    {version.active && (
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                        Active
-                      </span>
-                    )}
-                  </div>
+            {versions.map(
+              (item) => {
+                const displayVersion =
+                  item.version_number ||
+                  item.version ||
+                  "—";
 
-                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <span>
-                      Type: {(version.file_type || "unknown").toUpperCase()}
-                    </span>
-
-                    <span>
-                      Size: {formatFileSize(version.file_size)}
-                    </span>
-
-                    <span>
-                      Added:{" "}
-                      {version.created_at
-                        ? new Date(version.created_at).toLocaleDateString()
-                        : "—"}
-                    </span>
-                  </div>
-                </div>
-
-                {!version.active && (
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => activateVersion(version.id)}
-                    className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between"
                   >
-                    Make Active
-                  </button>
-                )}
-              </div>
-            ))}
+
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+
+                        <h3 className="font-extrabold text-slate-900">
+                          Version{" "}
+                          {displayVersion}
+                        </h3>
+
+                        {item.active && (
+                          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                            Active
+                          </span>
+                        )}
+
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+
+                        <span>
+                          Type:{" "}
+                          {(
+                            item.file_type ||
+                            "unknown"
+                          ).toUpperCase()}
+                        </span>
+
+                        <span>
+                          Size:{" "}
+                          {formatFileSize(
+                            item.file_size
+                          )}
+                        </span>
+
+                        <span>
+                          Added:{" "}
+                          {item.created_at
+                            ? new Date(
+                                item.created_at
+                              ).toLocaleDateString()
+                            : "—"}
+                        </span>
+
+                      </div>
+                    </div>
+
+                    {!item.active && (
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() =>
+                          activateVersion(
+                            item.id
+                          )
+                        }
+                        className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-bold text-violet-700 transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Make Active
+                      </button>
+                    )}
+
+                  </div>
+                );
+              }
+            )}
+
           </div>
         )}
+
       </div>
     </div>
   );
