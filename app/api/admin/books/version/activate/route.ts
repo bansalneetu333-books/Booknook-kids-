@@ -1,199 +1,188 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 
-export const runtime = "nodejs";
-
-type ActivatePayload = {
-  versionId?: string;
-  bookId?: string;
-};
-
-function cleanString(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
 export async function POST(request: Request) {
   try {
-    const { supabase, user, isAdmin } = await requireAdmin();
+    const { isAdmin } = await requireAdmin();
 
-    if (!user || !isAdmin) {
+    if (!isAdmin) {
       return NextResponse.json(
         { error: "Admin access required." },
         { status: 403 }
       );
     }
 
-    const body = (await request.json()) as ActivatePayload;
+    const body = await request.json();
 
-    const versionId = cleanString(body.versionId);
-    const bookId = cleanString(body.bookId);
+    const bookId =
+      typeof body.bookId === "string"
+        ? body.bookId.trim()
+        : "";
 
-    if (!versionId) {
+    const versionId =
+      typeof body.versionId === "string"
+        ? body.versionId.trim()
+        : "";
+
+    if (!bookId || !versionId) {
       return NextResponse.json(
-        { error: "Version ID is required." },
+        {
+          error:
+            "Book ID and version ID are required.",
+        },
         { status: 400 }
       );
     }
 
-    if (!bookId) {
-      return NextResponse.json(
-        { error: "Book ID is required." },
-        { status: 400 }
-      );
-    }
+    const { createAdminClient } =
+      await import("@/lib/admin");
+
+    const admin = createAdminClient();
 
     /*
-     * Verify that the requested version belongs
-     * to the requested book.
+     * First make sure the version actually
+     * belongs to the requested book.
      */
-    const { data: version, error: versionError } =
-      await supabase
+    const { data: version, error: findError } =
+      await admin
         .from("book_versions")
         .select(
-          "id,book_id,version,version_number,epub_path,file_path,file_size,active,is_current"
+          `
+            id,
+            book_id,
+            file_path,
+            epub_path
+          `
         )
         .eq("id", versionId)
         .eq("book_id", bookId)
         .maybeSingle();
 
-    if (versionError) {
+    if (findError) {
       console.error(
-        "Version lookup error:",
-        versionError
+        "Unable to find book version:",
+        findError
       );
 
       return NextResponse.json(
-        { error: "Unable to verify the book version." },
+        {
+          error:
+            "Unable to find the requested version.",
+        },
         { status: 500 }
       );
     }
 
     if (!version) {
       return NextResponse.json(
-        { error: "Book version not found." },
+        {
+          error:
+            "The selected version does not belong to this book.",
+        },
         { status: 404 }
       );
     }
 
+    if (
+      !version.epub_path &&
+      !version.file_path
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "This version does not contain an EPUB file.",
+        },
+        { status: 400 }
+      );
+    }
+
     /*
-     * Make every version of this book inactive.
+     * Remove current/active status from every
+     * version of this book.
      */
-    const { error: deactivateError } = await supabase
-      .from("book_versions")
-      .update({
-        active: false,
-        is_current: false,
-      })
-      .eq("book_id", bookId);
+    const { error: deactivateError } =
+      await admin
+        .from("book_versions")
+        .update({
+          is_current: false,
+          active: false,
+        })
+        .eq("book_id", bookId);
 
     if (deactivateError) {
       console.error(
-        "Version deactivation error:",
+        "Unable to deactivate existing versions:",
         deactivateError
       );
 
       return NextResponse.json(
         {
           error:
-            "Unable to deactivate the previous book version.",
+            "Unable to deactivate the previous version.",
         },
         { status: 500 }
       );
     }
 
     /*
-     * Activate the selected version.
+     * Make the selected version the only
+     * active/current version.
      */
-    const { data: activatedVersion, error: activateError } =
-      await supabase
+    const { data: activated, error: activateError } =
+      await admin
         .from("book_versions")
         .update({
-          active: true,
           is_current: true,
+          active: true,
         })
         .eq("id", versionId)
         .eq("book_id", bookId)
         .select(
-          "id,book_id,version,version_number,epub_path,file_path,file_size,active,is_current,uploaded_at"
+          `
+            id,
+            book_id,
+            version,
+            version_number,
+            file_path,
+            epub_path,
+            file_type,
+            file_size,
+            is_current,
+            active,
+            created_at
+          `
         )
         .single();
 
     if (activateError) {
       console.error(
-        "Version activation error:",
+        "Unable to activate version:",
         activateError
       );
 
-      /*
-       * Attempt to restore the selected version as active.
-       */
-      await supabase
-        .from("book_versions")
-        .update({
-          active: true,
-          is_current: true,
-        })
-        .eq("id", versionId)
-        .eq("book_id", bookId);
-
       return NextResponse.json(
         {
-          error: activateError.message,
+          error:
+            "Unable to activate the selected version.",
         },
         { status: 500 }
       );
     }
 
-    /*
-     * Keep books.epub_path synchronized with the
-     * newly activated version.
-     */
-    const currentEpubPath =
-      activatedVersion.epub_path ||
-      activatedVersion.file_path ||
-      null;
-
-    const { error: bookUpdateError } = await supabase
-      .from("books")
-      .update({
-        epub_path: currentEpubPath,
-      })
-      .eq("id", bookId);
-
-    if (bookUpdateError) {
-      console.error(
-        "Book EPUB path synchronization error:",
-        bookUpdateError
-      );
-
-      /*
-       * The version itself is already correctly activated,
-       * so do not undo it just because the convenience
-       * books.epub_path field could not be synchronized.
-       */
-    }
-
     return NextResponse.json({
-      ok: true,
-      bookId,
-      version: activatedVersion,
-      message: `Version ${
-        activatedVersion.version_number ||
-        activatedVersion.version
-      } is now active.`,
+      success: true,
+      version: activated,
     });
   } catch (error) {
     console.error(
-      "Admin version activation error:",
+      "Version activation error:",
       error
     );
 
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Unable to activate the book version.",
+          "Unable to activate the book version.",
       },
       { status: 500 }
     );
