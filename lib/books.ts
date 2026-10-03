@@ -5,97 +5,141 @@ export type Book = {
   title: string;
   slug: string;
   author: string;
-  description: string;
+  description: string | null;
   price: number;
-  genre: string;
-  age_category: string;
+  currency?: string | null;
+  genre: string | null;
+  age_category: string | null;
   cover_path: string | null;
   published: boolean;
   featured: boolean;
   created_at: string;
 };
 
-export async function getPublishedBooks(options?: {
-  search?: string;
-  genre?: string;
-  age?: string;
-}) {
-  const supabase = await createClient();
+const BOOK_FIELDS = `
+  id,
+  title,
+  slug,
+  author,
+  description,
+  price,
+  currency,
+  genre,
+  age_category,
+  cover_path,
+  published,
+  featured,
+  created_at
+`;
 
-  let query = supabase
-    .from("books")
-    .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false });
-
-  if (options?.search) {
-    const search = options.search.trim();
-
-    query = query.or(
-      `title.ilike.%${search}%,author.ilike.%${search}%,genre.ilike.%${search}%`
-    );
-  }
-
-  if (options?.genre) {
-    query = query.ilike(
-      "genre",
-      `%${options.genre}%`
-    );
-  }
-
-  if (options?.age) {
-    query = query.eq(
-      "age_category",
-      options.age
-    );
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    throw new Error("Unable to load books.");
-  }
-
-  return (data ?? []) as Book[];
+function normalizeBook(
+  book: any
+): Book {
+  return {
+    id: book.id,
+    title: book.title,
+    slug: book.slug,
+    author: book.author,
+    description:
+      book.description ?? null,
+    price: Number(book.price ?? 0),
+    currency:
+      book.currency ?? "INR",
+    genre: book.genre ?? null,
+    age_category:
+      book.age_category ?? null,
+    cover_path:
+      book.cover_path ?? null,
+    published: Boolean(
+      book.published
+    ),
+    featured: Boolean(
+      book.featured
+    ),
+    created_at:
+      book.created_at,
+  };
 }
 
-export async function getBookBySlug(
-  slug: string
-) {
+export async function getPublishedBooks(): Promise<Book[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(BOOK_FIELDS)
+    .eq("published", true)
+    .order("sort_order", {
+      ascending: true,
+    })
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (error) {
+    console.error(
+      "Unable to load published books:",
+      error
+    );
+
+    return [];
+  }
+
+  return (data ?? []).map(
+    normalizeBook
+  );
+}
+
+export async function getBookBySlug(
+  slug: string
+): Promise<Book | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("books")
+    .select(BOOK_FIELDS)
     .eq("slug", slug)
     .eq("published", true)
     .maybeSingle();
 
   if (error) {
-    throw new Error("Unable to load book.");
+    console.error(
+      "Unable to load book:",
+      error
+    );
+
+    return null;
   }
 
-  return data as Book | null;
+  return data
+    ? normalizeBook(data)
+    : null;
 }
 
-export async function getFeaturedBooks() {
+export async function getFeaturedBooks(): Promise<Book[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("books")
-    .select("*")
+    .select(BOOK_FIELDS)
     .eq("published", true)
     .eq("featured", true)
+    .order("sort_order", {
+      ascending: true,
+    })
     .order("created_at", {
       ascending: false,
-    })
-    .limit(8);
+    });
 
   if (error) {
-    throw new Error(
-      "Unable to load featured books."
+    console.error(
+      "Unable to load featured books:",
+      error
     );
+
+    return [];
   }
 
-  return (data ?? []) as Book[];
+  return (data ?? []).map(
+    normalizeBook
+  );
 }
