@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { BOOK_CATEGORIES } from "@/categories";
+import { BOOK_CATEGORIES } from "@/lib/categories";
 
 const MAX_FILE = 50 * 1024 * 1024;
 const MAX_COVER = 8 * 1024 * 1024;
@@ -38,8 +38,9 @@ function slugify(value: string) {
 
 function extension(file: File) {
   const name = file.name.toLowerCase();
+
   const ext = name.includes(".")
-    ? name.split(".").pop()!
+    ? name.split(".").pop() || "bin"
     : "bin";
 
   return (
@@ -55,23 +56,15 @@ export function BookForm({ book }: { book?: Book }) {
     author: book?.author ?? "Neetu Bansal",
     description: book?.description ?? "",
     price: String(book?.price ?? 199),
-    genre:
-      book?.genre ??
-      BOOK_CATEGORIES[0].name,
-    ageCategory:
-      book?.age_category ?? "6–16",
+    genre: book?.genre ?? BOOK_CATEGORIES[0].name,
+    ageCategory: book?.age_category ?? "6–16",
     published: book?.published ?? false,
-    featured: book?.featured ?? false
+    featured: book?.featured ?? false,
   });
 
-  const [cover, setCover] =
-    useState<File | null>(null);
-
-  const [epub, setEpub] =
-    useState<File | null>(null);
-
-  const [pdf, setPdf] =
-    useState<File | null>(null);
+  const [cover, setCover] = useState<File | null>(null);
+  const [epub, setEpub] = useState<File | null>(null);
+  const [pdf, setPdf] = useState<File | null>(null);
 
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -82,44 +75,38 @@ export function BookForm({ book }: { book?: Book }) {
   ) {
     setForm((old) => ({
       ...old,
-      [key]: value
+      [key]: value,
     }));
   }
 
   function chooseEpub(file: File | null) {
-    if (
-      file &&
-      file.size > MAX_FILE
-    ) {
+    if (file && file.size > MAX_FILE) {
       setStatus("EPUB is over 50 MB.");
       return;
     }
 
     setEpub(file);
+    setStatus("");
   }
 
   function choosePdf(file: File | null) {
-    if (
-      file &&
-      file.size > MAX_FILE
-    ) {
+    if (file && file.size > MAX_FILE) {
       setStatus("PDF is over 50 MB.");
       return;
     }
 
     setPdf(file);
+    setStatus("");
   }
 
   function chooseCover(file: File | null) {
-    if (
-      file &&
-      file.size > MAX_COVER
-    ) {
+    if (file && file.size > MAX_COVER) {
       setStatus("Cover is over 8 MB.");
       return;
     }
 
     setCover(file);
+    setStatus("");
   }
 
   async function submit(publish: boolean) {
@@ -147,48 +134,24 @@ export function BookForm({ book }: { book?: Book }) {
       return;
     }
 
-    if (
-      pdf &&
-      !epub &&
-      !book?.id
-    ) {
+    if (pdf && !epub) {
       setStatus(
-        "Add an EPUB before adding a PDF."
+        "Select the EPUB together with the PDF."
       );
       return;
     }
 
-    if (
-      pdf &&
-      !epub &&
-      book?.id
-    ) {
-      setStatus(
-        "Select the EPUB again when replacing or adding a PDF."
-      );
-      return;
-    }
-
-    if (
-      epub &&
-      epub.size > MAX_FILE
-    ) {
+    if (epub && epub.size > MAX_FILE) {
       setStatus("EPUB is over 50 MB.");
       return;
     }
 
-    if (
-      pdf &&
-      pdf.size > MAX_FILE
-    ) {
+    if (pdf && pdf.size > MAX_FILE) {
       setStatus("PDF is over 50 MB.");
       return;
     }
 
-    if (
-      cover &&
-      cover.size > MAX_COVER
-    ) {
+    if (cover && cover.size > MAX_COVER) {
       setStatus("Cover is over 8 MB.");
       return;
     }
@@ -207,35 +170,28 @@ export function BookForm({ book }: { book?: Book }) {
         title: form.title.trim(),
         slug,
         author: form.author.trim(),
-        description:
-          form.description.trim(),
-        price:
-          Number(form.price) || 0,
+        description: form.description.trim(),
+        price: Number(form.price) || 0,
         genre: form.genre,
-        ageCategory:
-          form.ageCategory.trim(),
+        ageCategory: form.ageCategory.trim(),
         published: false,
-        featured: form.featured
+        featured: form.featured,
       };
 
       setStatus("Saving details…");
 
-      const metaResponse =
-        await fetch(
-          "/api/admin/books",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-            body:
-              JSON.stringify(metadata)
-          }
-        );
+      const metaResponse = await fetch(
+        "/api/admin/books",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(metadata),
+        }
+      );
 
-      const meta =
-        await metaResponse.json();
+      const meta = await metaResponse.json();
 
       if (!metaResponse.ok) {
         throw new Error(
@@ -244,84 +200,66 @@ export function BookForm({ book }: { book?: Book }) {
         );
       }
 
-      const bookId =
-        meta.id as string;
+      const bookId = meta.id as string;
 
       const files = [
         cover
           ? {
-              kind: "cover",
+              kind: "cover" as const,
               size: cover.size,
               type:
                 cover.type ||
                 "image/jpeg",
-              extension:
-                extension(cover)
+              extension: extension(cover),
             }
           : null,
 
         epub
           ? {
-              kind: "epub",
+              kind: "epub" as const,
               size: epub.size,
-              type:
-                "application/epub+zip",
-              extension: "epub"
+              type: "application/epub+zip",
+              extension: "epub",
             }
           : null,
 
         pdf
           ? {
-              kind: "pdf",
+              kind: "pdf" as const,
               size: pdf.size,
               type: "application/pdf",
-              extension: "pdf"
+              extension: "pdf",
             }
-          : null
+          : null,
       ].filter(Boolean) as Array<{
-        kind:
-          | "cover"
-          | "epub"
-          | "pdf";
+        kind: "cover" | "epub" | "pdf";
         size: number;
         type: string;
         extension: string;
       }>;
 
-      if (files.length) {
-        if (
-          !epub &&
-          !book?.id
-        ) {
-          throw new Error(
-            "A new book needs an EPUB."
-          );
-        }
-
-        const version =
-          `${Date.now()}`;
+      if (files.length > 0) {
+        const version = `${Date.now()}`;
 
         setStatus(
           "Making secure upload links…"
         );
 
-        const signResponse =
-          await fetch(
-            "/api/admin/uploads/sign",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-              body:
-                JSON.stringify({
-                  bookId,
-                  version,
-                  files
-                })
-            }
-          );
+        const signResponse = await fetch(
+          "/api/admin/uploads/sign",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({
+              bookId,
+              version,
+              files,
+            }),
+          }
+        );
 
         const signData =
           await signResponse.json();
@@ -333,20 +271,17 @@ export function BookForm({ book }: { book?: Book }) {
           );
         }
 
-        const supabase =
-          createClient();
+        const supabase = createClient();
 
-        const signed:
-          SignedUpload[] =
-          signData.uploads;
+        const signed =
+          signData.uploads as SignedUpload[];
 
-        const uploaded:
-          Partial<
-            Record<
-              SignedUpload["kind"],
-              SignedUpload
-            >
-          > = {};
+        const uploaded: Partial<
+          Record<
+            SignedUpload["kind"],
+            SignedUpload
+          >
+        > = {};
 
         for (const item of signed) {
           const file =
@@ -371,13 +306,11 @@ export function BookForm({ book }: { book?: Book }) {
                 file,
                 {
                   contentType:
-                    item.kind ===
-                    "epub"
+                    item.kind === "epub"
                       ? "application/epub+zip"
-                      : item.kind ===
-                        "pdf"
+                      : item.kind === "pdf"
                       ? "application/pdf"
-                      : file.type
+                      : file.type,
                 }
               );
 
@@ -387,17 +320,14 @@ export function BookForm({ book }: { book?: Book }) {
             );
           }
 
-          uploaded[item.kind] =
-            item;
+          uploaded[item.kind] = item;
         }
 
         if (
           uploaded.epub ||
           uploaded.cover
         ) {
-          setStatus(
-            "Finishing book…"
-          );
+          setStatus("Finishing book…");
 
           const finalizeResponse =
             await fetch(
@@ -406,38 +336,34 @@ export function BookForm({ book }: { book?: Book }) {
                 method: "POST",
                 headers: {
                   "Content-Type":
-                    "application/json"
+                    "application/json",
                 },
-                body:
-                  JSON.stringify({
-                    bookId,
-                    ...(uploaded.epub
-                      ? {
-                          version,
-                          epubPath:
-                            uploaded
-                              .epub
-                              .path,
-                          epubSize:
-                            epub!.size
-                        }
-                      : {}),
-                    coverPath:
-                      uploaded.cover
-                        ?.path ??
-                      null,
-                    published:
-                      publish
-                  })
+                body: JSON.stringify({
+                  bookId,
+
+                  ...(uploaded.epub
+                    ? {
+                        version,
+                        epubPath:
+                          uploaded.epub.path,
+                        epubSize:
+                          epub?.size ?? 0,
+                      }
+                    : {}),
+
+                  coverPath:
+                    uploaded.cover?.path ??
+                    null,
+
+                  published: publish,
+                }),
               }
             );
 
           const finalizeData =
             await finalizeResponse.json();
 
-          if (
-            !finalizeResponse.ok
-          ) {
+          if (!finalizeResponse.ok) {
             throw new Error(
               finalizeData.error ??
                 "Could not finish book."
@@ -451,23 +377,20 @@ export function BookForm({ book }: { book?: Book }) {
                 method: "POST",
                 headers: {
                   "Content-Type":
-                    "application/json"
+                    "application/json",
                 },
-                body:
-                  JSON.stringify({
-                    ...metadata,
-                    bookId,
-                    published: true
-                  })
+                body: JSON.stringify({
+                  ...metadata,
+                  bookId,
+                  published: true,
+                }),
               }
             );
 
           const publishData =
             await publishResponse.json();
 
-          if (
-            !publishResponse.ok
-          ) {
+          if (!publishResponse.ok) {
             throw new Error(
               publishData.error ??
                 "Could not publish book."
@@ -482,23 +405,20 @@ export function BookForm({ book }: { book?: Book }) {
               method: "POST",
               headers: {
                 "Content-Type":
-                  "application/json"
+                  "application/json",
               },
-              body:
-                JSON.stringify({
-                  ...metadata,
-                  bookId,
-                  published: true
-                })
+              body: JSON.stringify({
+                ...metadata,
+                bookId,
+                published: true,
+              }),
             }
           );
 
         const publishData =
           await publishResponse.json();
 
-        if (
-          !publishResponse.ok
-        ) {
+        if (!publishResponse.ok) {
           throw new Error(
             publishData.error ??
               "Could not publish book."
@@ -538,17 +458,15 @@ export function BookForm({ book }: { book?: Book }) {
               className="rounded-2xl border p-3.5"
               value={form.title}
               onChange={(e) => {
-                update(
-                  "title",
-                  e.target.value
-                );
+                const value =
+                  e.target.value;
+
+                update("title", value);
 
                 if (!book) {
                   update(
                     "slug",
-                    slugify(
-                      e.target.value
-                    )
+                    slugify(value)
                   );
                 }
               }}
@@ -622,12 +540,13 @@ export function BookForm({ book }: { book?: Book }) {
               }
             >
               {BOOK_CATEGORIES.map(
-                (c) => (
+                (category) => (
                   <option
-                    key={c.slug}
-                    value={c.name}
+                    key={category.slug}
+                    value={category.name}
                   >
-                    {c.icon} {c.name}
+                    {category.icon}{" "}
+                    {category.name}
                   </option>
                 )
               )}
@@ -639,9 +558,7 @@ export function BookForm({ book }: { book?: Book }) {
 
             <input
               className="rounded-2xl border p-3.5"
-              value={
-                form.ageCategory
-              }
+              value={form.ageCategory}
               onChange={(e) =>
                 update(
                   "ageCategory",
@@ -651,7 +568,6 @@ export function BookForm({ book }: { book?: Book }) {
               placeholder="6–16"
             />
           </label>
-
         </div>
 
         <label className="grid gap-2 text-sm font-bold">
@@ -790,3 +706,5 @@ export function BookForm({ book }: { book?: Book }) {
     </div>
   );
 }
+
+export default BookForm;
