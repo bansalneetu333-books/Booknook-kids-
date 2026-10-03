@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createRazorpayOrder, getRazorpayConfig } from "@/lib/razorpay";
+import {
+  createRazorpayOrder,
+} from "@/lib/razorpay";
+
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
@@ -8,181 +12,290 @@ export async function POST(request: Request) {
 
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
-        { error: "Please log in before purchasing." },
+        {
+          error: "Authentication required.",
+        },
         { status: 401 }
       );
     }
 
     const body = await request.json();
-    const bookId = String(body?.bookId || "").trim();
+
+    const bookId =
+      typeof body.bookId === "string"
+        ? body.bookId.trim()
+        : "";
 
     if (!bookId) {
       return NextResponse.json(
-        { error: "Book ID is required." },
+        {
+          error: "Book ID is required.",
+        },
         { status: 400 }
       );
     }
 
-    const { data: book, error: bookError } = await supabase
-      .from("books")
-      .select("id,title,price,published")
-      .eq("id", bookId)
-      .eq("published", true)
-      .maybeSingle();
+    /*
+     * Load the published book.
+     */
+    const { data: book, error: bookError } =
+      await supabase
+        .from("books")
+        .select(
+          `
+            id,
+            title,
+            price,
+            currency,
+            published
+          `
+        )
+        .eq("id", bookId)
+        .eq("published", true)
+        .maybeSingle();
 
     if (bookError) {
-      console.error("Book lookup error:", bookError);
+      console.error(
+        "Unable to load checkout book:",
+        bookError
+      );
 
       return NextResponse.json(
-        { error: "Unable to load the selected book." },
+        {
+          error:
+            "Unable to load the selected book.",
+        },
         { status: 500 }
       );
     }
 
     if (!book) {
       return NextResponse.json(
-        { error: "Book not found or not available." },
+        {
+          error:
+            "This book is not available for purchase.",
+        },
         { status: 404 }
       );
     }
 
-    const { data: existingPurchase, error: purchaseError } =
+    const price = Number(
+      book.price ?? 0
+    );
+
+    if (
+      !Number.isFinite(price) ||
+      price < 0
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "This book has an invalid price.",
+        },
+        { status: 400 }
+      );
+    }
+
+    /*
+     * Prevent purchasing the same book twice.
+     */
+    const { data: existingPurchase } =
       await supabase
         .from("order_items")
-        .select("id, orders!inner(user_id,status)")
+        .select(
+          `
+            id,
+            orders!inner (
+              id,
+              user_id,
+              status
+            )
+          `
+        )
         .eq("book_id", bookId)
         .eq("orders.user_id", user.id)
         .eq("orders.status", "paid")
         .limit(1)
         .maybeSingle();
 
-    if (purchaseError) {
-      console.error(
-        "Existing purchase lookup error:",
-        purchaseError
-      );
-
-      return NextResponse.json(
-        { error: "Unable to check your previous purchases." },
-        { status: 500 }
-      );
-    }
-
     if (existingPurchase) {
       return NextResponse.json(
         {
-          error: "You already own this book.",
-          alreadyOwned: true,
+          error:
+            "You already own this book.",
+          alreadyPurchased: true,
+          bookId,
         },
         { status: 409 }
       );
     }
 
-    const price = Number(book.price ?? 0);
+    /*
+     * Convert INR to paise for Razorpay.
+     */
+    const amountInPaise =
+      Math.round(price * 100);
 
-    if (!Number.isFinite(price) || price <= 0) {
+    if (amountInPaise <= 0) {
       return NextResponse.json(
-        { error: "This book does not have a valid price." },
+        {
+          error:
+            "This book cannot be purchased at its current price.",
+        },
         { status: 400 }
       );
     }
 
-    const amountInPaise = Math.round(price * 100);
+    /*
+     * Create our local order first.
+     */
+    const { data: localOrder, error: orderError } =
+      await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          status: "pending",
+          amount: price,
+          currency:
+            book.currency || "INR",
+        })
+        .select(
+          `
+            id,
+            user_id,
+            status,
+            amount,
+            currency,
+            created_at
+          `
+        )
+        .single();
 
-    const receipt = `book_${bookId.slice(0, 8)}_${Date.now()}`;
-
-    const razorpayOrder = await createRazorpayOrder({
-      amount: amountInPaise,
-      currency: "INR",
-      receipt,
-      notes: {
-        user_id: user.id,
-        book_id: bookId,
-      },
-    });
-
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        razorpay_order_id: razorpayOrder.id,
-        status: "pending",
-        amount: price,
-        currency: "INR",
-      })
-      .select("id")
-      .single();
-
-    if (orderError || !order) {
+    if (orderError || !localOrder) {
       console.error(
-        "Order insert error:",
+        "Unable to create local order:",
         orderError
       );
 
       return NextResponse.json(
-        { error: "Unable to create your order." },
+        {
+          error:
+            "Unable to create your order.",
+        },
         { status: 500 }
       );
     }
 
-    const { error: itemError } = await supabase
+    /*
+     * Add the purchased book to the order.
+     */
+    const {
+      data: orderItem,
+      error: itemError,
+    } = await supabase
       .from("order_items")
       .insert({
-        order_id: order.id,
-        book_id: bookId,
+        order_id: localOrder.id,
+        book_id: book.id,
         price,
-      });
+      })
+      .select(
+        `
+          id,
+          order_id,
+          book_id,
+          price
+        `
+      )
+      .single();
 
-    if (itemError) {
+    if (itemError || !orderItem) {
       console.error(
-        "Order item insert error:",
+        "Unable to create order item:",
         itemError
       );
 
       await supabase
         .from("orders")
         .delete()
-        .eq("id", order.id);
+        .eq("id", localOrder.id);
 
       return NextResponse.json(
-        { error: "Unable to create your order item." },
+        {
+          error:
+            "Unable to add the book to your order.",
+        },
         { status: 500 }
       );
     }
 
-    const { keyId } = getRazorpayConfig();
+    /*
+     * Create the Razorpay order.
+     */
+    let razorpayOrder;
 
-    return NextResponse.json({
-      success: true,
-      orderId: order.id,
-      razorpayOrderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency || "INR",
-      keyId,
-      book: {
-        id: book.id,
-        title: book.title,
-        price,
-      },
-    });
-  } catch (error) {
-    console.error(
-      "Create checkout order error:",
-      error
-    );
+    try {
+      razorpayOrder =
+        await createRazorpayOrder({
+          amount: amountInPaise,
+          currency:
+            book.currency || "INR",
+          receipt:
+            localOrder.id,
+          notes: {
+            order_id:
+              localOrder.id,
+            book_id:
+              book.id,
+            user_id:
+              user.id,
+          },
+        });
+    } catch (error) {
+      console.error(
+        "Razorpay order creation failed:",
+        error
+      );
 
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create your order.",
-      },
-      { status: 500 }
-    );
-  }
-}
+      await supabase
+        .from("order_items")
+        .delete()
+        .eq(
+          "id",
+          orderItem.id
+        );
+
+      await supabase
+        .from("orders")
+        .delete()
+        .eq(
+          "id",
+          localOrder.id
+        );
+
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unable to create Razorpay order.",
+        },
+        { status: 500 }
+      );
+    }
+
+    /*
+     * Store the Razorpay order ID in our
+     * local order.
+     */
+    const {
+      data: updatedOrder,
+      error: updateError,
+    } = await supabase
+      .from("orders")
+      .update({
