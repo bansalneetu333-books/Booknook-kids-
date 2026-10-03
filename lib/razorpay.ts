@@ -1,68 +1,124 @@
+import Razorpay from "razorpay";
 import crypto from "crypto";
 
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+type RazorpayOrderInput = {
+  amount: number;
+  currency?: string;
+  receipt: string;
+  notes?: Record<string, string>;
+};
 
-export function getRazorpayConfig() {
-  if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+function getRazorpayCredentials() {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret =
+    process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId) {
     throw new Error(
-      "Missing Razorpay server configuration. Please check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET."
+      "Missing RAZORPAY_KEY_ID."
+    );
+  }
+
+  if (!keySecret) {
+    throw new Error(
+      "Missing RAZORPAY_KEY_SECRET."
     );
   }
 
   return {
-    keyId: RAZORPAY_KEY_ID,
-    keySecret: RAZORPAY_KEY_SECRET,
+    keyId,
+    keySecret,
   };
 }
 
-export function createRazorpayAuthHeader() {
-  const { keyId, keySecret } = getRazorpayConfig();
-
-  return `Basic ${Buffer.from(
-    `${keyId}:${keySecret}`
-  ).toString("base64")}`;
+export function getRazorpayKeyId() {
+  return getRazorpayCredentials()
+    .keyId;
 }
 
-export function verifyRazorpayPaymentSignature(
-  orderId: string,
-  paymentId: string,
-  signature: string
-) {
-  const { keySecret } = getRazorpayConfig();
+function createRazorpayClient() {
+  const {
+    keyId,
+    keySecret,
+  } = getRazorpayCredentials();
 
-  const expectedSignature = crypto
-    .createHmac("sha256", keySecret)
-    .update(`${orderId}|${paymentId}`)
-    .digest("hex");
+  return new Razorpay({
+    key_id: keyId,
+    key_secret: keySecret,
+  });
+}
 
-  const expectedBuffer = Buffer.from(
-    expectedSignature,
-    "utf8"
-  );
-
-  const receivedBuffer = Buffer.from(
-    signature,
-    "utf8"
-  );
-
+export async function createRazorpayOrder({
+  amount,
+  currency = "INR",
+  receipt,
+  notes,
+}: RazorpayOrderInput) {
   if (
-    expectedBuffer.length !== receivedBuffer.length
+    !Number.isFinite(amount) ||
+    amount <= 0
   ) {
-    return false;
+    throw new Error(
+      "Razorpay amount must be greater than zero."
+    );
   }
 
+  if (!receipt?.trim()) {
+    throw new Error(
+      "Razorpay receipt is required."
+    );
+  }
+
+  const razorpay =
+    createRazorpayClient();
+
+  return razorpay.orders.create({
+    amount: Math.round(amount),
+    currency,
+    receipt: receipt.trim(),
+    notes,
+  });
+}
+
+export function verifyPaymentSignature({
+  orderId,
+  paymentId,
+  signature,
+}: {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+}) {
+  const {
+    keySecret,
+  } = getRazorpayCredentials();
+
+  const generatedSignature =
+    crypto
+      .createHmac(
+        "sha256",
+        keySecret
+      )
+      .update(
+        `${orderId}|${paymentId}`
+      )
+      .digest("hex");
+
   return crypto.timingSafeEqual(
-    expectedBuffer,
-    receivedBuffer
+    Buffer.from(
+      generatedSignature
+    ),
+    Buffer.from(signature)
   );
 }
 
-export function verifyRazorpayWebhookSignature(
+export function verifyWebhookSignature(
   rawBody: string,
   signature: string
 ) {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  const secret =
+    process.env
+      .RAZORPAY_WEBHOOK_SECRET;
 
   if (!secret) {
     throw new Error(
@@ -70,74 +126,19 @@ export function verifyRazorpayWebhookSignature(
     );
   }
 
-  const expectedSignature = crypto
-    .createHmac("sha256", secret)
-    .update(rawBody)
-    .digest("hex");
-
-  const expectedBuffer = Buffer.from(
-    expectedSignature,
-    "utf8"
-  );
-
-  const receivedBuffer = Buffer.from(
-    signature,
-    "utf8"
-  );
-
-  if (
-    expectedBuffer.length !== receivedBuffer.length
-  ) {
-    return false;
-  }
+  const generatedSignature =
+    crypto
+      .createHmac(
+        "sha256",
+        secret
+      )
+      .update(rawBody)
+      .digest("hex");
 
   return crypto.timingSafeEqual(
-    expectedBuffer,
-    receivedBuffer
+    Buffer.from(
+      generatedSignature
+    ),
+    Buffer.from(signature)
   );
-}
-
-export async function createRazorpayOrder(params: {
-  amount: number;
-  currency?: string;
-  receipt: string;
-  notes?: Record<string, string>;
-}) {
-  const { amount, currency = "INR", receipt, notes } =
-    params;
-
-  if (!Number.isInteger(amount) || amount <= 0) {
-    throw new Error(
-      "Razorpay order amount must be a positive integer in the smallest currency unit."
-    );
-  }
-
-  const response = await fetch(
-    "https://api.razorpay.com/v1/orders",
-    {
-      method: "POST",
-      headers: {
-        Authorization: createRazorpayAuthHeader(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount,
-        currency,
-        receipt,
-        ...(notes ? { notes } : {}),
-      }),
-      cache: "no-store",
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data?.error?.description ||
-        "Unable to create Razorpay order."
-    );
-  }
-
-  return data;
 }
