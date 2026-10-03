@@ -4,88 +4,89 @@ import { useState } from "react";
 
 type DownloadButtonProps = {
   bookId: string;
+  title?: string;
+  className?: string;
 };
 
 export function DownloadButton({
   bookId,
+  title = "Download PDF",
+  className = "",
 }: DownloadButtonProps) {
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] =
+    useState(false);
+  const [error, setError] =
+    useState("");
 
   async function downloadBook() {
-    if (busy) return;
+    if (loading) return;
 
-    setBusy(true);
-    setMessage("Preparing your download…");
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await fetch("/api/books/download", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          bookId,
-        }),
-      });
+      const response = await fetch(
+        "/api/books/download",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            bookId,
+          }),
+        }
+      );
 
-      const data = await response.json();
+      const data =
+        (await response.json()) as {
+          url?: string;
+          error?: string;
+        };
 
-      if (!response.ok) {
+      if (!response.ok || !data.url) {
         throw new Error(
-          data?.error || "Unable to prepare the download."
+          data.error ??
+            "Unable to prepare the download."
         );
       }
 
-      if (!data?.url) {
-        throw new Error("Download link was not created.");
-      }
-
-      const link = document.createElement("a");
-      link.href = data.url;
-
-      if (data.filename) {
-        link.download = data.filename;
-      }
-
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setMessage("Download started.");
-    } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
+      window.location.href = data.url;
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
           : "Unable to download the book."
       );
     } finally {
-      setBusy(false);
+      setLoading(false);
     }
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <button
         type="button"
         onClick={downloadBook}
-        disabled={busy}
-        className="rounded-full border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        disabled={loading}
+        className={`inline-flex items-center justify-center rounded-full bg-indigo-600 px-5 py-3 font-black text-white shadow-lg transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       >
-        {busy ? "Preparing…" : "⬇️ Download Book"}
+        {loading
+          ? "Preparing download…"
+          : `⬇️ ${title}`}
       </button>
 
-      {message && (
+      {error && (
         <p
-          className="mt-2 text-xs text-slate-500"
-          aria-live="polite"
+          className="text-sm font-semibold text-red-600"
+          role="alert"
         >
-          {message}
+          {error}
         </p>
       )}
     </div>
   );
 }
+
+export default DownloadButton;
