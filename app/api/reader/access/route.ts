@@ -1,45 +1,59 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  createEpubSignedUrl,
-  getActiveBookVersion,
-  publicCoverUrl,
-} from "@/lib/storage";
+import { createAdminClient } from "@/lib/admin";
 
-export async function GET(request: Request) {
+const EPUB_BUCKET = "ebooks-private";
+
+export async function POST(request: Request) {
   try {
     const supabase = await createClient();
 
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
-        { error: "Please log in to read this book." },
+        {
+          error: "Authentication required.",
+        },
         { status: 401 }
       );
     }
 
-    const url = new URL(request.url);
-    const bookId = url.searchParams.get("bookId");
+    const body = await request.json();
+
+    const bookId =
+      typeof body.bookId === "string"
+        ? body.bookId.trim()
+        : "";
 
     if (!bookId) {
       return NextResponse.json(
-        { error: "Book ID is required." },
+        {
+          error: "Book ID is required.",
+        },
         { status: 400 }
       );
     }
 
     /*
-     * Verify that the logged-in customer has actually
+     * Verify that the customer has actually
      * purchased this book.
      */
-    const { data: ownership, error: ownershipError } =
+    const { data: purchase, error: purchaseError } =
       await supabase
         .from("order_items")
         .select(
-          "id, book_id, orders!inner(user_id, status)"
+          `
+            id,
+            orders!inner (
+              id,
+              user_id,
+              status
+            )
+          `
         )
         .eq("book_id", bookId)
         .eq("orders.user_id", user.id)
@@ -47,144 +61,135 @@ export async function GET(request: Request) {
         .limit(1)
         .maybeSingle();
 
-    if (ownershipError) {
+    if (purchaseError) {
       console.error(
-        "Reader ownership lookup error:",
-        ownershipError
+        "Reader ownership check failed:",
+        purchaseError
       );
 
       return NextResponse.json(
-        { error: "Unable to verify book ownership." },
+        {
+          error:
+            "Unable to verify book ownership.",
+        },
         { status: 500 }
       );
     }
 
-    if (!ownership) {
+    if (!purchase) {
       return NextResponse.json(
         {
           error:
-            "You do not own this book. Please purchase it first.",
+            "You need to purchase this book before reading it.",
         },
         { status: 403 }
       );
     }
 
     /*
-     * Load the book.
+     * Read the active book version using the
+     * server-only Supabase service role.
      */
-    const { data: book, error: bookError } =
-      await supabase
-        .from("books")
+    const admin = createAdminClient();
+
+    const { data: version, error: versionError } =
+      await admin
+        .from("book_versions")
         .select(
-          "id,title,slug,author,description,cover_path,published"
+          `
+            id,
+            book_id,
+            file_path,
+            epub_path,
+            file_type,
+            is_current,
+            active
+          `
         )
-        .eq("id", bookId)
-        .eq("published", true)
+        .eq("book_id", bookId)
+        .eq("is_current", true)
+        .eq("active", true)
         .maybeSingle();
 
-    if (bookError) {
+    if (versionError) {
       console.error(
-        "Reader book lookup error:",
-        bookError
+        "Unable to find active book version:",
+        versionError
       );
 
       return NextResponse.json(
-        { error: "Unable to load the book." },
+        {
+          error:
+            "Unable to find the book file.",
+        },
         { status: 500 }
       );
     }
-
-    if (!book) {
-      return NextResponse.json(
-        { error: "Book not found." },
-        { status: 404 }
-      );
-    }
-
-    /*
-     * Load the active EPUB version.
-     */
-    const version = await getActiveBookVersion(bookId);
 
     if (!version) {
       return NextResponse.json(
         {
           error:
-            "This book does not currently have a readable version.",
+            "No active version is available for this book.",
         },
         { status: 404 }
       );
     }
 
-    const epubPath =
-      version.epub_path || version.file_path;
+    /*
+     * Prefer epub_path. Fall back to file_path
+     * for versions created by the earlier upload
+     * flow.
+     */
+    const filePath =
+      version.epub_path ||
+      version.file_path;
 
-    if (!epubPath) {
+    if (!filePath) {
       return NextResponse.json(
         {
           error:
-            "The readable book file is not available.",
+            "No EPUB file is attached to this book.",
         },
         { status: 404 }
       );
     }
 
     /*
-     * Create a short-lived signed URL.
-     * The private ebook file itself is never made public.
+     * Prevent accidental use of another storage
+     * bucket through a stored path.
      */
-    const epubUrl =
-      await createEpubSignedUrl(epubPath, 300);
+    const normalizedPath =
+      filePath.startsWith("/")
+        ? filePath.slice(1)
+        : filePath;
 
-    /*
-     * Load saved reading progress.
-     */
-    const { data: progress, error: progressError } =
-      await supabase
-        .from("reading_progress")
-        .select(
-          "book_id,location,progress_percentage,last_read_at"
-        )
-        .eq("user_id", user.id)
-        .eq("book_id", bookId)
-        .maybeSingle();
+    const { data: signedUrl, error: signError } =
+      await admin.storage
+        .from(EPUB_BUCKET)
+        .createSignedUrl(
+          normalizedPath,
+          60 * 60
+        );
 
-    if (progressError) {
+    if (signError || !signedUrl?.signedUrl) {
       console.error(
-        "Reader progress lookup error:",
-        progressError
+        "Unable to create EPUB signed URL:",
+        signError
+      );
+
+      return NextResponse.json(
+        {
+          error:
+            "Unable to open the book file.",
+        },
+        { status: 500 }
       );
     }
 
     return NextResponse.json({
-      success: true,
-
-      book: {
-        id: book.id,
-        title: book.title,
-        slug: book.slug,
-        author: book.author,
-        description: book.description,
-        coverUrl: publicCoverUrl(book.cover_path),
-      },
-
-      version: {
-        id: version.id,
-        versionNumber: version.version_number,
-        fileType: version.file_type,
-        fileSize: version.file_size,
-      },
-
-      epubUrl,
-
-      progress: progress
-        ? {
-            location: progress.location,
-            progressPercentage:
-              progress.progress_percentage,
-            lastReadAt: progress.last_read_at,
-          }
-        : null,
+      url: signedUrl.signedUrl,
+      expiresIn: 60 * 60,
     });
   } catch (error) {
     console.error(
@@ -195,9 +200,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : "Unable to open the book.",
+          "Unable to open this book.",
       },
       { status: 500 }
     );
