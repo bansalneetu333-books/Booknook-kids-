@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
     // Make sure the book exists.
     const { data: existingBook, error: findError } = await supabase
       .from("books")
-      .select("id,title,published")
+      .select("id,title,published,is_published")
       .eq("id", bookId)
       .maybeSingle();
 
@@ -66,6 +66,7 @@ export async function PATCH(request: Request) {
       .from("books")
       .update({
         published: body.published,
+        is_published: body.published,
       })
       .eq("id", bookId)
       .select(
