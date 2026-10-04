@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Book = {
   id: string;
@@ -22,7 +22,7 @@ export default function AdminHomepagePage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  async function loadBooks() {
+  const loadBooks = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -59,11 +59,11 @@ export default function AdminHomepagePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    loadBooks();
-  }, []);
+    void loadBooks();
+  }, [loadBooks]);
 
   async function toggleFeatured(
     book: Book
