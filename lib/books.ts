@@ -12,6 +12,7 @@ export type Book = {
   age_category: string | null;
   cover_path: string | null;
   published: boolean;
+  is_published?: boolean | null;
   featured: boolean;
   created_at: string;
 };
@@ -28,6 +29,7 @@ const BOOK_FIELDS = `
   age_category,
   cover_path,
   published,
+  is_published,
   featured,
   created_at
 `;
@@ -51,8 +53,9 @@ function normalizeBook(
     cover_path:
       book.cover_path ?? null,
     published: Boolean(
-      book.published
+      book.published ?? book.is_published
     ),
+    is_published: book.is_published ?? null,
     featured: Boolean(
       book.featured
     ),
@@ -67,7 +70,7 @@ export async function getPublishedBooks(): Promise<Book[]> {
   const { data, error } = await supabase
     .from("books")
     .select(BOOK_FIELDS)
-    .eq("published", true)
+    .or("published.eq.true,is_published.eq.true")
     .order("sort_order", {
       ascending: true,
     })
