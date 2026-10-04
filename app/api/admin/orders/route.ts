@@ -5,7 +5,8 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const { supabase, user, isAdmin } = await requireAdmin();
+    const { supabase, user, isAdmin } =
+      await requireAdmin();
 
     if (!user || !isAdmin) {
       return NextResponse.json(
@@ -14,10 +15,14 @@ export async function GET(request: Request) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } =
+      new URL(request.url);
 
-    const status = searchParams.get("status")?.trim() || "";
-    const search = searchParams.get("search")?.trim() || "";
+    const status =
+      searchParams.get("status")?.trim() || "";
+
+    const search =
+      searchParams.get("search")?.trim() || "";
 
     let query = supabase
       .from("orders")
@@ -47,16 +52,27 @@ export async function GET(request: Request) {
         )
         `
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", {
+        ascending: false,
+      });
 
     if (status) {
-      query = query.eq("status", status);
+      query = query.eq(
+        "status",
+        status
+      );
     }
 
-    const { data: orders, error } = await query;
+    const {
+      data: orders,
+      error,
+    } = await query;
 
     if (error) {
-      console.error("Admin orders lookup error:", error);
+      console.error(
+        "Admin orders lookup error:",
+        error
+      );
 
       return NextResponse.json(
         { error: error.message },
@@ -66,16 +82,18 @@ export async function GET(request: Request) {
 
     // ------------------------------------------------------------
     // Load customer profiles separately.
-    // This avoids assuming a foreign-key relationship from
-    // orders.user_id to profiles.id exists.
     // ------------------------------------------------------------
     const userIds = Array.from(
       new Set(
         (orders ?? [])
-          .map((order) => order.user_id)
+          .map(
+            (order) =>
+              order.user_id
+          )
           .filter(
             (id): id is string =>
-              typeof id === "string" && id.length > 0
+              typeof id === "string" &&
+              id.length > 0
           )
       )
     );
@@ -90,11 +108,15 @@ export async function GET(request: Request) {
     >();
 
     if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } =
-        await supabase
-          .from("profiles")
-          .select("id,full_name,email")
-          .in("id", userIds);
+      const {
+        data: profiles,
+        error: profilesError,
+      } = await supabase
+        .from("profiles")
+        .select(
+          "id,full_name,email"
+        )
+        .in("id", userIds);
 
       if (profilesError) {
         console.warn(
@@ -103,7 +125,10 @@ export async function GET(request: Request) {
         );
       } else {
         for (const profile of profiles ?? []) {
-          profilesById.set(profile.id, profile);
+          profilesById.set(
+            profile.id,
+            profile
+          );
         }
       }
     }
@@ -111,112 +136,223 @@ export async function GET(request: Request) {
     // ------------------------------------------------------------
     // Optional search
     // ------------------------------------------------------------
-    const filteredOrders = (orders ?? []).filter((order) => {
-      if (!search) {
-        return true;
-      }
+    const filteredOrders =
+      (orders ?? []).filter(
+        (order) => {
+          if (!search) {
+            return true;
+          }
 
-      const profile = order.user_id
-        ? profilesById.get(order.user_id)
-        : null;
+          const profile =
+            order.user_id
+              ? profilesById.get(
+                  order.user_id
+                )
+              : null;
 
-      const searchableText = [
-        order.id,
-        order.razorpay_order_id,
-        order.razorpay_payment_id,
-        profile?.full_name,
-        profile?.email,
-        ...(order.order_items ?? []).flatMap((item) => {
-          const book = item.books;
+          const bookSearchText =
+            (order.order_items ?? [])
+              .flatMap((item) => {
+                /*
+                 * Supabase can infer a nested
+                 * relationship as an array.
+                 * Normalize it to one book.
+                 */
+                const book =
+                  Array.isArray(
+                    item.books
+                  )
+                    ? item.books[0] ??
+                      null
+                    : item.books;
 
-          return book
-            ? [book.title, book.author, book.slug]
-            : [];
-        }),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+                return book
+                  ? [
+                      book.title,
+                      book.author,
+                      book.slug,
+                    ]
+                  : [];
+              });
 
-      return searchableText.includes(search.toLowerCase());
-    });
+          const searchableText = [
+            order.id,
+            order.razorpay_order_id,
+            order.razorpay_payment_id,
+            profile?.full_name,
+            profile?.email,
+            ...bookSearchText,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          return searchableText.includes(
+            search.toLowerCase()
+          );
+        }
+      );
 
     // ------------------------------------------------------------
     // Format response
     // ------------------------------------------------------------
-    const formattedOrders = filteredOrders.map((order) => {
-      const profile = order.user_id
-        ? profilesById.get(order.user_id)
-        : null;
+    const formattedOrders =
+      filteredOrders.map(
+        (order) => {
+          const profile =
+            order.user_id
+              ? profilesById.get(
+                  order.user_id
+                )
+              : null;
 
-      return {
-        id: order.id,
-        userId: order.user_id,
+          return {
+            id: order.id,
 
-        customer: profile
-          ? {
-              id: profile.id,
-              fullName: profile.full_name,
-              email: profile.email,
-            }
-          : null,
+            userId:
+              order.user_id,
 
-        razorpayOrderId: order.razorpay_order_id,
-        razorpayPaymentId: order.razorpay_payment_id,
+            customer: profile
+              ? {
+                  id: profile.id,
+                  fullName:
+                    profile.full_name,
+                  email:
+                    profile.email,
+                }
+              : null,
 
-        status: order.status,
-        amount: Number(order.amount),
-        currency: order.currency,
+            razorpayOrderId:
+              order.razorpay_order_id,
 
-        createdAt: order.created_at,
-        updatedAt: order.updated_at,
+            razorpayPaymentId:
+              order.razorpay_payment_id,
 
-        items: (order.order_items ?? []).map((item) => ({
-          id: item.id,
-          bookId: item.book_id,
-          price: Number(item.price),
-          createdAt: item.created_at,
+            status:
+              order.status,
 
-          book: item.books
-            ? {
-                id: item.books.id,
-                title: item.books.title,
-                slug: item.books.slug,
-                author: item.books.author,
-                coverPath: item.books.cover_path,
+            amount: Number(
+              order.amount
+            ),
+
+            currency:
+              order.currency,
+
+            createdAt:
+              order.created_at,
+
+            updatedAt:
+              order.updated_at,
+
+            items: (
+              order.order_items ??
+              []
+            ).map(
+              (item) => {
+                /*
+                 * Normalize the nested
+                 * Supabase books relationship.
+                 */
+                const book =
+                  Array.isArray(
+                    item.books
+                  )
+                    ? item.books[0] ??
+                      null
+                    : item.books;
+
+                return {
+                  id: item.id,
+
+                  bookId:
+                    item.book_id,
+
+                  price: Number(
+                    item.price
+                  ),
+
+                  createdAt:
+                    item.created_at,
+
+                  book: book
+                    ? {
+                        id: book.id,
+                        title:
+                          book.title,
+                        slug:
+                          book.slug,
+                        author:
+                          book.author,
+                        coverPath:
+                          book.cover_path,
+                      }
+                    : null,
+                };
               }
-            : null,
-        })),
-      };
-    });
+            ),
+          };
+        }
+      );
 
     // ------------------------------------------------------------
     // Summary
     // ------------------------------------------------------------
     const summary = {
-      totalOrders: formattedOrders.length,
-      paidOrders: formattedOrders.filter(
-        (order) => order.status === "paid"
-      ).length,
-      pendingOrders: formattedOrders.filter(
-        (order) => order.status === "pending"
-      ).length,
-      failedOrders: formattedOrders.filter(
-        (order) => order.status === "failed"
-      ).length,
-      paidRevenue: formattedOrders
-        .filter((order) => order.status === "paid")
-        .reduce((total, order) => total + order.amount, 0),
+      totalOrders:
+        formattedOrders.length,
+
+      paidOrders:
+        formattedOrders.filter(
+          (order) =>
+            order.status ===
+            "paid"
+        ).length,
+
+      pendingOrders:
+        formattedOrders.filter(
+          (order) =>
+            order.status ===
+            "pending"
+        ).length,
+
+      failedOrders:
+        formattedOrders.filter(
+          (order) =>
+            order.status ===
+            "failed"
+        ).length,
+
+      paidRevenue:
+        formattedOrders
+          .filter(
+            (order) =>
+              order.status ===
+              "paid"
+          )
+          .reduce(
+            (
+              total,
+              order
+            ) =>
+              total +
+              order.amount,
+            0
+          ),
     };
 
     return NextResponse.json({
       ok: true,
-      orders: formattedOrders,
-      count: formattedOrders.length,
+      orders:
+        formattedOrders,
+      count:
+        formattedOrders.length,
       summary,
     });
   } catch (error) {
-    console.error("Admin orders API error:", error);
+    console.error(
+      "Admin orders API error:",
+      error
+    );
 
     return NextResponse.json(
       {
