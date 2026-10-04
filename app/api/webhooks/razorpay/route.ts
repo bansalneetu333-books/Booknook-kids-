@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/admin";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
@@ -75,19 +76,29 @@ export async function POST(request: Request) {
       const admin =
         createAdminClient();
 
-      const {
-        data: order,
-        error: findError,
-      } = await admin
+      let { data: order, error: findError } = await admin
         .from("orders")
         .select(
           "id,user_id,status,razorpay_order_id,razorpay_payment_id"
         )
-        .eq(
-          "razorpay_order_id",
-          razorpayOrderId
-        )
+        .eq("razorpay_order_id", razorpayOrderId)
         .maybeSingle();
+
+      // The local order ID is used as Razorpay's receipt. This
+      // fallback lets a verified webhook recover if the local
+      // razorpay_order_id write was interrupted after payment setup.
+      if (!order && !findError && typeof orderEntity?.receipt === "string") {
+        const fallback = await admin
+          .from("orders")
+          .select(
+            "id,user_id,status,razorpay_order_id,razorpay_payment_id"
+          )
+          .eq("id", orderEntity.receipt)
+          .maybeSingle();
+
+        order = fallback.data;
+        findError = fallback.error;
+      }
 
       if (findError) {
         console.error(
