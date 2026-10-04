@@ -1,5 +1,20 @@
-import Razorpay from "razorpay";
 import crypto from "crypto";
+
+type RazorpayConstructor = new (options: {
+  key_id: string;
+  key_secret: string;
+}) => {
+  orders: {
+    create: (options: {
+      amount: number;
+      currency: string;
+      receipt: string;
+      notes?: Record<string, string>;
+    }) => Promise<any>;
+  };
+};
+
+const Razorpay = require("razorpay") as RazorpayConstructor;
 
 type RazorpayOrderInput = {
   amount: number;
@@ -10,19 +25,14 @@ type RazorpayOrderInput = {
 
 function getRazorpayCredentials() {
   const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret =
-    process.env.RAZORPAY_KEY_SECRET;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId) {
-    throw new Error(
-      "Missing RAZORPAY_KEY_ID."
-    );
+    throw new Error("Missing RAZORPAY_KEY_ID.");
   }
 
   if (!keySecret) {
-    throw new Error(
-      "Missing RAZORPAY_KEY_SECRET."
-    );
+    throw new Error("Missing RAZORPAY_KEY_SECRET.");
   }
 
   return {
@@ -32,15 +42,11 @@ function getRazorpayCredentials() {
 }
 
 export function getRazorpayKeyId() {
-  return getRazorpayCredentials()
-    .keyId;
+  return getRazorpayCredentials().keyId;
 }
 
 function createRazorpayClient() {
-  const {
-    keyId,
-    keySecret,
-  } = getRazorpayCredentials();
+  const { keyId, keySecret } = getRazorpayCredentials();
 
   return new Razorpay({
     key_id: keyId,
@@ -54,23 +60,15 @@ export async function createRazorpayOrder({
   receipt,
   notes,
 }: RazorpayOrderInput) {
-  if (
-    !Number.isFinite(amount) ||
-    amount <= 0
-  ) {
-    throw new Error(
-      "Razorpay amount must be greater than zero."
-    );
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("Razorpay amount must be greater than zero.");
   }
 
   if (!receipt?.trim()) {
-    throw new Error(
-      "Razorpay receipt is required."
-    );
+    throw new Error("Razorpay receipt is required.");
   }
 
-  const razorpay =
-    createRazorpayClient();
+  const razorpay = createRazorpayClient();
 
   return razorpay.orders.create({
     amount: Math.round(amount),
@@ -89,25 +87,19 @@ export function verifyPaymentSignature({
   paymentId: string;
   signature: string;
 }) {
-  const {
-    keySecret,
-  } = getRazorpayCredentials();
+  const { keySecret } = getRazorpayCredentials();
 
-  const generatedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        keySecret
-      )
-      .update(
-        `${orderId}|${paymentId}`
-      )
-      .digest("hex");
+  const generatedSignature = crypto
+    .createHmac("sha256", keySecret)
+    .update(`${orderId}|${paymentId}`)
+    .digest("hex");
+
+  if (generatedSignature.length !== signature.length) {
+    return false;
+  }
 
   return crypto.timingSafeEqual(
-    Buffer.from(
-      generatedSignature
-    ),
+    Buffer.from(generatedSignature),
     Buffer.from(signature)
   );
 }
@@ -116,29 +108,23 @@ export function verifyWebhookSignature(
   rawBody: string,
   signature: string
 ) {
-  const secret =
-    process.env
-      .RAZORPAY_WEBHOOK_SECRET;
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
   if (!secret) {
-    throw new Error(
-      "Missing RAZORPAY_WEBHOOK_SECRET."
-    );
+    throw new Error("Missing RAZORPAY_WEBHOOK_SECRET.");
   }
 
-  const generatedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        secret
-      )
-      .update(rawBody)
-      .digest("hex");
+  const generatedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("hex");
+
+  if (generatedSignature.length !== signature.length) {
+    return false;
+  }
 
   return crypto.timingSafeEqual(
-    Buffer.from(
-      generatedSignature
-    ),
+    Buffer.from(generatedSignature),
     Buffer.from(signature)
   );
 }
