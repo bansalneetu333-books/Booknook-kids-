@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";\nimport Image from "next/image";
 
 type Book = {
   id: string;
@@ -31,7 +31,7 @@ export default function AdminBooksPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
-  async function loadBooks() {
+  const loadBooks = useCallback(async () => {
     setLoading(true);
     setMessage("");
 
@@ -291,10 +291,12 @@ export default function AdminBooksPage() {
                 <div className="flex gap-4 p-5">
                   <div className="h-28 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-100 to-pink-100">
                     {cover ? (
-                      <img
+                      <Image
                         src={cover}
                         alt={book.title}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-3xl">
