@@ -3,61 +3,13 @@ import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 
 const navigation = [
-  {
-    href: "/admin",
-    label: "Dashboard",
-    icon: "📊",
-  },
-  {
-    href: "/admin/books",
-    label: "Books",
-    icon: "📚",
-  },
-  {
-    href: "/admin/categories",
-    label: "Categories",
-    icon: "🏷️",
-  },
-  {
-    href: "/admin/homepage",
-    label: "Homepage",
-    icon: "🏠",
-  },
-  {
-    href: "/admin/customers",
-    label: "Customers",
-    icon: "👥",
-  },
-  {
-    href: "/admin/orders",
-    label: "Orders",
-    icon: "🧾",
-  },
-  {
-    href: "/admin/analytics",
-    label: "Analytics",
-    icon: "📈",
-  },
-  {
-    href: "/admin/storage",
-    label: "Storage",
-    icon: "🗄️",
-  },
-  {
-    href: "/admin/whatsapp",
-    label: "WhatsApp",
-    icon: "💬",
-  },
-  {
-    href: "/admin/support",
-    label: "Support",
-    icon: "🤖",
-  },
-  {
-    href: "/admin/promotions",
-    label: "Promotions",
-    icon: "🎁",
-  },
+  { href: "/admin", label: "Dashboard", icon: "📊" },
+  { href: "/admin/books", label: "Books", icon: "📚" },
+  { href: "/admin/categories", label: "Categories", icon: "🏷️" },
+  { href: "/admin/homepage", label: "Homepage", icon: "🏠" },
+  { href: "/admin/orders", label: "Orders", icon: "🧾" },
+  { href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { href: "/admin/whatsapp", label: "WhatsApp", icon: "💬" },
 ];
 
 export default async function AdminLayout({
