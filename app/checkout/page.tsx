@@ -171,7 +171,7 @@ export default async function CheckoutPage({
 
               <div className="mt-7 rounded-2xl bg-slate-50 p-5">
                 <h2 className="font-extrabold text-slate-900">
-                  What you'll get
+                  What you&apos;ll get
                 </h2>
 
                 <ul className="mt-3 space-y-2 text-sm text-slate-600">
