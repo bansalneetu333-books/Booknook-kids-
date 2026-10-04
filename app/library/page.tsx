@@ -52,10 +52,10 @@ export default async function LibraryPage() {
             </div>
           ) : (
             <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {books.map((item) => (
+              {books.map((book) => (
                 <BookCard
-                  key={item.id}
-                  book={item.books}
+                  key={book.id}
+                  book={book}
                 />
               ))}
             </div>
