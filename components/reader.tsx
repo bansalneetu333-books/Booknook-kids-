@@ -10,6 +10,7 @@ type ReaderProps = {
 
 type AccessResponse = {
   url?: string;
+  fileType?: string;
   error?: string;
 };
 
@@ -33,6 +34,7 @@ export function EpubReader({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const saveProgress = useCallback(
     (
@@ -81,6 +83,7 @@ export function EpubReader({
     async function loadReader() {
       setLoading(true);
       setError("");
+      setPdfUrl(null);
 
       try {
         if (!containerRef.current) {
@@ -114,6 +117,12 @@ export function EpubReader({
         }
 
         if (cancelled) return;
+
+        if (data.fileType === "application/pdf" || data.url.toLowerCase().includes(".pdf")) {
+          setPdfUrl(data.url);
+          setLoading(false);
+          return;
+        }
 
         const book = ePub(data.url);
 
@@ -285,6 +294,18 @@ export function EpubReader({
 
   function goNext() {
     void renditionRef.current?.next();
+  }
+
+  if (pdfUrl) {
+    return (
+      <section className="flex min-h-[75vh] flex-col overflow-hidden rounded-[2rem] bg-slate-900 shadow-2xl">
+        <header className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4 text-white sm:px-6">
+          <h1 className="truncate font-black">{title}</h1>
+          <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white">Open PDF</a>
+        </header>
+        <iframe title={title} src={pdfUrl} className="h-[75vh] w-full bg-white" />
+      </section>
+    );
   }
 
   if (error) {
