@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       await supabase
         .from("book_versions")
         .select(
-          "id,version_number,epub_path,file_path,file_size,active"
+          "id,version_number,epub_path,file_path,file_size,file_type,active"
         )
         .eq("book_id", bookId)
         .eq("active", true)
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
       fileName: `${book.title
         .trim()
         .replace(/[^a-zA-Z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "") || "book"}.epub`,
+        .replace(/^-+|-+$/g, "") || "book"}${activeVersion.file_type === "application/pdf" ? ".pdf" : ".epub"}`,
       version: activeVersion.version_number,
       fileSize: activeVersion.file_size,
     });
