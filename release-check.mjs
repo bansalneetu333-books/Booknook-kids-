@@ -1,28 +1,44 @@
 import fs from "node:fs";
-import path from "node:path";
 
 const required = [
-  "app/api/payments/create-order/route.ts",
-  "app/api/payments/verify/route.ts",
-  "app/api/payments/webhook/route.ts",
+  "app/api/checkout/create-order/route.ts",
+  "app/api/checkout/verify/route.ts",
+  "app/api/webhooks/razorpay/route.ts",
   "app/api/reader/access/route.ts",
-  "app/api/downloads/epub/route.ts",
-  "app/api/admin/refunds/route.ts",
-  "supabase/migrations/0005_hardening.sql",
-  "docs/PRODUCTION_RUNBOOK.md"
+  "app/api/books/download/route.ts",
+  "app/api/admin/books/route.ts",
+  "app/api/admin/books/version/route.ts",
+  "app/api/admin/books/version/activate/route.ts",
+  "lib/razorpay.ts",
+  "lib/admin.ts",
+  "lib/storage.ts",
+  "middleware.ts",
+  "next.config.ts",
+  "package.json"
 ];
 
-const missing = required.filter((file) => !fs.existsSync(path.resolve(file)));
+const missing = required.filter((file) => !fs.existsSync(file));
 if (missing.length) {
   console.error("Missing required release files:", missing);
   process.exit(1);
 }
 
-const envExample = fs.readFileSync(".env.example", "utf8");
+const packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+for (const script of ["build", "lint", "typecheck", "test", "release-check", "smoke-test"]) {
+  if (!packageJson.scripts?.[script]) {
+    console.error(`Missing npm script: ${script}`);
+    process.exit(1);
+  }
+}
+
+const envExample = fs.existsSync(".env.example")
+  ? fs.readFileSync(".env.example", "utf8")
+  : "";
+
 for (const key of [
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
   "RAZORPAY_KEY_ID",
   "RAZORPAY_KEY_SECRET",
