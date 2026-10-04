@@ -6,7 +6,6 @@ if (!base) {
 }
 
 const paths = ["/", "/books", "/sitemap.xml", "/robots.txt", "/api/health"];
-
 let failed = false;
 
 for (const pathname of paths) {
