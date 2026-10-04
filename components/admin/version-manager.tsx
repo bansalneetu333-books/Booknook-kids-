@@ -73,11 +73,11 @@ export default function VersionManager({
     } finally {
       setLoadingVersions(false);
     }
-  }
+  }, [bookId]);
 
   useEffect(() => {
     void loadVersions();
-  }, [bookId]);
+  }, [loadVersions]);
 
   async function handleUpload(
     event: React.FormEvent<HTMLFormElement>
