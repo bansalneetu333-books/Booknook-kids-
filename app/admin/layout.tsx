@@ -7,7 +7,9 @@ const navigation = [
   { href: "/admin/books", label: "Books", icon: "📚" },
   { href: "/admin/categories", label: "Categories", icon: "🏷️" },
   { href: "/admin/homepage", label: "Homepage", icon: "🏠" },
+  { href: "/admin/customers", label: "Customers", icon: "👥" },
   { href: "/admin/orders", label: "Orders", icon: "🧾" },
+  { href: "/admin/sales", label: "Sales", icon: "💰" },
   { href: "/admin/analytics", label: "Analytics", icon: "📈" },
   { href: "/admin/whatsapp", label: "WhatsApp", icon: "💬" },
 ];
