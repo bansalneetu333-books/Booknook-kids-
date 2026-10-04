@@ -86,7 +86,9 @@ export async function POST(request: Request) {
       genre,
       age_category: ageCategory,
       published: Boolean(body.published),
+      is_published: Boolean(body.published),
       featured: Boolean(body.featured),
+      is_featured: Boolean(body.featured),
     };
 
     if (body.bookId) {
