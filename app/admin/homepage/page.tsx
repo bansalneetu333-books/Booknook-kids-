@@ -134,7 +134,7 @@ export default function AdminHomepagePage() {
       const response = await fetch(
         "/api/admin/books/publish",
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
