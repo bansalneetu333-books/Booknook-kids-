@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Image from "next/image";\nimport Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CheckoutButton } from "@/components/checkout-button";
@@ -121,10 +121,12 @@ export default async function CheckoutPage({
               <div className="w-full max-w-sm">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-white shadow-2xl">
                   {coverUrl ? (
-                    <img
+                    <Image
                       src={coverUrl}
                       alt={book.title}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      className="object-cover"
                     />
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center p-8 text-center">
