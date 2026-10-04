@@ -32,11 +32,11 @@ export async function GET(request: Request) {
     const { data: ownership } = await supabase
       .from("order_items")
       .select(
-        "order_id,orders!inner(user_id,payment_status)"
+        "order_id,orders!inner(user_id,status)"
       )
       .eq("book_id", bookId)
       .eq("orders.user_id", user.id)
-      .eq("orders.payment_status", "paid")
+      .eq("orders.status", "paid")
       .limit(1)
       .maybeSingle();
 
