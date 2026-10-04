@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type OrderItem = {
   id: string;
@@ -101,7 +101,7 @@ export default function AdminOrdersPage() {
   const [error, setError] =
     useState("");
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -168,7 +168,7 @@ export default function AdminOrdersPage() {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [status, search]);
+  }, [loadOrders]);
 
   const visibleOrders = useMemo(
     () => orders,
