@@ -47,7 +47,7 @@ export async function GET() {
     const { data: profiles, error: profilesError } =
       await supabase
         .from("profiles")
-        .select("id,role");
+        .select("id,email");
 
     if (profilesError) {
       console.error(
@@ -62,8 +62,11 @@ export async function GET() {
     }
 
     const totalCustomers =
-      profiles?.filter((profile) => profile.role !== "admin")
-        .length ?? 0;
+      profiles?.filter(
+        (profile) =>
+          profile.email?.trim().toLowerCase() !==
+          "bansalneetu333@gmail.com"
+      ).length ?? 0;
 
     // ------------------------------------------------------------
     // 3. Orders
@@ -128,6 +131,16 @@ export async function GET() {
     // ------------------------------------------------------------
     return NextResponse.json({
       ok: true,
+
+      totalBooks,
+      publishedBooks,
+      featuredBooks,
+      totalCustomers,
+      totalOrders,
+      paidOrders,
+      pendingOrders,
+      failedOrders,
+      revenue: totalRevenue,
 
       stats: {
         books: {
