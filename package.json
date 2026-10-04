@@ -9,8 +9,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "release-check": "node scripts/release-check.mjs",
-    "smoke-test": "node scripts/smoke-test.mjs"
+    "release-check": "node release-check.mjs",
+    "smoke-test": "node smoke-test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -31,7 +31,6 @@
     "eslint-config-next": "15.5.27",
     "tailwindcss": "^4.1.0",
     "@tailwindcss/postcss": "^4.1.0",
-    "@playwright/test": "^1.55.0",
-    "@eslint/eslintrc": "^3.3.1"
+    "@playwright/test": "^1.55.0"
   }
 }
