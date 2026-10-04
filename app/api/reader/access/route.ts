@@ -103,8 +103,7 @@ export async function POST(request: Request) {
             epub_path,
             file_type,
             is_current,
-            active,
-            file_type
+            active
           `
         )
         .eq("book_id", bookId)
