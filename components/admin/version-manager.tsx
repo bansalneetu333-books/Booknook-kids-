@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Version = {
   id: string;
@@ -36,7 +36,7 @@ export default function VersionManager({
   const [error, setError] =
     useState("");
 
-  async function loadVersions() {
+  const loadVersions = useCallback(async () => {
     try {
       setLoadingVersions(true);
       setError("");
