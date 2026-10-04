@@ -40,7 +40,9 @@ export async function GET(request: Request) {
         cover_path,
         epub_path,
         published,
+        is_published,
         featured,
+        is_featured,
         created_at,
         updated_at,
         book_versions(
@@ -156,8 +158,8 @@ export async function GET(request: Request) {
         coverPath: book.cover_path,
         epubPath: book.epub_path,
 
-        published: book.published,
-        featured: book.featured,
+        published: Boolean(book.published ?? book.is_published),
+        featured: Boolean(book.featured ?? book.is_featured),
 
         createdAt: book.created_at,
         updatedAt: book.updated_at,
