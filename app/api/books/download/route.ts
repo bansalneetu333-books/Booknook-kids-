@@ -48,7 +48,7 @@ export async function POST(request: Request) {
      */
     const { data: book, error: bookError } = await supabase
       .from("books")
-      .select("id,title,published")
+      .select("id,title,published,is_published")
       .eq("id", bookId)
       .maybeSingle();
 
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!book.published) {
+    if (!book.published && !book.is_published) {
       return NextResponse.json(
         { error: "This book is not currently available." },
         { status: 404 }
