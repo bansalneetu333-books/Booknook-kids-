@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { getMyLibrary } from "@/lib/library";
 
-export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
     const library = await getMyLibrary();
+
+    if (library === null) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
 
     return NextResponse.json({
       ok: true,
@@ -13,27 +24,21 @@ export async function GET() {
       count: library.length,
     });
   } catch (error) {
-    console.error("Customer library API error:", error);
-
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unable to load your library.";
-
-    if (
-      message.toLowerCase().includes("not authenticated") ||
-      message.toLowerCase().includes("unauthorized") ||
-      message.toLowerCase().includes("login")
-    ) {
-      return NextResponse.json(
-        { error: "Please log in to view your library." },
-        { status: 401 }
-      );
-    }
+    console.error(
+      "Customer library API error:",
+      error
+    );
 
     return NextResponse.json(
-      { error: message },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to load your library.",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }
