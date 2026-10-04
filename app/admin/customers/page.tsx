@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Customer = {
   id: string;
@@ -19,7 +19,7 @@ export default function AdminCustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadCustomers() {
+  const loadCustomers = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
