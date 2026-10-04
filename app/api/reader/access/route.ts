@@ -103,7 +103,8 @@ export async function POST(request: Request) {
             epub_path,
             file_type,
             is_current,
-            active
+            active,
+            file_type
           `
         )
         .eq("book_id", bookId)
@@ -189,6 +190,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       url: signedUrl.signedUrl,
+      fileType: version.file_type || "application/epub+zip",
       expiresIn: 60 * 60,
     });
   } catch (error) {
