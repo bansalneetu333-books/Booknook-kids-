@@ -7,9 +7,6 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // ------------------------------------------------------------
-    // 1. Require logged-in customer
-    // ------------------------------------------------------------
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -21,9 +18,6 @@ export async function GET() {
       );
     }
 
-    // ------------------------------------------------------------
-    // 2. Load this customer's orders
-    // ------------------------------------------------------------
     const { data: orders, error: ordersError } = await supabase
       .from("orders")
       .select(
@@ -63,10 +57,7 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (ordersError) {
-      console.error(
-        "Customer orders lookup error:",
-        ordersError
-      );
+      console.error("Customer orders lookup error:", ordersError);
 
       return NextResponse.json(
         { error: "Unable to load your orders." },
@@ -74,9 +65,6 @@ export async function GET() {
       );
     }
 
-    // ------------------------------------------------------------
-    // 3. Return safe customer order information
-    // ------------------------------------------------------------
     const formattedOrders = (orders ?? []).map((order) => ({
       id: order.id,
       razorpayOrderId: order.razorpay_order_id,
@@ -87,28 +75,35 @@ export async function GET() {
       createdAt: order.created_at,
       updatedAt: order.updated_at,
 
-      items: (order.order_items ?? []).map((item) => ({
-        id: item.id,
-        bookId: item.book_id,
-        price: Number(item.price),
-        createdAt: item.created_at,
-        book: item.books
-          ? {
-              id: item.books.id,
-              title: item.books.title,
-              slug: item.books.slug,
-              author: item.books.author,
-              description: item.books.description,
-              price: Number(item.books.price),
-              currency: item.books.currency,
-              genre: item.books.genre,
-              ageCategory: item.books.age_category,
-              coverPath: item.books.cover_path,
-              published: item.books.published,
-              featured: item.books.featured,
-            }
-          : null,
-      })),
+      items: (order.order_items ?? []).map((item) => {
+        const book = Array.isArray(item.books)
+          ? item.books[0] ?? null
+          : item.books;
+
+        return {
+          id: item.id,
+          bookId: item.book_id,
+          price: Number(item.price),
+          createdAt: item.created_at,
+
+          book: book
+            ? {
+                id: book.id,
+                title: book.title,
+                slug: book.slug,
+                author: book.author,
+                description: book.description,
+                price: Number(book.price),
+                currency: book.currency,
+                genre: book.genre,
+                ageCategory: book.age_category,
+                coverPath: book.cover_path,
+                published: book.published,
+                featured: book.featured,
+              }
+            : null,
+        };
+      }),
     }));
 
     return NextResponse.json({
