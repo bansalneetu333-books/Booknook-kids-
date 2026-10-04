@@ -12,11 +12,25 @@ export default async function BooksPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
+  const allBooks = await getPublishedBooks();
 
-  const books = await getPublishedBooks({
-    search: params.q,
-    genre: params.genre,
-    age: params.age
+  const search = params.q?.trim().toLowerCase();
+  const genre = params.genre?.trim().toLowerCase();
+  const age = params.age?.trim().toLowerCase();
+
+  const books = allBooks.filter((book) => {
+    const matchesSearch =
+      !search ||
+      book.title.toLowerCase().includes(search) ||
+      book.author.toLowerCase().includes(search);
+
+    const matchesGenre =
+      !genre || book.genre?.toLowerCase() === genre;
+
+    const matchesAge =
+      !age || book.age_category?.toLowerCase().includes(age);
+
+    return matchesSearch && matchesGenre && matchesAge;
   });
 
   return (
