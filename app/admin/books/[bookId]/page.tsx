@@ -45,7 +45,13 @@ export default async function EditBookPage({
         age_category,
         published,
         featured,
-        cover_path
+        is_free,
+        cover_path,
+        book_categories (
+          categories (
+            name
+          )
+        )
       `
     )
     .eq("id", bookId)
@@ -78,6 +84,12 @@ export default async function EditBookPage({
       Boolean(book.published),
     featured:
       Boolean(book.featured),
+    is_free:
+      Boolean(book.is_free),
+    categories:
+      (book.book_categories ?? [])
+        .map((item: any) => Array.isArray(item.categories) ? item.categories[0]?.name : item.categories?.name)
+        .filter(Boolean),
     cover_path:
       book.cover_path ?? null,
   };
