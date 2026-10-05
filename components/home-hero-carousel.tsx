@@ -55,13 +55,13 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
           const itemCover =
             item.cover_url ||
             (item.cover_path
-              ? \`\\${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/\\${item.cover_path}\`
+              ? `\${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/\${item.cover_path}`
               : null);
 
           return itemCover ? (
             <div
               key={item.id}
-              className={\`absolute inset-0 transition-opacity duration-1000 \${index === active ? "opacity-100" : "opacity-0"}\`}
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === active ? "opacity-100" : "opacity-0"}`}
               aria-hidden={index !== active}
             >
               <Image src={itemCover} alt="" fill sizes="100vw" className="object-cover object-center" priority={index === 0} />
@@ -78,7 +78,7 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
             {book.author && <p className="mt-2 text-sm font-bold text-white/80 sm:text-base">By {book.author}</p>}
             {book.description && <p className="mt-4 line-clamp-2 max-w-lg text-sm leading-6 text-white/85 sm:text-base">{book.description}</p>}
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={\`/books/\\${book.slug}\`} className="rounded-full bg-white px-6 py-3 font-black text-indigo-700 shadow-lg">
+              <Link href={`/books/\${book.slug}`} className="rounded-full bg-white px-6 py-3 font-black text-indigo-700 shadow-lg">
                 {book.is_free ? "Read Free" : "Explore Book"}
               </Link>
               <Link href="/books" className="rounded-full border border-white/40 bg-white/10 px-6 py-3 font-black text-white backdrop-blur">
@@ -94,9 +94,9 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
               <button
                 key={item.id}
                 type="button"
-                aria-label={\`Show \\${item.title}\`}
+                aria-label={`Show \${item.title}`}
                 onClick={() => setActive(index)}
-                className={\`h-2.5 rounded-full transition-all \${index === active ? "w-8 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"}\`}
+                className={`h-2.5 rounded-full transition-all ${index === active ? "w-8 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"}`}
               />
             ))}
           </div>
