@@ -43,8 +43,16 @@ export async function GET(request: Request) {
         is_published,
         featured,
         is_featured,
+        is_free,
         created_at,
         updated_at,
+        book_categories (
+          categories (
+            name,
+            slug,
+            icon
+          )
+        ),
         book_versions(
           id,
           version,
@@ -160,6 +168,11 @@ export async function GET(request: Request) {
 
         published: Boolean(book.published ?? book.is_published),
         featured: Boolean(book.featured ?? book.is_featured),
+        isFree: Boolean(book.is_free),
+        categories: (book.book_categories ?? []).map((item: any) => {
+          const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
+          return category ? { name: category.name, slug: category.slug, icon: category.icon } : null;
+        }).filter(Boolean),
 
         createdAt: book.created_at,
         updatedAt: book.updated_at,
