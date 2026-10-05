@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { siteConfig } from "@/lib/config";
 import { getFeaturedBooks, getPublishedBooks, getFreeBooks } from "@/lib/books";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { CategoryMenu } from "@/components/category-menu";
+import { HomeHeroCarousel } from "@/components/home-hero-carousel";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
@@ -30,38 +30,7 @@ export default async function HomePage() {
           </div>
 
           <div className="min-w-0">
-            <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-pink-500 p-6 text-white shadow-xl sm:p-10">
-              <div className="max-w-3xl">
-                <p className="text-sm font-black uppercase tracking-[0.2em] text-white/80">
-                  Welcome to {siteConfig.name}
-                </p>
-
-                <h1 className="mt-3 text-4xl font-black leading-tight sm:text-6xl">
-                  {map.hero_title || "Discover Amazing Stories! 📚✨"}
-                </h1>
-
-                <p className="mt-4 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
-                  {map.hero_text ||
-                    "Read, explore and enjoy wonderful e-books for young readers."}
-                </p>
-
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Link
-                    href="/books"
-                    className="rounded-full bg-white px-6 py-3 font-black text-indigo-700 shadow-lg"
-                  >
-                    Start Reading
-                  </Link>
-
-                  <Link
-                    href="/library"
-                    className="rounded-full border border-white/40 bg-white/10 px-6 py-3 font-black text-white backdrop-blur"
-                  >
-                    My Shelf
-                  </Link>
-                </div>
-              </div>
-            </section>
+            <HomeHeroCarousel books={featured.length ? featured : latest.slice(0, 8)} />
 
             <section className="mt-10">
               <div className="flex items-end justify-between gap-4">
