@@ -84,6 +84,13 @@ export default function AdminLoginForm() {
             <button type="submit" disabled={loading} className="w-full rounded-2xl bg-violet-600 px-5 py-3.5 font-black text-white shadow-lg hover:bg-violet-700 disabled:opacity-60">
               {loading ? "Signing in..." : "Sign in to Admin"}
             </button>
+
+            <Link
+              href="/admin-reset"
+              className="block text-center text-sm font-bold text-violet-600 hover:text-violet-800"
+            >
+              Forgot admin password?
+            </Link>
           </form>
 
           <Link href="/login" className="mt-7 block text-center text-sm font-bold text-slate-500 hover:text-violet-600">
