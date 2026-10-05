@@ -1,13 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
+import nextVitals from "eslint-config-next/core-web-vitals.js";
 
 export default defineConfig([
-  ...nextVitals,
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "node_modules/**",
-    "next-env.d.ts",
-  ]),
+  ...(Array.isArray(nextVitals) ? nextVitals : [nextVitals]),
+  globalIgnores([".next/**", "out/**", "build/**", "node_modules/**", "next-env.d.ts"]),
 ]);
