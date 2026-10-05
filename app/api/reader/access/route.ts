@@ -42,6 +42,21 @@ export async function POST(request: Request) {
      * Verify that the customer has actually
      * purchased this book.
      */
+    const { data: book, error: bookError } = await supabase
+      .from("books")
+      .select("id,title,published,is_free")
+      .eq("id", bookId)
+      .eq("published", true)
+      .maybeSingle();
+
+    if (bookError) {
+      return NextResponse.json({ error: "Unable to verify book." }, { status: 500 });
+    }
+
+    if (!book) {
+      return NextResponse.json({ error: "Book is not available." }, { status: 404 });
+    }
+
     const { data: purchase, error: purchaseError } =
       await supabase
         .from("order_items")
@@ -62,21 +77,14 @@ export async function POST(request: Request) {
         .maybeSingle();
 
     if (purchaseError) {
-      console.error(
-        "Reader ownership check failed:",
-        purchaseError
-      );
-
+      console.error("Reader ownership check failed:", purchaseError);
       return NextResponse.json(
-        {
-          error:
-            "Unable to verify book ownership.",
-        },
+        { error: "Unable to verify book ownership." },
         { status: 500 }
       );
     }
 
-    if (!purchase) {
+    if (!book.is_free && !purchase) {
       return NextResponse.json(
         {
           error:
