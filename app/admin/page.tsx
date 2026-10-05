@@ -13,34 +13,66 @@ type DashboardStats = {
 
 async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    const { isAdmin } = await requireAdmin();
+    const { supabase, isAdmin } = await requireAdmin();
 
     if (!isAdmin) {
       return {};
     }
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      "http://localhost:3000";
+    const [
+      { data: books, error: booksError },
+      { data: profiles, error: profilesError },
+      { data: orders, error: ordersError },
+    ] = await Promise.all([
+      supabase.from("books").select("id,published"),
+      supabase.from("profiles").select("id,email"),
+      supabase.from("orders").select("id,status,amount"),
+    ]);
 
-    const response = await fetch(
-      `${baseUrl}/api/admin/dashboard`,
-      {
-        cache: "no-store",
-      }
-    );
-
-    if (!response.ok) {
+    if (booksError || profilesError || ordersError) {
+      console.error("Dashboard stats database error:", {
+        booksError,
+        profilesError,
+        ordersError,
+      });
       return {};
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error(
-      "Dashboard stats error:",
-      error
-    );
+    const totalBooks = books?.length ?? 0;
 
+    const publishedBooks =
+      books?.filter((book) => book.published === true).length ?? 0;
+
+    const totalCustomers =
+      profiles?.filter(
+        (profile) =>
+          profile.email?.trim().toLowerCase() !==
+          "bansalneetu333@gmail.com"
+      ).length ?? 0;
+
+    const totalOrders = orders?.length ?? 0;
+
+    const paidOrders =
+      orders?.filter((order) => order.status === "paid").length ?? 0;
+
+    const totalRevenue =
+      orders
+        ?.filter((order) => order.status === "paid")
+        .reduce(
+          (total, order) => total + (Number(order.amount) || 0),
+          0
+        ) ?? 0;
+
+    return {
+      totalBooks,
+      publishedBooks,
+      totalCustomers,
+      totalOrders,
+      paidOrders,
+      totalRevenue,
+    };
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
     return {};
   }
 }
