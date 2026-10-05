@@ -4,7 +4,6 @@ import { getFeaturedBooks, getPublishedBooks, getFreeBooks } from "@/lib/books";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { CategoryMenu } from "@/components/category-menu";
-import { BOOK_CATEGORIES } from "@/lib/categories";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
@@ -62,21 +61,6 @@ export default async function HomePage() {
                   </Link>
                 </div>
               </div>
-            </section>
-
-            <section className="mt-6 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-5">
-              {BOOK_CATEGORIES.slice(0, 10).map((category) => (
-                <Link
-                  key={category.slug}
-                  href={`/books?genre=${encodeURIComponent(category.name)}`}
-                  className="min-w-0 rounded-3xl border border-white bg-white/90 p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                >
-                  <span className="text-3xl">{category.icon}</span>
-                  <p className="mt-2 truncate text-sm font-black text-slate-800">
-                    {category.name}
-                  </p>
-                </Link>
-              ))}
             </section>
 
             <section className="mt-10">
