@@ -49,7 +49,9 @@ export default function LoginForm() {
           email: normalizedEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/library`,
+            // Keep the confirmation callback path simple and valid.
+            // The callback defaults confirmed customers to /library.
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
 
