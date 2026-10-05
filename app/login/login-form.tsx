@@ -6,7 +6,18 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 function normalizePhone(value: string) {
-  return value.replace(/[\s()-]/g, "");
+  const cleaned = value.replace(/[\s()-]/g, "");
+
+  // Accept Indian mobile numbers with or without +91.
+  if (/^\d{10}$/.test(cleaned)) {
+    return `+91${cleaned}`;
+  }
+
+  if (/^91\d{10}$/.test(cleaned)) {
+    return `+${cleaned}`;
+  }
+
+  return cleaned;
 }
 
 function getErrorMessage(value: string | null) {
@@ -44,7 +55,7 @@ export default function LoginForm() {
     const normalizedPhone = normalizePhone(phone);
 
     if (!/^\+[1-9]\d{7,14}$/.test(normalizedPhone)) {
-      setMessage("Enter a valid mobile number with country code, for example +91XXXXXXXXXX.");
+      setMessage("Enter a valid mobile number, for example 7743085373 or +917743085373.");
       setLoading(false);
       return;
     }
