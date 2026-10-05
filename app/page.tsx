@@ -17,18 +17,20 @@ export default async function HomePage() {
   return (
     <>
       <SiteHeader />
-      <main className="min-h-screen bg-[radial-gradient(circle_at_20%_0%,#dbeafe,transparent_30%),radial-gradient(circle_at_100%_10%,#fce7f3,transparent_30%),#f8fafc]">
+      <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_20%_0%,#dbeafe,transparent_30%),radial-gradient(circle_at_100%_10%,#fce7f3,transparent_30%),#f8fafc]">
         {map.announcement && (
           <div className="bg-indigo-600 px-4 py-2 text-center text-sm font-bold text-white">
             {map.announcement}
           </div>
         )}
 
-        <div className="mx-auto flex max-w-[1500px] gap-5 px-4 py-5 sm:px-6">
-          <CategoryMenu />
+        <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-6">
+          <div className="min-w-0">
+            <CategoryMenu />
+          </div>
 
-          <div className="min-w-0 flex-1">
-            <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-pink-500 p-7 text-white shadow-xl sm:p-10">
+          <div className="min-w-0">
+            <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-pink-500 p-6 text-white shadow-xl sm:p-10">
               <div className="max-w-3xl">
                 <p className="text-sm font-black uppercase tracking-[0.2em] text-white/80">
                   Welcome to {siteConfig.name}
@@ -61,15 +63,15 @@ export default async function HomePage() {
               </div>
             </section>
 
-            <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <section className="mt-6 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-5">
               {BOOK_CATEGORIES.slice(0, 10).map((category) => (
                 <Link
                   key={category.slug}
                   href={`/books?genre=${encodeURIComponent(category.name)}`}
-                  className="rounded-3xl border border-white bg-white/90 p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                  className="min-w-0 rounded-3xl border border-white bg-white/90 p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
                   <span className="text-3xl">{category.icon}</span>
-                  <p className="mt-2 text-sm font-black text-slate-800">
+                  <p className="mt-2 truncate text-sm font-black text-slate-800">
                     {category.name}
                   </p>
                 </Link>
@@ -78,19 +80,19 @@ export default async function HomePage() {
 
             <section className="mt-10">
               <div className="flex items-end justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-black text-indigo-600">
                     ✨ Fresh picks
                   </p>
                   <h2 className="mt-1 text-3xl font-black">Featured</h2>
                 </div>
 
-                <Link href="/books" className="text-sm font-black text-indigo-600">
+                <Link href="/books" className="shrink-0 text-sm font-black text-indigo-600">
                   See all →
                 </Link>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="mt-5 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {(featured.length ? featured : latest.slice(0, 5)).map((book) => (
                   <BookCard key={book.id} book={book} />
                 ))}
@@ -99,19 +101,19 @@ export default async function HomePage() {
 
             <section className="mt-10 pb-12">
               <div className="flex items-end justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-black text-pink-600">
                     🌟 More to explore
                   </p>
                   <h2 className="mt-1 text-3xl font-black">New Shelf</h2>
                 </div>
 
-                <Link href="/books" className="text-sm font-black text-indigo-600">
+                <Link href="/books" className="shrink-0 text-sm font-black text-indigo-600">
                   Browse →
                 </Link>
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="mt-5 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {latest.slice(0, 10).map((book) => (
                   <BookCard key={book.id} book={book} />
                 ))}
