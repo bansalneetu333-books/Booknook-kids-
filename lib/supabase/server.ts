@@ -1,15 +1,25 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+function normalizeSupabaseUrl(value: string) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    throw new Error(
+      "Invalid NEXT_PUBLIC_SUPABASE_URL. Use the bare Supabase project URL, for example https://your-project.supabase.co."
+    );
+  }
+}
+
 export async function createClient() {
   const cookieStore = await cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl) {
+  if (!rawSupabaseUrl) {
     throw new Error(
       "Missing NEXT_PUBLIC_SUPABASE_URL."
     );
@@ -22,7 +32,7 @@ export async function createClient() {
   }
 
   return createServerClient(
-    supabaseUrl,
+    normalizeSupabaseUrl(rawSupabaseUrl),
     supabaseKey,
     {
       cookies: {
