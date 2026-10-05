@@ -160,7 +160,7 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [search, status]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
