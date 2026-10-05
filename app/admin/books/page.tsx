@@ -78,7 +78,7 @@ export default function AdminBooksPage() {
 
   async function updateBook(
     bookId: string,
-    action: "publish" | "featured",
+    action: "publish" | "featured" | "free",
     value: boolean
   ) {
     setBusyId(bookId);
@@ -88,7 +88,9 @@ export default function AdminBooksPage() {
       const endpoint =
         action === "publish"
           ? "/api/admin/books/publish"
-          : "/api/admin/books/featured";
+          : action === "featured"
+          ? "/api/admin/books/featured"
+          : "/api/admin/books/free";
 
       const response = await fetch(endpoint, {
         method: "PATCH",
@@ -99,7 +101,9 @@ export default function AdminBooksPage() {
           bookId,
           [action === "publish"
             ? "published"
-            : "featured"]: value,
+            : action === "featured"
+            ? "featured"
+            : "isFree"]: value,
         }),
       });
 
@@ -118,7 +122,9 @@ export default function AdminBooksPage() {
                 ...book,
                 ...(action === "publish"
                   ? { published: value }
-                  : { featured: value }),
+                  : action === "featured"
+                  ? { featured: value }
+                  : { isFree: value }),
               }
             : book
         )
@@ -382,6 +388,21 @@ export default function AdminBooksPage() {
                       {book.published
                         ? "Unpublish"
                         : "Publish"}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() =>
+                        updateBook(
+                          book.id,
+                          "free",
+                          !book.isFree
+                        )
+                      }
+                      className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+                    >
+                      {book.isFree ? "Remove Free" : "Make Free"}
                     </button>
 
                     <button
