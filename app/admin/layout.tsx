@@ -22,7 +22,7 @@ export default async function AdminLayout({
   const { user, isAdmin } = await requireAdmin();
 
   if (!user) {
-    redirect("/login?next=/admin");
+    redirect("/admin-login");
   }
 
   if (!isAdmin) {
