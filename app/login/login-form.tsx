@@ -5,23 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-function normalizePhone(value: string) {
-  const cleaned = value.replace(/[\s()-]/g, "");
-
-  // Accept Indian mobile numbers with or without +91.
-  if (/^\d{10}$/.test(cleaned)) {
-    return `+91${cleaned}`;
-  }
-
-  if (/^91\d{10}$/.test(cleaned)) {
-    return `+${cleaned}`;
-  }
-
-  return cleaned;
-}
-
 function getErrorMessage(value: string | null) {
   if (!value) return null;
+
   return value === "otp_expired"
     ? "That OTP has expired. Please request a new one."
     : value === "access_denied"
@@ -32,9 +18,10 @@ function getErrorMessage(value: string | null) {
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [phone, setPhone] = useState("");
+
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"email" | "otp">("email");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(
     getErrorMessage(searchParams.get("error"))
@@ -48,23 +35,26 @@ export default function LoginForm() {
 
   async function sendOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      setMessage("Enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     setSuccess(null);
 
-    const normalizedPhone = normalizePhone(phone);
-
-    if (!/^\+[1-9]\d{7,14}$/.test(normalizedPhone)) {
-      setMessage("Enter a valid mobile number, for example 7743085373 or +917743085373.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const supabase = createClient();
+
       const { error } = await supabase.auth.signInWithOtp({
-        phone: normalizedPhone,
-        options: { shouldCreateUser: true },
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: true,
+        },
       });
 
       if (error) {
@@ -72,11 +62,13 @@ export default function LoginForm() {
         return;
       }
 
-      setPhone(normalizedPhone);
+      setEmail(normalizedEmail);
       setStep("otp");
-      setSuccess("OTP sent. Check your mobile for the verification code.");
+      setSuccess("OTP sent. Check your email for the verification code.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to send OTP.");
+      setMessage(
+        error instanceof Error ? error.message : "Unable to send OTP."
+      );
     } finally {
       setLoading(false);
     }
@@ -84,25 +76,26 @@ export default function LoginForm() {
 
   async function verifyOtp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const token = otp.replace(/\D/g, "");
+
+    if (!/^\d{6}$/.test(token)) {
+      setMessage("Enter the 6-digit OTP sent to your email.");
+      return;
+    }
+
     setLoading(true);
     setMessage(null);
     setSuccess(null);
 
-    const normalizedPhone = normalizePhone(phone);
-    const token = otp.replace(/\D/g, "");
-
-    if (!/^\d{6,8}$/.test(token)) {
-      setMessage("Enter the OTP sent to your mobile.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const supabase = createClient();
+
       const { data, error } = await supabase.auth.verifyOtp({
-        phone: normalizedPhone,
+        email: normalizedEmail,
         token,
-        type: "sms",
+        type: "email",
       });
 
       if (error) {
@@ -111,16 +104,11 @@ export default function LoginForm() {
       }
 
       if (!data.user) {
-        setMessage("Verification succeeded but no account was returned. Please try again.");
+        setMessage(
+          "Verification succeeded but no account was returned. Please try again."
+        );
         return;
       }
-
-      await supabase.auth.updateUser({
-        data: {
-          mobile_number: normalizedPhone,
-          whatsapp_number: normalizedPhone,
-        },
-      });
 
       const requestedNext = searchParams.get("next");
       const safeNext =
@@ -134,7 +122,11 @@ export default function LoginForm() {
       router.replace(safeNext);
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Verification failed. Please try again.");
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Verification failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -146,54 +138,78 @@ export default function LoginForm() {
         <section className="w-full rounded-[2rem] border border-white bg-white p-6 shadow-xl sm:p-8">
           <div className="text-center">
             <Link href="/" className="inline-flex items-center gap-2">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl shadow-sm">📚</span>
-              <span className="text-2xl font-black text-slate-900">Booknook Kids</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl shadow-sm">
+                📚
+              </span>
+              <span className="text-2xl font-black text-slate-900">
+                Booknook Kids
+              </span>
             </Link>
 
             <h1 className="mt-7 text-3xl font-black text-slate-900">
-              {step === "phone" ? "Welcome! 👋" : "Verify your mobile 📱"}
+              {step === "email" ? "Welcome! 👋" : "Check your email ✉️"}
             </h1>
 
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              {step === "phone"
-                ? "Enter your mobile number to sign in or create your Booknook Kids account."
-                : `We sent an OTP to ${phone}.`}
+              {step === "email"
+                ? "Enter your email to sign in or create your Booknook Kids account."
+                : `We sent a 6-digit OTP to ${email}.`}
             </p>
           </div>
 
           {(message || success) && (
-            <div role="alert" className={`mt-6 rounded-2xl px-4 py-3 text-sm font-semibold ${success ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+            <div
+              role="alert"
+              className={`mt-6 rounded-2xl px-4 py-3 text-sm font-semibold ${
+                success
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-rose-50 text-rose-700"
+              }`}
+            >
               {success ?? message}
             </div>
           )}
 
-          {step === "phone" ? (
+          {step === "email" ? (
             <form onSubmit={sendOtp} className="mt-7 space-y-5">
               <div>
-                <label htmlFor="phone" className="mb-2 block text-sm font-bold text-slate-700">Mobile No.</label>
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-bold text-slate-700"
+                >
+                  Email Address
+                </label>
                 <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
+                  id="email"
+                  name="email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   required
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="+91 9876543210"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@example.com"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
-                <p className="mt-2 text-xs text-slate-400">Include your country code, for example +91.</p>
               </div>
 
-              <button type="submit" disabled={loading} className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 px-5 py-3.5 font-black text-white shadow-lg transition hover:from-violet-700 hover:to-pink-600 disabled:cursor-not-allowed disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 px-5 py-3.5 font-black text-white shadow-lg transition hover:from-violet-700 hover:to-pink-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {loading ? "Sending OTP..." : "Send OTP"}
               </button>
             </form>
           ) : (
             <form onSubmit={verifyOtp} className="mt-7 space-y-5">
               <div>
-                <label htmlFor="otp" className="mb-2 block text-sm font-bold text-slate-700">Enter OTP</label>
+                <label
+                  htmlFor="otp"
+                  className="mb-2 block text-sm font-bold text-slate-700"
+                >
+                  Enter 6-digit OTP
+                </label>
                 <input
                   id="otp"
                   name="otp"
@@ -201,30 +217,51 @@ export default function LoginForm() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   required
-                  maxLength={8}
+                  maxLength={6}
                   value={otp}
-                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))}
-                  placeholder="Enter OTP"
+                  onChange={(event) =>
+                    setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="123456"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-center text-2xl font-black tracking-[0.35em] text-slate-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
-              <button type="submit" disabled={loading} className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 px-5 py-3.5 font-black text-white shadow-lg transition hover:from-violet-700 hover:to-pink-600 disabled:cursor-not-allowed disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 px-5 py-3.5 font-black text-white shadow-lg transition hover:from-violet-700 hover:to-pink-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {loading ? "Verifying..." : "Verify OTP"}
               </button>
 
-              <button type="button" onClick={() => { setStep("phone"); setOtp(""); setMessage(null); setSuccess(null); }} className="w-full text-sm font-bold text-violet-600 hover:text-violet-800">
-                Change mobile number
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("email");
+                  setOtp("");
+                  setMessage(null);
+                  setSuccess(null);
+                }}
+                className="w-full text-sm font-bold text-violet-600 hover:text-violet-800"
+              >
+                Change email address
               </button>
             </form>
           )}
 
-          <Link href="/" className="mt-7 block text-center text-sm font-semibold text-slate-400 hover:text-slate-600">
+          <Link
+            href="/"
+            className="mt-7 block text-center text-sm font-semibold text-slate-400 hover:text-slate-600"
+          >
             ← Back to Booknook Kids
           </Link>
 
           <div className="mt-5 text-center">
-            <Link href="/admin-login" className="text-xs font-semibold text-slate-400 hover:text-slate-600">
+            <Link
+              href="/admin-login"
+              className="text-xs font-semibold text-slate-400 hover:text-slate-600"
+            >
               Admin login
             </Link>
           </div>
