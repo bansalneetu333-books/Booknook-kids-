@@ -14,6 +14,8 @@ type BookPayload = {
   ageCategory?: string;
   published?: boolean;
   featured?: boolean;
+  isFree?: boolean;
+  categorySlugs?: string[];
 };
 
 function cleanString(value: unknown) {
@@ -39,6 +41,9 @@ export async function POST(request: Request) {
     const description = cleanString(body.description);
     const genre = cleanString(body.genre);
     const ageCategory = cleanString(body.ageCategory);
+    const categorySlugs = Array.isArray(body.categorySlugs)
+      ? body.categorySlugs.filter((value): value is string => typeof value === "string" && value.trim()).map((value) => value.trim().toLowerCase())
+      : [];
 
     if (!title) {
       return NextResponse.json(
@@ -61,9 +66,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!genre) {
+    if (!genre || categorySlugs.length === 0) {
       return NextResponse.json(
-        { error: "Category is required." },
+        { error: "Select at least one category." },
         { status: 400 }
       );
     }
@@ -89,7 +94,39 @@ export async function POST(request: Request) {
       is_published: Boolean(body.published),
       featured: Boolean(body.featured),
       is_featured: Boolean(body.featured),
+      is_free: Boolean(body.isFree),
     };
+
+    async function syncCategories(bookId: string) {
+      const { data: categories, error: categoriesError } = await supabase
+        .from("categories")
+        .select("id,slug")
+        .in("slug", categorySlugs);
+
+      if (categoriesError) throw categoriesError;
+
+      if (!categories || categories.length !== new Set(categorySlugs).size) {
+        throw new Error("One or more selected categories are invalid.");
+      }
+
+      const { error: deleteError } = await supabase
+        .from("book_categories")
+        .delete()
+        .eq("book_id", bookId);
+
+      if (deleteError) throw deleteError;
+
+      const rows = categories.map((category) => ({
+        book_id: bookId,
+        category_id: category.id,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("book_categories")
+        .insert(rows);
+
+      if (insertError) throw insertError;
+    }
 
     if (body.bookId) {
       const { data: existingBook, error: existingError } =
@@ -140,6 +177,16 @@ export async function POST(request: Request) {
         );
       }
 
+      try {
+        await syncCategories(data.id);
+      } catch (categoryError) {
+        console.error("Book category sync error:", categoryError);
+        return NextResponse.json(
+          { error: categoryError instanceof Error ? categoryError.message : "Unable to save categories." },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json({
         ok: true,
         id: data.id,
@@ -167,6 +214,16 @@ export async function POST(request: Request) {
 
       return NextResponse.json(
         { error: error.message },
+        { status: 500 }
+      );
+    }
+
+    try {
+      await syncCategories(data.id);
+    } catch (categoryError) {
+      console.error("Book category sync error:", categoryError);
+      return NextResponse.json(
+        { error: categoryError instanceof Error ? categoryError.message : "Unable to save categories." },
         { status: 500 }
       );
     }
