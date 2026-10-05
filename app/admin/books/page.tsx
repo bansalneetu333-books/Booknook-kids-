@@ -15,6 +15,8 @@ type Book = {
   cover_path: string | null;
   published: boolean;
   featured: boolean;
+  isFree?: boolean;
+  categories?: { name: string; slug: string; icon?: string | null }[];
   created_at: string;
   version?: {
     id?: string;
@@ -337,6 +339,11 @@ export default function AdminBooksPage() {
                       {book.featured && (
                         <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-700">
                           Featured
+                        </span>
+                      )}
+                      {book.isFree && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">
+                          Free Reading
                         </span>
                       )}
                     </div>
