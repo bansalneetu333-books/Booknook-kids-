@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const genre = cleanString(body.genre);
     const ageCategory = cleanString(body.ageCategory);
     const categorySlugs = Array.isArray(body.categorySlugs)
-      ? body.categorySlugs.filter((value): value is string => typeof value === "string" && value.trim()).map((value) => value.trim().toLowerCase())
+      ? body.categorySlugs.filter((value): value is string => typeof value === "string" && value.trim().length > 0).map((value) => value.trim().toLowerCase())
       : [];
 
     if (!title) {
