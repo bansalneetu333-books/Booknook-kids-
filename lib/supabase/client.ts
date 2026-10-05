@@ -31,6 +31,11 @@ export function createClient() {
 
   return createBrowserClient(
     normalizeSupabaseUrl(rawSupabaseUrl),
-    supabaseKey
+    supabaseKey,
+    {
+      auth: {
+        flowType: "pkce",
+      },
+    }
   );
 }
