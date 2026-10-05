@@ -27,6 +27,16 @@ async function ownsBook(
   userId: string,
   bookId: string
 ) {
+  const { data: freeBook } = await supabase
+    .from("books")
+    .select("id")
+    .eq("id", bookId)
+    .eq("published", true)
+    .eq("is_free", true)
+    .maybeSingle();
+
+  if (freeBook) return true;
+
   const { data, error } = await supabase
     .from("order_items")
     .select(
