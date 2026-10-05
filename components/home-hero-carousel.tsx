@@ -47,11 +47,6 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
   }
 
   const book = slides[active];
-  const cover =
-    book.cover_url ||
-    (book.cover_path
-      ? \`\\${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/\\${book.cover_path}\`
-      : null);
 
   return (
     <section className="relative overflow-hidden rounded-[2rem] bg-slate-950 shadow-xl">
