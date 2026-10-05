@@ -15,6 +15,8 @@ type BookCardProps = {
     age_category?: string | null;
     cover_path?: string | null;
     cover_url?: string | null;
+    is_free?: boolean;
+  };
   };
 };
 
@@ -51,11 +53,18 @@ export function BookCard({ book }: BookCardProps) {
         </div>
 
         <div className="p-4">
-          {book.genre && (
-            <span className="mb-2 inline-block rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">
-              {book.genre}
-            </span>
-          )}
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {book.is_free && (
+              <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-black text-emerald-700">
+                📖 Free
+              </span>
+            )}
+            {book.genre && (
+              <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-700">
+                {book.genre}
+              </span>
+            )}
+          </div>
 
           <h3 className="line-clamp-2 text-base font-extrabold text-slate-900">
             {book.title}
@@ -75,13 +84,15 @@ export function BookCard({ book }: BookCardProps) {
 
           <div className="mt-4 flex items-center justify-between gap-2">
             <span className="text-lg font-extrabold text-slate-900">
-              {typeof book.price === "number"
+              {book.is_free
+                ? "Free"
+                : typeof book.price === "number"
                 ? `₹${book.price.toFixed(2)}`
                 : "Free"}
             </span>
 
             <span className="rounded-xl bg-violet-600 px-3 py-2 text-xs font-bold text-white transition group-hover:bg-violet-700">
-              View Book
+              {book.is_free ? "Read Free" : "View Book"}
             </span>
           </div>
         </div>
