@@ -17,7 +17,6 @@ type BookCardProps = {
     cover_url?: string | null;
     is_free?: boolean;
   };
-  };
 };
 
 export function BookCard({ book }: BookCardProps) {
