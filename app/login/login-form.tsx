@@ -82,7 +82,7 @@ export default function LoginForm() {
     const normalizedEmail = email.trim().toLowerCase();
     const token = otp.replace(/\D/g, "");
 
-    if (!/^\d{6}$/.test(token)) {
+    if (!/^\d{8}$/.test(token)) {
       setMessage("Enter the 8-digit OTP sent to your email.");
       return;
     }
