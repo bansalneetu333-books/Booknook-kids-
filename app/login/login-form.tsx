@@ -49,7 +49,7 @@ export default function LoginForm() {
           email: normalizedEmail,
           password,
           options: {
-            emailRedirectTo: \${window.location.origin}/auth/callback?next=/library,
+            emailRedirectTo: ${window.location.origin}/auth/callback?next=/library,
           },
         });
 
@@ -137,11 +137,11 @@ export default function LoginForm() {
           {(message || success) && (
             <div
               role="alert"
-              className={\`mt-6 rounded-2xl px-4 py-3 text-sm font-semibold \${
+              className={`mt-6 rounded-2xl px-4 py-3 text-sm font-semibold ${
                 success
                   ? "bg-emerald-50 text-emerald-700"
                   : "bg-rose-50 text-rose-700"
-              }\`}
+              }`}
             >
               {success ?? message}
             </div>
