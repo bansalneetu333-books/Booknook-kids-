@@ -68,7 +68,7 @@ export function BookForm({ book }: { book?: Book }) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
     if (book?.categories?.length) return book.categories;
     const legacy = (book?.genre ?? "").split("/").map((value) => value.trim()).filter(Boolean);
-    return legacy.length ? legacy : [BOOK_CATEGORIES[0].name];
+    return legacy.length ? legacy : [];
   });
 
   const [cover, setCover] = useState<File | null>(null);
