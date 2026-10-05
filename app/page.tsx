@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/lib/config";
-import { getFeaturedBooks, getPublishedBooks } from "@/lib/books";
+import { getFeaturedBooks, getPublishedBooks, getFreeBooks } from "@/lib/books";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { CategoryMenu } from "@/components/category-menu";
@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 export default async function HomePage() {
   const featured = await getFeaturedBooks();
   const latest = await getPublishedBooks();
+  const freeBooks = await getFreeBooks();
   const supabase = await createClient();
   const { data: content } = await supabase.from("site_content").select("key,value");
   const map = Object.fromEntries((content ?? []).map((item) => [item.key, item.value]));
@@ -97,6 +98,30 @@ export default async function HomePage() {
                   <BookCard key={book.id} book={book} />
                 ))}
               </div>
+            </section>
+
+            <section className="mt-10">
+              <div className="flex items-end justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-emerald-600">📖 Read without buying</p>
+                  <h2 className="mt-1 text-3xl font-black">Free Reading</h2>
+                </div>
+                <Link href="/free-reading" className="shrink-0 text-sm font-black text-emerald-600">
+                  See all free →
+                </Link>
+              </div>
+
+              {freeBooks.length > 0 ? (
+                <div className="mt-5 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {freeBooks.slice(0, 5).map((book) => (
+                    <BookCard key={book.id} book={book} />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-5 rounded-3xl border border-emerald-100 bg-emerald-50 p-6 text-sm font-semibold text-emerald-800">
+                  Free books will appear here soon.
+                </div>
+              )}
             </section>
 
             <section className="mt-10 pb-12">
