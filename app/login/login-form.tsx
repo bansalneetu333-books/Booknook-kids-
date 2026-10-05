@@ -49,7 +49,7 @@ export default function LoginForm() {
           email: normalizedEmail,
           password,
           options: {
-            emailRedirectTo: ${window.location.origin}/auth/callback?next=/library,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=/library`,
           },
         });
 
