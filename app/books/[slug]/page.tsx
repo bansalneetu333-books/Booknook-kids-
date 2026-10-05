@@ -83,11 +83,18 @@ export default async function BookDetailsPage({
 
             {/* Information */}
             <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
-              {book.genre && (
-                <span className="w-fit rounded-full bg-violet-100 px-3 py-1.5 text-xs font-bold text-violet-700">
-                  {book.genre}
-                </span>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {book.is_free && (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-700">
+                    📖 Free Reading
+                  </span>
+                )}
+                {book.genre && (
+                  <span className="w-fit rounded-full bg-violet-100 px-3 py-1.5 text-xs font-bold text-violet-700">
+                    {book.genre}
+                  </span>
+                )}
+              </div>
 
               <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
                 {book.title}
@@ -132,7 +139,9 @@ export default async function BookDetailsPage({
                   </p>
 
                   <p className="mt-1 text-3xl font-extrabold text-slate-900">
-                    {Number(book.price) > 0
+                    {book.is_free
+                      ? "Free"
+                      : Number(book.price) > 0
                       ? `₹${Number(book.price).toFixed(2)}`
                       : "Free"}
                   </p>
@@ -144,12 +153,21 @@ export default async function BookDetailsPage({
               </div>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                <Link
-                  href={`/checkout?bookId=${book.id}`}
-                  className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
-                >
-                  🛒 Buy Now
-                </Link>
+                {book.is_free ? (
+                  <Link
+                    href={`/reader/${book.id}`}
+                    className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                  >
+                    📖 Read Free
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/checkout?bookId=${book.id}`}
+                    className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
+                  >
+                    🛒 Buy Now
+                  </Link>
+                )}
 
                 <WishlistButton bookId={book.id} />
               </div>
