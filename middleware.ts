@@ -1,16 +1,28 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+function normalizeSupabaseUrl(value: string) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const supabaseUrl = rawSupabaseUrl
+    ? normalizeSupabaseUrl(rawSupabaseUrl)
+    : null;
 
   if (!supabaseUrl || !supabaseKey) {
     return response;
@@ -57,6 +69,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
