@@ -83,7 +83,7 @@ export default function LoginForm() {
     const token = otp.replace(/\D/g, "");
 
     if (!/^\d{6}$/.test(token)) {
-      setMessage("Enter the 6-digit OTP sent to your email.");
+      setMessage("Enter the 8-digit OTP sent to your email.");
       return;
     }
 
@@ -155,7 +155,7 @@ export default function LoginForm() {
             <p className="mt-2 text-sm leading-6 text-slate-500">
               {step === "email"
                 ? "Enter your email to sign in or create your Booknook Kids account."
-                : `We sent a 6-digit OTP to ${email}.`}
+                : `We sent an 8-digit OTP to ${email}.`}
             </p>
           </div>
 
@@ -210,7 +210,7 @@ export default function LoginForm() {
                   htmlFor="otp"
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
-                  Enter 6-digit OTP
+                  Enter 8-digit OTP
                 </label>
                 <input
                   id="otp"
@@ -219,12 +219,12 @@ export default function LoginForm() {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   required
-                  maxLength={6}
+                  maxLength={8}
                   value={otp}
                   onChange={(event) =>
-                    setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+                    setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))
                   }
-                  placeholder="123456"
+                  placeholder="12345678"
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-center text-2xl font-black tracking-[0.35em] text-slate-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
