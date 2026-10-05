@@ -18,7 +18,9 @@ type Book = {
   age_category: string;
   published: boolean;
   featured: boolean;
+  is_free?: boolean;
   cover_path?: string | null;
+  categories?: string[];
 };
 
 type SignedUpload = {
@@ -60,6 +62,13 @@ export function BookForm({ book }: { book?: Book }) {
     ageCategory: book?.age_category ?? "6–16",
     published: book?.published ?? false,
     featured: book?.featured ?? false,
+    isFree: book?.is_free ?? false,
+  });
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    if (book?.categories?.length) return book.categories;
+    const legacy = (book?.genre ?? "").split("/").map((value) => value.trim()).filter(Boolean);
+    return legacy.length ? legacy : [BOOK_CATEGORIES[0].name];
   });
 
   const [cover, setCover] = useState<File | null>(null);
@@ -124,8 +133,8 @@ export function BookForm({ book }: { book?: Book }) {
       return;
     }
 
-    if (!form.genre) {
-      setStatus("Pick a category.");
+    if (selectedCategories.length === 0) {
+      setStatus("Select at least one category.");
       return;
     }
 
@@ -172,10 +181,14 @@ export function BookForm({ book }: { book?: Book }) {
         author: form.author.trim(),
         description: form.description.trim(),
         price: Number(form.price) || 0,
-        genre: form.genre,
+        genre: selectedCategories.join(" / "),
+        categorySlugs: selectedCategories
+          .map((name) => BOOK_CATEGORIES.find((category) => category.name === name)?.slug)
+          .filter(Boolean),
         ageCategory: form.ageCategory.trim(),
         published: false,
         featured: form.featured,
+        isFree: form.isFree,
       };
 
       setStatus("Saving details…");
@@ -526,32 +539,41 @@ export function BookForm({ book }: { book?: Book }) {
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-bold">
-            Category
-
-            <select
-              className="rounded-2xl border bg-white p-3.5"
-              value={form.genre}
-              onChange={(e) =>
-                update(
-                  "genre",
-                  e.target.value
-                )
-              }
-            >
-              {BOOK_CATEGORIES.map(
-                (category) => (
-                  <option
+          <div className="grid gap-2 text-sm font-bold sm:col-span-2">
+            <span>Categories <span className="text-red-500">*</span></span>
+            <span className="text-xs font-medium text-slate-500">
+              Choose one or more categories.
+            </span>
+            <div className="grid grid-cols-2 gap-2 rounded-2xl border bg-slate-50 p-3 sm:grid-cols-3">
+              {BOOK_CATEGORIES.map((category) => {
+                const checked = selectedCategories.includes(category.name);
+                return (
+                  <label
                     key={category.slug}
-                    value={category.name}
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                      checked
+                        ? "border-violet-300 bg-violet-100 text-violet-800"
+                        : "border-slate-200 bg-white text-slate-700"
+                    }`}
                   >
-                    {category.icon}{" "}
-                    {category.name}
-                  </option>
-                )
-              )}
-            </select>
-          </label>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        setSelectedCategories((current) =>
+                          e.target.checked
+                            ? [...current, category.name]
+                            : current.filter((name) => name !== category.name)
+                        );
+                      }}
+                    />
+                    <span>{category.icon}</span>
+                    <span>{category.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
 
           <label className="grid gap-2 text-sm font-bold">
             Age
@@ -647,22 +669,30 @@ export function BookForm({ book }: { book?: Book }) {
 
         </div>
 
-        <label className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-          <input
-            type="checkbox"
-            checked={form.featured}
-            onChange={(e) =>
-              update(
-                "featured",
-                e.target.checked
-              )
-            }
-          />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+            <input
+              type="checkbox"
+              checked={form.isFree}
+              onChange={(e) => update("isFree", e.target.checked)}
+            />
+            <span>
+              <span className="block text-sm font-black text-emerald-800">📖 Free Reading</span>
+              <span className="mt-1 block text-xs font-medium text-emerald-700">
+                Customers can read this book online without buying it.
+              </span>
+            </span>
+          </label>
 
-          <span className="text-sm font-bold">
-            Show on Home
-          </span>
-        </label>
+          <label className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+            <input
+              type="checkbox"
+              checked={form.featured}
+              onChange={(e) => update("featured", e.target.checked)}
+            />
+            <span className="text-sm font-bold">Show on Home</span>
+          </label>
+        </div>
 
         <div className="flex flex-wrap gap-3">
 
