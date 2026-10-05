@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";\nimport Image from "next/image";
+import Link from "next/link";
+import Image from "next/image";
 
 type Book = {
   id: string;
@@ -67,11 +68,11 @@ export default function AdminBooksPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [search]);
 
   useEffect(() => {
-    loadBooks();
-  }, []);
+    void loadBooks();
+  }, [loadBooks]);
 
   async function updateBook(
     bookId: string,
