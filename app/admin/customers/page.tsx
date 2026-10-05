@@ -45,11 +45,11 @@ export default function AdminCustomersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [search]);
 
   useEffect(() => {
     void loadCustomers();
-  }, []);
+  }, [loadCustomers]);
 
   return (
     <div className="space-y-6">
