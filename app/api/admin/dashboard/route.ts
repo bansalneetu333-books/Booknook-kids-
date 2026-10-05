@@ -140,7 +140,8 @@ export async function GET() {
       paidOrders,
       pendingOrders,
       failedOrders,
-      revenue: totalRevenue,\n      totalRevenue,
+      revenue: totalRevenue,
+      totalRevenue,
 
       stats: {
         books: {
