@@ -39,6 +39,20 @@ export default async function BooksPage({
 
       <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-7xl">
+          <div className="mb-4 rounded-3xl bg-gradient-to-r from-indigo-600 to-pink-500 px-5 py-4 text-white shadow-md">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-white/75">
+                  Explore
+                </p>
+                <h1 className="mt-1 text-2xl font-black sm:text-3xl">
+                  Find your next read 📚
+                </h1>
+              </div>
+              <span className="hidden text-3xl sm:block">✨</span>
+            </div>
+          </div>
+
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
             <Link
               href="/books"
@@ -66,34 +80,6 @@ export default async function BooksPage({
               </Link>
             ))}
           </div>
-
-          <form className="mt-5 grid gap-3 rounded-3xl border bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto_auto]">
-            <input
-              name="q"
-              defaultValue={params.q}
-              placeholder="Search books…"
-              className="rounded-2xl border p-3.5 outline-none focus:border-indigo-500"
-            />
-
-            {params.genre && (
-              <input
-                type="hidden"
-                name="genre"
-                value={params.genre}
-              />
-            )}
-
-            <input
-              name="age"
-              defaultValue={params.age}
-              placeholder="Age e.g. 6–16"
-              className="rounded-2xl border p-3.5"
-            />
-
-            <button className="rounded-2xl bg-slate-900 px-5 py-3.5 font-black text-white">
-              Find
-            </button>
-          </form>
 
           {books.length === 0 ? (
             <div className="mt-8 rounded-[2rem] bg-white p-12 text-center shadow-sm">
