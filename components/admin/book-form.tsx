@@ -375,6 +375,30 @@ export function BookForm({ book }: { book?: Book }) {
                 "Could not finish book."
             );
           }
+
+          if (uploaded.cover) {
+            const coverSaveResponse = await fetch("/api/admin/books", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                ...metadata,
+                bookId,
+                published: publish,
+                coverPath: uploaded.cover.path,
+              }),
+            });
+
+            const coverSaveData = await coverSaveResponse.json();
+
+            if (!coverSaveResponse.ok) {
+              throw new Error(
+                coverSaveData.error ??
+                  "The cover uploaded but could not be linked to the book."
+              );
+            }
+          }
         } else if (publish) {
           const publishResponse =
             await fetch(
