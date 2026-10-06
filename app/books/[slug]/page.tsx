@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { BookCard } from "@/components/book-card";
 import { WishlistButton } from "@/components/wishlist-button";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import { getBookBySlug, getPublishedBooks } from "@/lib/books";
 
 type BookPageProps = {
@@ -161,12 +162,23 @@ export default async function BookDetailsPage({
                     📖 Read Free
                   </Link>
                 ) : (
-                  <Link
-                    href={`/checkout?bookId=${book.id}`}
-                    className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
-                  >
-                    🛒 Buy Now
-                  </Link>
+                  <>
+                    <Link
+                      href={`/checkout?bookId=${book.id}`}
+                      className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
+                    >
+                      🛒 Buy Now
+                    </Link>
+                    <AddToCartButton
+                      book={{
+                        id: book.id,
+                        title: book.title,
+                        slug: book.slug,
+                        price: Number(book.price),
+                        cover_path: book.cover_path,
+                      }}
+                    />
+                  </>
                 )}
 
                 <WishlistButton bookId={book.id} />
