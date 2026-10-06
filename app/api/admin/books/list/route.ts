@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
+import { getBookFileAvailability } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
@@ -133,7 +134,8 @@ export async function GET(request: Request) {
     // ------------------------------------------------------------
     // 4. Format version information
     // ------------------------------------------------------------
-    const formattedBooks = filteredBooks.map((book) => {
+    const formattedBooks = await Promise.all(filteredBooks.map(async (book) => {
+      const fileAvailability = await getBookFileAvailability(book.id);
       const versions = [...(book.book_versions ?? [])].sort(
         (a, b) => {
           const dateA = a.uploaded_at || a.created_at || "";
@@ -164,6 +166,10 @@ export async function GET(request: Request) {
 
         coverPath: book.cover_path,
         epubPath: book.epub_path,
+        epubAvailable: fileAvailability.epubAvailable,
+        pdfAvailable: fileAvailability.pdfAvailable,
+        epubFilePath: fileAvailability.epubPath,
+        pdfFilePath: fileAvailability.pdfPath,
 
         published: Boolean(book.published ?? book.is_published),
         featured: Boolean(book.featured ?? book.is_featured),
@@ -225,6 +231,7 @@ export async function GET(request: Request) {
 
       withEpub: formattedBooks.filter(
         (book) =>
+          Boolean(book.epubAvailable) ||
           Boolean(book.epubPath) ||
           Boolean(book.activeVersion)
       ).length,
