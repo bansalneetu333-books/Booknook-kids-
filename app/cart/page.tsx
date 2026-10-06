@@ -51,9 +51,9 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-pink-50 px-4 py-8 sm:px-6">
+    <main className="bn-page px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-5xl">
-        <Link href="/books" className="text-sm font-bold text-violet-700">← Continue shopping</Link>
+        <Link href="/books" className="text-sm font-bold text-[var(--booknook-primary)]">← Continue shopping</Link>
         <h1 className="mt-4 text-4xl font-black text-[var(--booknook-ink)]">My Cart 🛒</h1>
         <p className="mt-2 text-[var(--booknook-muted)]">Review your books and pay once for everything.</p>
 
