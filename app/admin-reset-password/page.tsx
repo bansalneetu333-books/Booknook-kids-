@@ -71,10 +71,10 @@ export default function AdminResetPasswordPage() {
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-md items-center justify-center">
         <section className="w-full rounded-[2rem] border border-slate-800 bg-white p-6 shadow-2xl sm:p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-2xl">🔐</div>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--booknook-primary)] text-2xl">🔐</div>
             <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-violet-600">Booknook Kids</p>
-            <h1 className="mt-2 text-3xl font-black text-slate-900">Create New Password</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Choose a new password for your administrator account.</p>
+            <h1 className="mt-2 text-3xl font-black text-[var(--booknook-ink)]">Create New Password</h1>
+            <p className="mt-2 text-sm leading-6 text-[var(--booknook-muted)]">Choose a new password for your administrator account.</p>
           </div>
 
           {message && (
@@ -84,14 +84,14 @@ export default function AdminResetPasswordPage() {
           {ready ? (
             <form onSubmit={handleSubmit} className="mt-7 space-y-5">
               <div>
-                <label htmlFor="new-password" className="mb-2 block text-sm font-bold text-slate-700">New password</label>
-                <input id="new-password" type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100" />
+                <label htmlFor="new-password" className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]">New password</label>
+                <input id="new-password" type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" required className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-3.5 text-[var(--booknook-ink)] outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100" />
               </div>
               <div>
-                <label htmlFor="confirm-password" className="mb-2 block text-sm font-bold text-slate-700">Confirm password</label>
-                <input id="confirm-password" type="password" minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" required className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100" />
+                <label htmlFor="confirm-password" className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]">Confirm password</label>
+                <input id="confirm-password" type="password" minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" required className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-3.5 text-[var(--booknook-ink)] outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100" />
               </div>
-              <button type="submit" disabled={loading} className="w-full rounded-2xl bg-violet-600 px-5 py-3.5 font-black text-white shadow-lg hover:bg-violet-700 disabled:opacity-60">
+              <button type="submit" disabled={loading} className="w-full rounded-2xl bg-[var(--booknook-primary)] px-5 py-3.5 font-black text-white shadow-lg hover:opacity-90 disabled:opacity-60">
                 {loading ? "Updating..." : "Create New Password"}
               </button>
             </form>
@@ -101,7 +101,7 @@ export default function AdminResetPasswordPage() {
             </div>
           )}
 
-          <Link href="/admin-login" className="mt-7 block text-center text-sm font-bold text-slate-500 hover:text-violet-600">
+          <Link href="/admin-login" className="mt-7 block text-center text-sm font-bold text-[var(--booknook-muted)] hover:text-violet-600">
             ← Back to Admin Login
           </Link>
         </section>
