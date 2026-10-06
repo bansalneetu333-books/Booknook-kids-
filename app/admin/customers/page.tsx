@@ -54,16 +54,16 @@ export default function AdminCustomersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-black uppercase tracking-widest text-violet-600">
+        <p className="text-sm font-black uppercase tracking-widest text-[var(--booknook-primary)]">
           Admin
         </p>
-        <h1 className="mt-1 text-3xl font-black text-slate-900">Customers</h1>
-        <p className="mt-2 text-slate-500">
+        <h1 className="mt-1 text-3xl font-black text-[var(--booknook-ink)]">Customers</h1>
+        <p className="mt-2 text-[var(--booknook-muted)]">
           View registered customers and their purchase activity.
         </p>
       </div>
 
-      <div className="flex gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex gap-3 rounded-3xl border border-[var(--booknook-border)] bg-white p-4 shadow-sm">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -71,31 +71,31 @@ export default function AdminCustomersPage() {
             if (e.key === "Enter") void loadCustomers();
           }}
           placeholder="Search name or email..."
-          className="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-violet-500"
+          className="min-w-0 flex-1 rounded-[1.25rem] border border-[var(--booknook-border)] px-4 py-3 outline-none focus:border-violet-500"
         />
         <button
           type="button"
           onClick={() => void loadCustomers()}
-          className="rounded-2xl bg-slate-900 px-5 py-3 font-bold text-white"
+          className="rounded-2xl bg-[var(--booknook-ink)] px-5 py-3 font-bold text-white"
         >
           Search
         </button>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
         {loading ? (
-          <div className="p-10 text-center text-slate-500">Loading customers...</div>
+          <div className="p-10 text-center text-[var(--booknook-muted)]">Loading customers...</div>
         ) : customers.length === 0 ? (
-          <div className="p-10 text-center text-slate-500">No customers found.</div>
+          <div className="p-10 text-center text-[var(--booknook-muted)]">No customers found.</div>
         ) : (
           <table className="min-w-full text-sm">
-            <thead className="border-b bg-slate-50 text-left text-slate-500">
+            <thead className="border-b bg-[#f7f8fc] text-left text-[var(--booknook-muted)]">
               <tr>
                 <th className="px-5 py-4 font-bold">Customer</th>
                 <th className="px-5 py-4 font-bold">Orders</th>
@@ -108,17 +108,17 @@ export default function AdminCustomersPage() {
               {customers.map((customer) => (
                 <tr key={customer.id}>
                   <td className="px-5 py-4">
-                    <div className="font-bold text-slate-900">
+                    <div className="font-bold text-[var(--booknook-ink)]">
                       {customer.full_name || "Unnamed customer"}
                     </div>
-                    <div className="text-slate-500">{customer.email || "—"}</div>
+                    <div className="text-[var(--booknook-muted)]">{customer.email || "—"}</div>
                   </td>
                   <td className="px-5 py-4">{customer.orders_count}</td>
                   <td className="px-5 py-4">{customer.paid_orders_count}</td>
                   <td className="px-5 py-4 font-bold">
                     ₹{Number(customer.total_spent || 0).toFixed(2)}
                   </td>
-                  <td className="px-5 py-4 text-slate-500">
+                  <td className="px-5 py-4 text-[var(--booknook-muted)]">
                     {new Date(customer.created_at).toLocaleDateString("en-IN")}
                   </td>
                 </tr>
