@@ -98,9 +98,15 @@ export default function AdminBooksPage() {
         },
         body: JSON.stringify({
           bookId,
-          ...(action === "new_pick" ? { bookId, new_pick: value } : {
-            [action === "publish" ? "published" : action === "featured" ? "featured" : "isFree"]: value,
-          }),
+          ...(action === "new_pick"
+            ? { new_pick: value }
+            : {
+                [action === "publish"
+                  ? "published"
+                  : action === "featured"
+                  ? "featured"
+                  : "isFree"]: value,
+              }),
         }),
       });
 
