@@ -168,9 +168,7 @@ export function BookForm({ book }: { book?: Book }) {
         slugify(form.title);
 
       const metadata = {
-        ...(book?.id
-          ? { bookId: book.id }
-          : {}),
+        ...(book?.id ? { bookId: book.id } : {}),
         title: form.title.trim(),
         slug,
         author: form.author.trim(),
@@ -181,7 +179,7 @@ export function BookForm({ book }: { book?: Book }) {
           .map((name) => BOOK_CATEGORIES.find((category) => category.name === name)?.slug)
           .filter(Boolean),
         ageCategory: form.ageCategory.trim(),
-        published: book?.published ?? false,
+        published: publish,
         featured: form.featured,
         isFree: form.isFree,
       };
