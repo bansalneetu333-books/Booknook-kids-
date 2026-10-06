@@ -28,17 +28,24 @@ export async function POST() {
     const missingFiles: string[] = [];
 
     for (const book of books ?? []) {
-      const file = await getReadableBookFile(book.id);
-
-      if (!file) {
-        missingFiles.push(book.title);
-        continue;
-      }
-
       const normalizedTitle = normalize(book.title);
       const shouldBeFree =
         normalizedTitle === "door 2050" ||
         normalizedTitle === "rani laxmi bai" ||
+        normalizedTitle === "rani lakshmi bai" ||
+        normalizedTitle === "rani laxmi bai" ||
+        normalizedTitle === "rani lakshmi bai";
+
+      const file = await getReadableBookFile(book.id);
+
+      if (!file && !shouldBeFree) {
+        missingFiles.push(book.title);
+        continue;
+      }
+      const shouldBeFree =
+        normalizedTitle === "door 2050" ||
+        normalizedTitle === "rani laxmi bai" ||
+        normalizedTitle === "rani lakshmi bai" ||
         normalizedTitle === "rani laxmi bai" ||
         normalizedTitle === "rani lakshmi bai";
 
