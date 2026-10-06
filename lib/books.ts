@@ -14,6 +14,7 @@ export type Book = {
   published: boolean;
   is_published?: boolean | null;
   featured: boolean;
+  new_pick: boolean;
   is_free: boolean;
   created_at: string;
 };
@@ -32,6 +33,7 @@ const BOOK_FIELDS = `
   published,
   is_published,
   featured,
+  new_pick,
   is_free,
   created_at
 `;
@@ -51,6 +53,7 @@ function normalizeBook(book: any): Book {
     published: Boolean(book.published ?? book.is_published),
     is_published: book.is_published ?? null,
     featured: Boolean(book.featured),
+    new_pick: Boolean(book.new_pick),
     is_free: Boolean(book.is_free),
     created_at: book.created_at,
   };
@@ -174,6 +177,22 @@ export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
       })
     )
     .map(normalizeBook);
+}
+
+export async function getNewPickBooks(): Promise<Book[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("books")
+    .select(BOOK_FIELDS)
+    .eq("published", true)
+    .eq("new_pick", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Unable to load new picks:", error);
+    return [];
+  }
+  return (data ?? []).map(normalizeBook);
 }
 
 export async function getFeaturedBooks(): Promise<Book[]> {
