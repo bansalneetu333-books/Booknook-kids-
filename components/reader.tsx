@@ -43,7 +43,7 @@ export function EpubReader({
       location: string | null,
       percentage: number
     ) => {
-      if (!location) return;
+      if (preview || !location) return;
 
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
