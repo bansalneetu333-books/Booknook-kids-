@@ -27,6 +27,7 @@ export async function POST(request: Request) {
     const { data: book, error: bookError } = await supabase.from("books").select("id,title,slug").eq("id", bookId).maybeSingle();
     if (bookError) return NextResponse.json({ error: "Unable to verify the book." }, { status: 500 });
     if (!book) return NextResponse.json({ error: "Book not found." }, { status: 404 });
+    if (epubPath && !version) return NextResponse.json({ error: "Version is required when uploading an EPUB." }, { status: 400 });
 
     const bookUpdate: Record<string, unknown> = {
       published,
@@ -39,7 +40,6 @@ export async function POST(request: Request) {
     if (bookUpdateError) return NextResponse.json({ error: bookUpdateError.message }, { status: 500 });
 
     if (!epubPath) return NextResponse.json({ ok: true, bookId, published, message: "Book details finalized." });
-    if (!version) return NextResponse.json({ error: "Version is required when uploading an EPUB." }, { status: 400 });
 
     const epubSize = typeof body.epubSize === "number" && Number.isFinite(body.epubSize) && body.epubSize > 0
       ? Math.floor(body.epubSize) : null;
