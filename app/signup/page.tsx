@@ -36,10 +36,10 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-sky-50 px-6">
+    <main className="grid min-h-screen place-items-center bg-[#fffdf9] px-6">
       <form
         onSubmit={submit}
-        className="w-full max-w-md rounded-3xl bg-white p-8 shadow-sm"
+        className="w-full max-w-md bn-surface p-8 shadow-sm"
       >
         <h1 className="text-3xl font-black">
           Create Account ✨
@@ -50,7 +50,7 @@ export default function SignupPage() {
         </label>
 
         <input
-          className="mt-2 w-full rounded-xl border p-3"
+          className="mt-2 w-full rounded-2xl border p-3"
           required
           value={fullName}
           onChange={(e) =>
@@ -63,7 +63,7 @@ export default function SignupPage() {
         </label>
 
         <input
-          className="mt-2 w-full rounded-xl border p-3"
+          className="mt-2 w-full rounded-2xl border p-3"
           type="email"
           required
           value={email}
@@ -77,7 +77,7 @@ export default function SignupPage() {
         </label>
 
         <input
-          className="mt-2 w-full rounded-xl border p-3"
+          className="mt-2 w-full rounded-2xl border p-3"
           type="password"
           minLength={8}
           required
@@ -95,7 +95,7 @@ export default function SignupPage() {
         </button>
 
         <p
-          className="mt-4 text-sm text-slate-600"
+          className="mt-4 text-sm text-[var(--booknook-muted)]"
           aria-live="polite"
         >
           {status}
