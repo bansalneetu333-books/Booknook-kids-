@@ -116,7 +116,7 @@ export default async function AccountPage() {
           />
 
           <AccountCard
-            href="/orders"
+            href="/account/purchases"
             icon="🧾"
             title="My Orders"
             description="View your purchases and payment history."
