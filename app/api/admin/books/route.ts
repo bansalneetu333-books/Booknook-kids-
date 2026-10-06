@@ -14,6 +14,7 @@ type BookPayload = {
   ageCategory?: string;
   published?: boolean;
   featured?: boolean;
+  newPick?: boolean;
   isFree?: boolean;
   categorySlugs?: string[];
 };
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
       published: Boolean(body.published),
       is_published: Boolean(body.published),
       featured: Boolean(body.featured),
+      new_pick: Boolean(body.newPick),
       is_featured: Boolean(body.featured),
       is_free: Boolean(body.isFree),
     };
