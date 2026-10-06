@@ -35,7 +35,7 @@ export default async function BookDetailsPage({
     .slice(0, 4);
 
   const coverUrl = book.cover_path
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/${book.cover_path}`
+    ? "/api/books/cover?path=" + encodeURIComponent(book.cover_path)
     : null;
 
   return (
