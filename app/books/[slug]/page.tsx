@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BookCard } from "@/components/book-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { BookReviews } from "@/components/book-reviews";
 import { getBookBySlug, getPublishedBooks } from "@/lib/books";
 
 type BookPageProps = {
@@ -200,6 +201,8 @@ export default async function BookDetailsPage({
           </div>
         </div>
       </section>
+
+      <div className="mx-auto max-w-7xl px-4 pb-2 sm:px-6 lg:px-8"><BookReviews bookId={book.id} /></div>
 
       {/* Related books */}
       {relatedBooks.length > 0 && (
