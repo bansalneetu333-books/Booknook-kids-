@@ -97,7 +97,14 @@ export async function POST(request: Request) {
       featured: Boolean(body.featured),
       is_featured: Boolean(body.featured),
       is_free: Boolean(body.isFree),
-      ...(coverPath ? { cover_path: coverPath } : {}),
+      ...(coverPath
+        ? {
+            cover_path: coverPath,
+            cover_url:
+              "/api/books/cover?path=" +
+              encodeURIComponent(coverPath),
+          }
+        : {}),
     };
 
     async function syncCategories(bookId: string) {
