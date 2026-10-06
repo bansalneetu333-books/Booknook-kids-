@@ -21,7 +21,7 @@ export default async function ReaderPage({
     .from("books")
     .select("id,title,published,is_free")
     .eq("id", bookId)
-    .eq("published", true)
+    .or("published.eq.true,is_published.eq.true")
     .maybeSingle();
 
   if (!book) notFound();
