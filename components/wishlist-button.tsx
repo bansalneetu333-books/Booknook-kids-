@@ -118,8 +118,8 @@ export function WishlistButton({
         aria-pressed={wishlisted}
         className={`flex items-center justify-center gap-2 rounded-full border px-5 py-3 font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
           wishlisted
-            ? "border-pink-300 bg-pink-50 text-pink-700 hover:bg-pink-100"
-            : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+            ? "border-pink-300 bg-[rgba(255,111,174,0.08)] text-[var(--booknook-secondary)] hover:bg-pink-100"
+            : "border-slate-300 bg-white text-[var(--booknook-ink)] hover:bg-slate-50"
         }`}
       >
         <span className="text-lg">
@@ -139,7 +139,7 @@ export function WishlistButton({
 
       {message && (
         <p
-          className="mt-2 text-xs text-slate-500"
+          className="mt-2 text-xs text-[var(--booknook-muted)]"
           aria-live="polite"
         >
           {message}
