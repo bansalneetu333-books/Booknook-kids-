@@ -6,6 +6,7 @@ import ePub, { type Book, type Rendition } from "epubjs";
 type ReaderProps = {
   bookId: string;
   title?: string;
+  preview?: boolean;
 };
 
 type AccessResponse = {
@@ -23,6 +24,7 @@ type ProgressResponse = {
 export function EpubReader({
   bookId,
   title = "Book",
+  preview = false,
 }: ReaderProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const bookRef = useRef<Book | null>(null);
@@ -102,6 +104,7 @@ export function EpubReader({
             },
             body: JSON.stringify({
               bookId,
+              preview,
             }),
           }
         );
