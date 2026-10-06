@@ -203,7 +203,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       url: signedUrl.signedUrl,
-      fileType: version.file_type || "application/epub+zip",
+      fileType: version?.file_type || "application/epub+zip",
       expiresIn: 60 * 60,
     });
   } catch (error) {
