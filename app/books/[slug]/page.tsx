@@ -56,7 +56,7 @@ export default async function BookDetailsPage({
           <div className="grid gap-0 lg:grid-cols-2">
             {/* Cover */}
             <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
-              <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl">
+              <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-3 shadow-2xl sm:p-4">
                 <div className="relative aspect-[3/4]">
                   {coverUrl ? (
                     <Image
@@ -65,7 +65,7 @@ export default async function BookDetailsPage({
                       fill
                       priority
                       sizes="(max-width: 1024px) 90vw, 500px"
-                      className="object-cover"
+                      className="object-contain"
                     />
                   ) : (
                     <div className="flex h-full flex-col items-center justify-center p-8 text-center">
