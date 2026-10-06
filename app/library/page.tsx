@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getMyLibrary } from "@/lib/library";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
+import { LibraryBookActions } from "@/components/library-book-actions";
 
 export default async function LibraryPage() {
   const books = await getMyLibrary();
@@ -57,6 +58,7 @@ export default async function LibraryPage() {
                   key={book.id}
                   book={book}
                 />
+                <LibraryBookActions bookId={book.id} />
               ))}
             </div>
           )}
