@@ -69,6 +69,8 @@ export default async function CheckoutPage({
   const availableBooks = validBooks.filter((_, index) => !purchased[index]);
 
   if (availableBooks.length === 0) {
+    const ownedBook = validBooks[0];
+
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12">
         <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -92,7 +94,7 @@ export default async function CheckoutPage({
             </Link>
 
             <Link
-              href={`/books/${book.slug}`}
+              href={`/books/${ownedBook.slug}`}
               className="rounded-full border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
             >
               Back to Book
