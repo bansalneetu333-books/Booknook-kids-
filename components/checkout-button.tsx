@@ -266,8 +266,17 @@ export function CheckoutButton({
               );
             }
 
+            try {
+              const cartIds = bookIds || (bookId ? [bookId] : []);
+              if (cartIds.length) {
+                const current = JSON.parse(localStorage.getItem("booknook_cart") || "[]") as { id: string }[];
+                localStorage.setItem("booknook_cart", JSON.stringify(current.filter((item) => !cartIds.includes(item.id))));
+              }
+            } catch {}
+
+            window.dispatchEvent(new Event("booknook-cart-updated"));
             setMessage(
-              "Payment successful! Your book is now in your library."
+              "Payment successful! Your books are now in your library."
             );
 
             router.push(
