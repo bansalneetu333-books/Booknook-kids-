@@ -49,8 +49,7 @@ export async function GET(request: Request) {
         book_categories (
           categories (
             name,
-            slug,
-            icon
+            slug
           )
         ),
         book_versions(
@@ -171,7 +170,7 @@ export async function GET(request: Request) {
         isFree: Boolean(book.is_free),
         categories: (book.book_categories ?? []).map((item: any) => {
           const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
-          return category ? { name: category.name, slug: category.slug, icon: category.icon } : null;
+          return category ? { name: category.name, slug: category.slug } : null;
         }).filter(Boolean),
 
         createdAt: book.created_at,
