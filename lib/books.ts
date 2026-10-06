@@ -16,6 +16,7 @@ export type Book = {
   featured: boolean;
   is_free: boolean;
   created_at: string;
+  categories?: { name: string; slug: string }[];
 };
 
 const BOOK_FIELDS = `
@@ -64,6 +65,16 @@ function normalizeBook(
     is_free: Boolean(book.is_free),
     created_at:
       book.created_at,
+    categories: (book.book_categories ?? [])
+      .map((item: any) => {
+        const category = Array.isArray(item.categories)
+          ? item.categories[0]
+          : item.categories;
+        return category
+          ? { name: category.name, slug: category.slug }
+          : null;
+      })
+      .filter(Boolean),
   };
 }
 
@@ -72,7 +83,14 @@ export async function getPublishedBooks(): Promise<Book[]> {
 
   const { data, error } = await supabase
     .from("books")
-    .select(BOOK_FIELDS)
+    .select(`${BOOK_FIELDS},
+      book_categories (
+        categories (
+          name,
+          slug
+        )
+      )
+    `)
     .or("published.eq.true,is_published.eq.true")
     .order("sort_order", {
       ascending: true,
