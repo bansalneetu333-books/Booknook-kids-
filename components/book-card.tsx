@@ -23,7 +23,7 @@ export function BookCard({ book }: BookCardProps) {
   const cover =
     book.cover_url ||
     (book.cover_path
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/${book.cover_path}`
+      ? "/api/books/cover?path=" + encodeURIComponent(book.cover_path)
       : null);
 
   return (
