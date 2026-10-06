@@ -178,6 +178,10 @@ export async function PATCH(
       updates.featured = Boolean(body.featured);
     }
 
+    if (body.new_pick !== undefined) {
+      updates.new_pick = Boolean(body.new_pick);
+    }
+
     if (body.sort_order !== undefined) {
       const sortOrder = Number(body.sort_order);
 

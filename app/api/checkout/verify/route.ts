@@ -86,7 +86,7 @@ export async function POST(
     } = await supabase
       .from("orders")
       .select(
-        "id,user_id,status,amount,currency,razorpay_order_id"
+        "id,user_id,payment_status,total_amount,currency,razorpay_order_id"
       )
       .eq(
         "razorpay_order_id",
@@ -137,7 +137,7 @@ export async function POST(
       );
     }
 
-    if (order.status === "paid") {
+    if (order.payment_status === "paid") {
       return NextResponse.json({
         success: true,
         alreadyPaid: true,
@@ -151,7 +151,7 @@ export async function POST(
     } = await supabase
       .from("orders")
       .update({
-        status: "paid",
+        payment_status: "paid",
         razorpay_payment_id:
           razorpay_payment_id,
         updated_at:
@@ -163,7 +163,7 @@ export async function POST(
         user.id
       )
       .select(
-        "id,status,amount,currency,razorpay_order_id,razorpay_payment_id"
+        "id,payment_status,total_amount,currency,razorpay_order_id,razorpay_payment_id"
       )
       .single();
 

@@ -15,6 +15,7 @@ type Book = {
   cover_path: string | null;
   published: boolean;
   featured: boolean;
+  newPick?: boolean;
   isFree?: boolean;
   categories?: { name: string; slug: string; icon?: string | null }[];
   created_at: string;
@@ -78,7 +79,7 @@ export default function AdminBooksPage() {
 
   async function updateBook(
     bookId: string,
-    action: "publish" | "featured" | "free",
+    action: "publish" | "featured" | "free" | "new_pick",
     value: boolean
   ) {
     setBusyId(bookId);
@@ -86,11 +87,9 @@ export default function AdminBooksPage() {
 
     try {
       const endpoint =
-        action === "publish"
-          ? "/api/admin/books/publish"
-          : action === "featured"
-          ? "/api/admin/books/featured"
-          : "/api/admin/books/free";
+        action === "publish" ? "/api/admin/books/publish" :
+        action === "featured" ? "/api/admin/books/featured" :
+        action === "free" ? "/api/admin/books/free" : "/api/admin/books";
 
       const response = await fetch(endpoint, {
         method: "PATCH",
@@ -99,11 +98,9 @@ export default function AdminBooksPage() {
         },
         body: JSON.stringify({
           bookId,
-          [action === "publish"
-            ? "published"
-            : action === "featured"
-            ? "featured"
-            : "isFree"]: value,
+          ...(action === "new_pick" ? { bookId, new_pick: value } : {
+            [action === "publish" ? "published" : action === "featured" ? "featured" : "isFree"]: value,
+          }),
         }),
       });
 
@@ -124,7 +121,7 @@ export default function AdminBooksPage() {
                   ? { published: value }
                   : action === "featured"
                   ? { featured: value }
-                  : { isFree: value }),
+                  : action === "free" ? { isFree: value } : { newPick: value }),
               }
             : book
         )
@@ -347,6 +344,7 @@ export default function AdminBooksPage() {
                           Featured
                         </span>
                       )}
+                      {book.newPick && <span className="rounded-full bg-pink-100 px-2 py-1 text-[10px] font-bold text-pink-700">New Pick</span>}
                       {book.isFree && (
                         <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">
                           Free Reading
@@ -405,16 +403,7 @@ export default function AdminBooksPage() {
                       {book.isFree ? "Remove Free" : "Make Free"}
                     </button>
 
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() =>
-                        updateBook(
-                          book.id,
-                          "featured",
-                          !book.featured
-                        )
-                      }
+                    <button type="button" disabled={busy} onClick={() => updateBook(book.id, "featured", !book.featured)}
                       className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 disabled:opacity-50"
                     >
                       {book.featured
