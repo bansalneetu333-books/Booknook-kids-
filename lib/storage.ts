@@ -21,6 +21,33 @@ export async function getActiveBookVersion(bookId: string) {
   return data;
 }
 
+async function findExistingStorageFile(bookSlug: string) {
+  const supabase = createAdminClient();
+  const safeSlug = bookSlug.trim();
+  if (!safeSlug) return null;
+
+  const { data: entries, error } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET).list(safeSlug, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+  if (error) { console.error("Storage fallback list error:", error); return null; }
+
+  const candidates: Array<{ path: string; fileType: string; fileSize: number | null; createdAt: string }> = [];
+  for (const entry of entries ?? []) {
+    const name = String(entry.name || "");
+    const lower = name.toLowerCase();
+    if (lower.endsWith(".epub") || lower.endsWith(".pdf")) {
+      candidates.push({ path: safeSlug + "/" + name, fileType: lower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof entry.metadata?.size === "number" ? entry.metadata.size : null, createdAt: entry.created_at || "" });
+      continue;
+    }
+    const { data: nested } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET).list(safeSlug + "/" + name, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+    for (const file of nested ?? []) {
+      const fileName = String(file.name || "");
+      const fileLower = fileName.toLowerCase();
+      if (!fileLower.endsWith(".epub") && !fileLower.endsWith(".pdf")) continue;
+      candidates.push({ path: safeSlug + "/" + name + "/" + fileName, fileType: fileLower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof file.metadata?.size === "number" ? file.metadata.size : null, createdAt: file.created_at || "" });
+    }
+  }
+  candidates.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return candidates[0] ?? null;
+}
 export async function getReadableBookFile(bookId: string) {
   const supabase = createAdminClient();
   const version = await getActiveBookVersion(bookId);
@@ -40,7 +67,7 @@ export async function getReadableBookFile(bookId: string) {
 
   const { data, error } = await supabase
     .from("books")
-    .select("epub_path")
+    .select("slug,epub_path")
     .eq("id", bookId)
     .maybeSingle();
 
@@ -49,15 +76,30 @@ export async function getReadableBookFile(bookId: string) {
     throw new Error("Unable to load book file.");
   }
 
-  if (!data?.epub_path) return null;
+  if (data?.epub_path) {
+    return {
+      path: data.epub_path,
+      fileType: "application/epub+zip",
+      version: null,
+      fileSize: null,
+      source: "legacy" as const,
+    };
+  }
 
-  return {
-    path: data.epub_path,
-    fileType: "application/epub+zip",
-    version: null,
-    fileSize: null,
-    source: "legacy" as const,
-  };
+  if (data?.slug) {
+    const fallback = await findExistingStorageFile(data.slug);
+    if (fallback) {
+      return {
+        path: fallback.path,
+        fileType: fallback.fileType,
+        version: null,
+        fileSize: fallback.fileSize,
+        source: "storage-fallback" as const,
+      };
+    }
+  }
+
+  return null;
 }
 
 export async function createEpubSignedUrl(path: string, expiresIn = 300) {
