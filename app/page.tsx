@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getFeaturedBooks, getPublishedBooks, getFreeBooks } from "@/lib/books";
+import { getFeaturedBooks, getNewPickBooks, getPublishedBooks, getFreeBooks } from "@/lib/books";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { CategoryMenu } from "@/components/category-menu";
@@ -9,11 +9,12 @@ import { createClient } from "@/lib/supabase/server";
 export default async function HomePage() {
   const featured = await getFeaturedBooks();
   const latest = await getPublishedBooks();
+  const selectedNewPicks = await getNewPickBooks();
   const freeBooks = await getFreeBooks();
   const featuredHome = Array.from(
     new Map([...featured, ...latest].map((book) => [book.id, book])).values()
   ).slice(0, 5);
-  const newPicks = latest.slice(0, 5);
+  const newPicks = (selectedNewPicks.length ? selectedNewPicks : latest).slice(0, 5);
   const supabase = await createClient();
   const { data: content } = await supabase.from("site_content").select("key,value");
   const map = Object.fromEntries((content ?? []).map((item) => [item.key, item.value]));
