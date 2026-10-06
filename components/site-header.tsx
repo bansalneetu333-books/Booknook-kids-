@@ -21,13 +21,13 @@ export function SiteHeader() {
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-[var(--booknook-border)] bg-white/95 backdrop-blur-xl">
       <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex min-w-0 items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 via-fuchsia-500 to-orange-400 text-xl shadow-md">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--booknook-primary)] via-[var(--booknook-secondary)] to-[var(--booknook-sky)] text-xl shadow-md">
             📚
           </span>
-          <span className="truncate text-base font-black tracking-tight text-slate-950 sm:text-lg">
+          <span className="truncate text-base font-black tracking-tight text-[var(--booknook-ink)] sm:text-lg">
             BookNook Kids
           </span>
         </Link>
@@ -40,8 +40,8 @@ export function SiteHeader() {
               className={
                 "rounded-xl px-3 py-2 text-sm font-extrabold transition " +
                 (isActive(item.href)
-                  ? "bg-violet-100 text-violet-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-950")
+                  ? "bg-[rgba(109,93,252,0.10)] text-[var(--booknook-primary)]"
+                  : "text-[var(--booknook-muted)] hover:bg-[#f1f2f7] hover:text-[var(--booknook-ink)]")
               }
             >
               {item.label}
@@ -49,7 +49,7 @@ export function SiteHeader() {
           ))}
           <Link
             href="/account"
-            className="ml-1 rounded-full bg-slate-950 px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-violet-700"
+            className="ml-1 rounded-full bg-[var(--booknook-ink)] px-4 py-2 text-sm font-black text-white shadow-sm transition hover:opacity-90"
           >
             Account
           </Link>
@@ -59,7 +59,7 @@ export function SiteHeader() {
           <Link
             href="/cart"
             aria-label="Cart"
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg shadow-sm"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--booknook-border)] bg-white text-lg shadow-sm"
           >
             🛒
           </Link>
@@ -68,7 +68,7 @@ export function SiteHeader() {
             aria-label={open ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={open}
             onClick={() => setOpen((value) => !value)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg font-black text-slate-800 shadow-sm"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--booknook-border)] bg-white text-lg font-black text-[var(--booknook-ink)] shadow-sm"
           >
             {open ? "✕" : "☰"}
           </button>
@@ -76,7 +76,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <div className="border-t border-slate-200 bg-white px-4 py-3 shadow-lg md:hidden">
+        <div className="border-t border-[var(--booknook-border)] bg-white px-4 py-3 shadow-lg md:hidden">
           <nav className="mx-auto grid max-w-7xl grid-cols-2 gap-2">
             {navigation.map((item) => (
               <Link
@@ -86,8 +86,8 @@ export function SiteHeader() {
                 className={
                   "rounded-2xl px-4 py-3 text-sm font-black " +
                   (isActive(item.href)
-                    ? "bg-violet-100 text-violet-700"
-                    : "bg-slate-50 text-slate-700")
+                    ? "bg-[rgba(109,93,252,0.10)] text-[var(--booknook-primary)]"
+                    : "bg-[#f7f8fc] text-slate-700")
                 }
               >
                 {item.label}
@@ -96,7 +96,7 @@ export function SiteHeader() {
             <Link
               href="/account"
               onClick={() => setOpen(false)}
-              className="col-span-2 rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-black text-white"
+              className="col-span-2 rounded-2xl bg-[var(--booknook-ink)] px-4 py-3 text-center text-sm font-black text-white"
             >
               Account
             </Link>
