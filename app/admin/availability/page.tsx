@@ -61,21 +61,21 @@ export default function AdminAvailabilityPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-violet-600">Admin</p>
-          <h1 className="mt-1 text-3xl font-extrabold text-slate-900">File Availability</h1>
-          <p className="mt-2 text-slate-500">Check every book's EPUB, PDF and cover in one place.</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">Admin</p>
+          <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">File Availability</h1>
+          <p className="mt-2 text-[var(--booknook-muted)]">Check every book's EPUB, PDF and cover in one place.</p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => void load()}
-            className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700"
+            className="rounded-full border border-[var(--booknook-border)] bg-white px-5 py-3 text-sm font-bold text-[var(--booknook-ink)]"
           >
             Refresh
           </button>
           <Link
             href="/admin/books"
-            className="rounded-full bg-violet-600 px-5 py-3 text-sm font-bold text-white"
+            className="rounded-full bg-[var(--booknook-primary)] px-5 py-3 text-sm font-bold text-white"
           >
             Back to Books
           </Link>
@@ -83,34 +83,34 @@ export default function AdminAvailabilityPage() {
       </div>
 
       {message && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {message}
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
         <table className="w-full min-w-[620px] border-collapse">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-5 py-4 text-left text-sm font-extrabold text-slate-700">Book</th>
-              <th className="px-5 py-4 text-center text-sm font-extrabold text-slate-700">EPUB</th>
-              <th className="px-5 py-4 text-center text-sm font-extrabold text-slate-700">PDF</th>
-              <th className="px-5 py-4 text-center text-sm font-extrabold text-slate-700">Cover</th>
+            <tr className="border-b border-[var(--booknook-border)] bg-[#f7f8fc]">
+              <th className="px-5 py-4 text-left text-sm font-extrabold text-[var(--booknook-ink)]">Book</th>
+              <th className="px-5 py-4 text-center text-sm font-extrabold text-[var(--booknook-ink)]">EPUB</th>
+              <th className="px-5 py-4 text-center text-sm font-extrabold text-[var(--booknook-ink)]">PDF</th>
+              <th className="px-5 py-4 text-center text-sm font-extrabold text-[var(--booknook-ink)]">Cover</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center font-semibold text-slate-500">Checking files…</td>
+                <td colSpan={4} className="px-5 py-12 text-center font-semibold text-[var(--booknook-muted)]">Checking files…</td>
               </tr>
             ) : books.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-12 text-center font-semibold text-slate-500">No books found.</td>
+                <td colSpan={4} className="px-5 py-12 text-center font-semibold text-[var(--booknook-muted)]">No books found.</td>
               </tr>
             ) : (
               books.map((book) => (
                 <tr key={book.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-5 py-4 font-bold text-slate-900">{book.title}</td>
+                  <td className="px-5 py-4 font-bold text-[var(--booknook-ink)]">{book.title}</td>
                   <td className="px-5 py-4 text-center"><Status available={Boolean(book.epubAvailable)} /></td>
                   <td className="px-5 py-4 text-center"><Status available={Boolean(book.pdfAvailable)} /></td>
                   <td className="px-5 py-4 text-center"><Status available={Boolean(book.coverPath)} /></td>
