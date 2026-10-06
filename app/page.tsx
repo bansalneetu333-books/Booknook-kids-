@@ -40,7 +40,7 @@ export default async function HomePage() {
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-black text-indigo-600">
-                    ✨ Fresh picks
+                    ✨ Featured books
                   </p>
                   <h2 className="mt-1 text-3xl font-black">Featured</h2>
                 </div>
