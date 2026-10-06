@@ -229,10 +229,10 @@ export async function GET(request: Request) {
               order.razorpay_payment_id,
 
             status:
-              order.status,
+              order.payment_status,
 
             amount: Number(
-              order.amount
+              order.total_amount
             ),
 
             currency:
