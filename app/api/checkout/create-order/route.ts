@@ -12,7 +12,11 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const requestedIds = Array.isArray(body?.bookIds) ? body.bookIds : typeof body?.bookId === "string" ? [body.bookId] : [];
-    const bookIds = [...new Set(requestedIds.filter((id: unknown): id is string => typeof id === "string" && id.trim().length > 0).map(id => id.trim()))];
+    const bookIds = [...new Set(
+      requestedIds
+        .filter((id: unknown): id is string => typeof id === "string" && id.trim().length > 0)
+        .map((id: string) => id.trim())
+    )];
 
     if (bookIds.length === 0) return NextResponse.json({ error: "At least one book is required." }, { status: 400 });
     if (bookIds.length > 50) return NextResponse.json({ error: "Cart is too large. Please check out in smaller groups." }, { status: 400 });
