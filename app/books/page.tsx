@@ -39,21 +39,6 @@ export default async function BooksPage({
 
       <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6">
         <div className="mx-auto max-w-7xl">
-          <div className="rounded-[2rem] bg-gradient-to-br from-indigo-600 to-pink-500 p-7 text-white shadow-xl sm:p-9">
-            <p className="text-sm font-black uppercase tracking-widest text-white/75">
-              Explore
-            </p>
-
-            <h1 className="mt-2 text-4xl font-black">
-              Find your next read 📚
-            </h1>
-
-            <p className="mt-2 max-w-2xl text-white/85">
-              Pick a world, search a title, and open a story made
-              for young readers.
-            </p>
-          </div>
-
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
             <Link
               href="/books"
