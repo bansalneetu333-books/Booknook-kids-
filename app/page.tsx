@@ -33,7 +33,7 @@ export default async function HomePage() {
 
       <main className="min-h-screen overflow-x-hidden bg-[#fffdf9]">
         {map.announcement && (
-          <div className="bg-slate-950 px-4 py-2 text-center text-xs font-extrabold text-white sm:text-sm">
+          <div className="bg-[var(--booknook-ink)] px-4 py-2 text-center text-xs font-extrabold text-white sm:text-sm">
             {map.announcement}
           </div>
         )}
@@ -44,7 +44,7 @@ export default async function HomePage() {
           <section className="py-8 sm:py-10">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-600">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--booknook-primary)]">
                   Find your next world
                 </p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
@@ -105,7 +105,7 @@ export default async function HomePage() {
           <section className="pb-12">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-violet-600">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--booknook-primary)]">
                   Hand-picked
                 </p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
