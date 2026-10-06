@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getReadableBookFile, createEpubSignedUrl } from "@/lib/storage";
+import { requireAdmin } from "@/lib/admin";
 
 export async function POST(request: Request) {
   try {
@@ -11,19 +12,22 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     const bookId = typeof body.bookId === "string" ? body.bookId.trim() : "";
+    const preview = body?.preview === true;
+    const adminCheck = preview ? await requireAdmin() : null;
+    if (preview && (!adminCheck?.user || !adminCheck?.isAdmin)) return NextResponse.json({ error: "Admin preview access required." }, { status: 403 });
     if (!bookId) return NextResponse.json({ error: "Book ID is required." }, { status: 400 });
 
     const { data: book, error: bookError } = await supabase
       .from("books")
       .select("id,title,published,is_free")
       .eq("id", bookId)
-      .or("published.eq.true,is_published.eq.true")
       .maybeSingle();
 
     if (bookError) return NextResponse.json({ error: "Unable to verify book." }, { status: 500 });
     if (!book) return NextResponse.json({ error: "Book is not available." }, { status: 404 });
+    if (!preview && !(book.published === true || (book as any).is_published === true)) return NextResponse.json({ error: "Book is not available." }, { status: 404 });
 
-    if (!book.is_free) {
+    if (!preview && !book.is_free) {
       const { data: purchase, error: purchaseError } = await supabase
         .from("order_items")
         .select("id,orders!inner(id,user_id,status)")
