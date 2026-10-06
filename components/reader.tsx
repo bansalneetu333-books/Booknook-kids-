@@ -337,10 +337,10 @@ export function EpubReader({
 
   if (pdfUrl) {
     return (
-      <section className="flex min-h-[75vh] flex-col overflow-hidden rounded-[2rem] bg-slate-900 shadow-2xl">
+      <section className="flex min-h-[75vh] flex-col overflow-hidden rounded-[2rem] bg-[#0f172a] shadow-2xl">
         <header className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4 text-white sm:px-6">
           <h1 className="truncate font-black">{title}</h1>
-          <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white">Open PDF</a>
+          <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-[var(--booknook-primary)] px-4 py-2 text-sm font-black text-white">Open PDF</a>
         </header>
         <iframe
           title={title}
@@ -354,16 +354,16 @@ export function EpubReader({
 
   if (error) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center">
+      <div className="rounded-3xl border border-[rgba(255,111,174,0.3)] bg-[rgba(255,111,174,0.08)] p-6 text-center">
         <div className="text-4xl">
           📕
         </div>
 
-        <h2 className="mt-3 text-xl font-black text-red-800">
+        <h2 className="mt-3 text-xl font-black text-[var(--booknook-ink)]">
           Unable to open this book
         </h2>
 
-        <p className="mt-2 text-sm font-medium text-red-700">
+        <p className="mt-2 text-sm font-medium text-[var(--booknook-secondary)]">
           {error}
         </p>
 
@@ -372,7 +372,7 @@ export function EpubReader({
           onClick={() =>
             window.location.reload()
           }
-          className="mt-5 rounded-full bg-red-600 px-5 py-3 font-black text-white"
+          className="mt-5 rounded-full bg-[var(--booknook-secondary)] px-5 py-3 font-black text-white"
         >
           Try Again
         </button>
@@ -381,7 +381,7 @@ export function EpubReader({
   }
 
   return (
-    <section className="flex min-h-[75vh] flex-col overflow-hidden rounded-[2rem] bg-slate-900 shadow-2xl">
+    <section className="flex min-h-[75vh] flex-col overflow-hidden rounded-[2rem] bg-[#0f172a] shadow-2xl">
 
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-4 text-white sm:px-6">
 
@@ -392,7 +392,7 @@ export function EpubReader({
 
           <div className="mt-1 h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-indigo-400 transition-all"
+              className="h-full rounded-full bg-[var(--booknook-sky)] transition-all"
               style={{
                 width: `${progress}%`,
               }}
@@ -415,11 +415,11 @@ export function EpubReader({
                 📖
               </div>
 
-              <p className="mt-3 font-black text-slate-700">
+              <p className="mt-3 font-black text-[var(--booknook-ink)]">
                 Opening your book…
               </p>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--booknook-muted)]">
                 Please wait a moment.
               </p>
             </div>
@@ -433,7 +433,7 @@ export function EpubReader({
 
       </div>
 
-      <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-slate-900 p-4">
+      <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-[#0f172a] p-4">
 
         <button
           type="button"
@@ -452,7 +452,7 @@ export function EpubReader({
           type="button"
           onClick={goNext}
           disabled={loading}
-          className="rounded-full bg-indigo-600 px-5 py-3 font-black text-white transition hover:bg-indigo-500 disabled:opacity-40"
+          className="rounded-full bg-[var(--booknook-primary)] px-5 py-3 font-black text-white transition hover:opacity-90 disabled:opacity-40"
         >
           Next →
         </button>
