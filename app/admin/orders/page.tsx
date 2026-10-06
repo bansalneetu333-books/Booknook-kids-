@@ -80,7 +80,7 @@ function statusClass(status: string) {
       return "bg-red-100 text-red-700";
 
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-[#f1f2f7] text-[var(--booknook-ink)]";
   }
 }
 
@@ -176,7 +176,7 @@ export default function AdminOrdersPage() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-[#f7f8fc] p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
 
         <div className="mb-8">
@@ -184,11 +184,11 @@ export default function AdminOrdersPage() {
             Admin
           </p>
 
-          <h1 className="mt-1 text-3xl font-black text-slate-900 sm:text-4xl">
+          <h1 className="mt-1 text-3xl font-black text-[var(--booknook-ink)] sm:text-4xl">
             Orders
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-[var(--booknook-muted)]">
             View purchases, customers and
             Razorpay payment information.
           </p>
@@ -197,7 +197,7 @@ export default function AdminOrdersPage() {
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
           <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="text-sm font-bold text-slate-500">
+            <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Total Orders
             </p>
 
@@ -207,7 +207,7 @@ export default function AdminOrdersPage() {
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="text-sm font-bold text-slate-500">
+            <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Paid Orders
             </p>
 
@@ -217,7 +217,7 @@ export default function AdminOrdersPage() {
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="text-sm font-bold text-slate-500">
+            <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Pending
             </p>
 
@@ -227,7 +227,7 @@ export default function AdminOrdersPage() {
           </div>
 
           <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <p className="text-sm font-bold text-slate-500">
+            <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Revenue
             </p>
 
@@ -253,7 +253,7 @@ export default function AdminOrdersPage() {
                 setSearch(e.target.value)
               }
               placeholder="Search customer, book, order or payment ID…"
-              className="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-indigo-500"
+              className="min-w-0 flex-1 rounded-[1.25rem] border border-[var(--booknook-border)] px-4 py-3 outline-none focus:border-indigo-500"
             />
 
             <select
@@ -261,7 +261,7 @@ export default function AdminOrdersPage() {
               onChange={(e) =>
                 setStatus(e.target.value)
               }
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 font-bold outline-none focus:border-indigo-500"
+              className="rounded-[1.25rem] border border-[var(--booknook-border)] bg-white px-4 py-3 font-bold outline-none focus:border-indigo-500"
             >
               <option value="all">
                 All statuses
@@ -301,7 +301,7 @@ export default function AdminOrdersPage() {
         </div>
 
         {error && (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 font-semibold text-red-700">
+          <div className="mb-6 rounded-[1.25rem] border border-red-200 bg-red-50 p-4 font-semibold text-red-700">
             {error}
           </div>
         )}
@@ -312,7 +312,7 @@ export default function AdminOrdersPage() {
               ⏳
             </div>
 
-            <p className="mt-3 font-bold text-slate-600">
+            <p className="mt-3 font-bold text-[var(--booknook-muted)]">
               Loading orders…
             </p>
           </div>
@@ -326,7 +326,7 @@ export default function AdminOrdersPage() {
               No orders found
             </h2>
 
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-[var(--booknook-muted)]">
               Try another search or status
               filter.
             </p>
@@ -344,7 +344,7 @@ export default function AdminOrdersPage() {
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-black text-slate-900">
+                      <h2 className="font-black text-[var(--booknook-ink)]">
                         Order #{order.id.slice(0, 8)}
                       </h2>
 
@@ -357,7 +357,7 @@ export default function AdminOrdersPage() {
                       </span>
                     </div>
 
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-[var(--booknook-muted)]">
                       {formatDate(
                         order.createdAt
                       )}
@@ -374,7 +374,7 @@ export default function AdminOrdersPage() {
                       )}
                     </p>
 
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-[var(--booknook-muted)]">
                       {order.items.length}{" "}
                       {order.items.length === 1
                         ? "book"
@@ -387,17 +387,17 @@ export default function AdminOrdersPage() {
                 <div className="grid gap-5 py-5 lg:grid-cols-3">
 
                   <div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    <p className="text-xs font-black uppercase tracking-wider text-[#8a90a0]">
                       Customer
                     </p>
 
-                    <p className="mt-1 font-bold text-slate-900">
+                    <p className="mt-1 font-bold text-[var(--booknook-ink)]">
                       {order.customer
                         ?.fullName ||
                         "Customer"}
                     </p>
 
-                    <p className="break-all text-sm text-slate-500">
+                    <p className="break-all text-sm text-[var(--booknook-muted)]">
                       {order.customer
                         ?.email ||
                         "No email"}
@@ -405,22 +405,22 @@ export default function AdminOrdersPage() {
                   </div>
 
                   <div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    <p className="text-xs font-black uppercase tracking-wider text-[#8a90a0]">
                       Razorpay Order
                     </p>
 
-                    <p className="mt-1 break-all font-mono text-sm text-slate-700">
+                    <p className="mt-1 break-all font-mono text-sm text-[var(--booknook-ink)]">
                       {order.razorpayOrderId ||
                         "—"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    <p className="text-xs font-black uppercase tracking-wider text-[#8a90a0]">
                       Payment ID
                     </p>
 
-                    <p className="mt-1 break-all font-mono text-sm text-slate-700">
+                    <p className="mt-1 break-all font-mono text-sm text-[var(--booknook-ink)]">
                       {order.razorpayPaymentId ||
                         "—"}
                     </p>
@@ -429,7 +429,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div>
-                  <p className="mb-3 text-xs font-black uppercase tracking-wider text-slate-400">
+                  <p className="mb-3 text-xs font-black uppercase tracking-wider text-[#8a90a0]">
                     Books
                   </p>
 
@@ -438,16 +438,16 @@ export default function AdminOrdersPage() {
                       (item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between gap-4 rounded-2xl bg-slate-50 p-3"
+                          className="flex items-center justify-between gap-4 rounded-2xl bg-[#f7f8fc] p-3"
                         >
                           <div className="min-w-0">
-                            <p className="truncate font-bold text-slate-800">
+                            <p className="truncate font-bold text-[var(--booknook-ink)]">
                               {item.book
                                 ?.title ||
                                 "Book"}
                             </p>
 
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-[var(--booknook-muted)]">
                               {item.book
                                 ?.author ||
                                 ""}
