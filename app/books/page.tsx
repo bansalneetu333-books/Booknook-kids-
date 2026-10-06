@@ -34,6 +34,7 @@ export default async function BooksPage({
 
     const matchesCategory =
       !category ||
+      (book.categories ?? []).some((item) => item.slug === category) ||
       (book.genre ?? "")
         .split("/")
         .map((value) => value.trim().toLowerCase())
