@@ -102,6 +102,92 @@ export async function getReadableBookFile(bookId: string) {
   return null;
 }
 
+export async function getBookFileAvailability(bookId: string) {
+  const supabase = createAdminClient();
+  let epubAvailable = false;
+  let pdfAvailable = false;
+  let epubPath: string | null = null;
+  let pdfPath: string | null = null;
+
+  const { data: book } = await supabase.from("books").select("slug,epub_path").eq("id", bookId).maybeSingle();
+  if (!book) return { epubAvailable: false, pdfAvailable: false, epubPath: null, pdfPath: null };
+
+  if (book.epub_path) {
+    epubAvailable = true;
+    epubPath = book.epub_path;
+  }
+
+  const { data: versions } = await supabase.from("book_versions")
+    .select("epub_path,file_path,file_type,active,is_current,created_at")
+    .eq("book_id", bookId)
+    .order("created_at", { ascending: false });
+
+  for (const version of versions ?? []) {
+    const path = version.epub_path || version.file_path || null;
+    if (!path) continue;
+    const type = String(version.file_type || "").toLowerCase();
+    if (type === "application/pdf" || path.toLowerCase().endsWith(".pdf")) {
+      pdfAvailable = true;
+      pdfPath = pdfPath || path;
+    } else {
+      epubAvailable = true;
+      epubPath = epubPath || path;
+    }
+  }
+
+  if (!epubAvailable || !pdfAvailable) {
+    const fallback = await findAllExistingStorageFiles(book.slug);
+    if (!epubAvailable && fallback.epubPath) {
+      epubAvailable = true;
+      epubPath = fallback.epubPath;
+    }
+    if (!pdfAvailable && fallback.pdfPath) {
+      pdfAvailable = true;
+      pdfPath = fallback.pdfPath;
+    }
+  }
+
+  return { epubAvailable, pdfAvailable, epubPath, pdfPath };
+}
+
+async function findAllExistingStorageFiles(bookSlug: string) {
+  const supabase = createAdminClient();
+  const safeSlug = String(bookSlug || "").trim();
+  if (!safeSlug) return { epubPath: null as string | null, pdfPath: null as string | null };
+
+  const { data: entries } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET)
+    .list(safeSlug, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+
+  let epubPath: string | null = null;
+  let pdfPath: string | null = null;
+
+  for (const entry of entries ?? []) {
+    const name = String(entry.name || "");
+    const lower = name.toLowerCase();
+
+    if (lower.endsWith(".epub")) {
+      epubPath = epubPath || safeSlug + "/" + name;
+      continue;
+    }
+    if (lower.endsWith(".pdf")) {
+      pdfPath = pdfPath || safeSlug + "/" + name;
+      continue;
+    }
+
+    const { data: nested } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET)
+      .list(safeSlug + "/" + name, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+
+    for (const file of nested ?? []) {
+      const fileName = String(file.name || "");
+      const fileLower = fileName.toLowerCase();
+      if (fileLower.endsWith(".epub")) epubPath = epubPath || safeSlug + "/" + name + "/" + fileName;
+      if (fileLower.endsWith(".pdf")) pdfPath = pdfPath || safeSlug + "/" + name + "/" + fileName;
+    }
+  }
+
+  return { epubPath, pdfPath };
+}
+
 export async function createEpubSignedUrl(path: string, expiresIn = 300) {
   const supabase = createAdminClient();
   const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
