@@ -20,19 +20,29 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const bookId = body?.bookId;
+    const requestedIds = Array.isArray(body?.bookIds)
+      ? body.bookIds
+      : typeof body?.bookId === "string"
+      ? [body.bookId]
+      : [];
 
-    if (
-      typeof bookId !== "string" ||
-      !bookId.trim()
-    ) {
+    const bookIds = Array.from(
+      new Set(
+        requestedIds.filter(
+          (id: unknown): id is string =>
+            typeof id === "string" && id.trim().length > 0
+        )
+      )
+    );
+
+    if (bookIds.length === 0) {
       return NextResponse.json(
-        { error: "bookId is required." },
+        { error: "At least one book is required." },
         { status: 400 }
       );
     }
 
-    const { data: book, error: bookError } =
+    const { data: books, error: bookError } =
       await supabase
         .from("books")
         .select(
@@ -47,8 +57,7 @@ export async function POST(request: Request) {
             is_published
           `
         )
-        .eq("id", bookId)
-        .maybeSingle();
+        .in("id", bookIds);
 
     if (bookError) {
       console.error(
@@ -65,12 +74,48 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!book) {
+    if (!books || books.length !== bookIds.length) {
       return NextResponse.json(
-        { error: "Book not found." },
+        { error: "One or more selected books could not be found." },
         { status: 404 }
       );
     }
+
+    const unavailable = books.filter(
+      (book) => !(book.published === true || book.is_published === true) || Number(book.price) <= 0
+    );
+
+    if (unavailable.length > 0) {
+      return NextResponse.json(
+        { error: "One or more selected books are not currently available for purchase." },
+        { status: 400 }
+      );
+    }
+
+    const { data: existingPurchases, error: purchaseLookupError } =
+      await supabase
+        .from("order_items")
+        .select(`book_id, orders!inner(user_id,status)`)
+        .in("book_id", bookIds)
+        .eq("orders.user_id", user.id)
+        .eq("orders.status", "paid");
+
+    if (purchaseLookupError) {
+      return NextResponse.json({ error: "Unable to check previous purchases." }, { status: 500 });
+    }
+
+    const ownedIds = new Set((existingPurchases ?? []).map((item) => item.book_id));
+    const booksToBuy = books.filter((book) => !ownedIds.has(book.id));
+
+    if (booksToBuy.length === 0) {
+      return NextResponse.json(
+        { error: "You already own all selected books.", alreadyPurchased: true },
+        { status: 409 }
+      );
+    }
+
+    const totalPrice = booksToBuy.reduce((sum, book) => sum + Number(book.price), 0);
+    const firstBook = booksToBuy[0];
 
     /*
      * Some existing rows use `published`,
@@ -93,7 +138,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const price = Number(book.price);
+    const price = totalPrice;
 
     if (
       !Number.isFinite(price) ||
@@ -176,7 +221,7 @@ export async function POST(request: Request) {
           status: "pending",
           amount: price,
           currency:
-            book.currency || "INR",
+            firstBook.currency || "INR",
         })
         .select(
           "id,user_id,status,amount,currency,created_at"
@@ -204,11 +249,13 @@ export async function POST(request: Request) {
     const { error: itemError } =
       await supabase
         .from("order_items")
-        .insert({
-          order_id: localOrder.id,
-          book_id: book.id,
-          price,
-        });
+        .insert(
+          booksToBuy.map((book) => ({
+            order_id: localOrder.id,
+            book_ids: booksToBuy.map((book) => book.id).join(","),
+            price: Number(book.price),
+          }))
+        );
 
     if (itemError) {
       console.error(
@@ -365,15 +412,14 @@ export async function POST(request: Request) {
           razorpayOrder.currency,
       },
 
-      book: {
+      books: booksToBuy.map((book) => ({
         id: book.id,
         title: book.title,
         slug: book.slug,
         author: book.author,
-        price,
-        currency:
-          book.currency || "INR",
-      },
+        price: Number(book.price),
+        currency: book.currency || "INR",
+      })),
     });
   } catch (error) {
     console.error(
