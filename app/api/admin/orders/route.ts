@@ -32,8 +32,8 @@ export async function GET(request: Request) {
         user_id,
         razorpay_order_id,
         razorpay_payment_id,
-        status,
-        amount,
+        payment_status,
+        total_amount,
         currency,
         created_at,
         updated_at,
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
 
     if (status) {
       query = query.eq(
-        "status",
+        "payment_status",
         status
       );
     }
@@ -229,10 +229,10 @@ export async function GET(request: Request) {
               order.razorpay_payment_id,
 
             status:
-              order.status,
+              order.payment_status,
 
             amount: Number(
-              order.amount
+              order.total_amount
             ),
 
             currency:
@@ -304,21 +304,21 @@ export async function GET(request: Request) {
       paidOrders:
         formattedOrders.filter(
           (order) =>
-            order.status ===
+            order.payment_status ===
             "paid"
         ).length,
 
       pendingOrders:
         formattedOrders.filter(
           (order) =>
-            order.status ===
+            order.payment_status ===
             "pending"
         ).length,
 
       failedOrders:
         formattedOrders.filter(
           (order) =>
-            order.status ===
+            order.payment_status ===
             "failed"
         ).length,
 
@@ -326,7 +326,7 @@ export async function GET(request: Request) {
         formattedOrders
           .filter(
             (order) =>
-              order.status ===
+              order.payment_status ===
               "paid"
           )
           .reduce(
@@ -335,7 +335,7 @@ export async function GET(request: Request) {
               order
             ) =>
               total +
-              order.amount,
+              order.total_amount,
             0
           ),
     };
