@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CheckoutButton } from "@/components/checkout-button";
-import { getCheckoutBook, hasPurchasedBook } from "@/lib/checkout";
+import { getCheckoutBook, getPurchasedBookIds } from "@/lib/checkout";
 import { createClient } from "@/lib/supabase/server";
 
 type CheckoutPageProps = {
@@ -65,8 +65,8 @@ export default async function CheckoutPage({
     );
   }
 
-  const purchased = await Promise.all(validBooks.map((book) => hasPurchasedBook(book.id)));
-  const availableBooks = validBooks.filter((_, index) => !purchased[index]);
+  const purchasedIds = await getPurchasedBookIds(validBooks.map((book) => book.id));
+  const availableBooks = validBooks.filter((book) => !purchasedIds.has(book.id));
 
   if (availableBooks.length === 0) {
     return (
