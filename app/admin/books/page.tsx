@@ -218,12 +218,35 @@ export default function AdminBooksPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/books/new"
-          className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3 font-bold text-white transition hover:bg-violet-700"
-        >
-          + Add New Book
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/admin/books/new"
+            className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3 font-bold text-white transition hover:bg-violet-700"
+          >
+            + Add New Book
+          </Link>
+
+          <button
+            type="button"
+            onClick={async () => {
+              setMessage("Checking Supabase for existing cover files…");
+              try {
+                const response = await fetch("/api/admin/books/repair-covers", {
+                  method: "POST",
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data?.error || "Unable to repair covers.");
+                setMessage(data?.message || "Cover check complete.");
+                await loadBooks();
+              } catch (error) {
+                setMessage(error instanceof Error ? error.message : "Unable to repair covers.");
+              }
+            }}
+            className="inline-flex items-center justify-center rounded-full border border-violet-200 bg-white px-6 py-3 font-bold text-violet-700"
+          >
+            🔧 Fix Missing Covers
+          </button>
+        </div>
       </div>
 
       {/* Search */}
