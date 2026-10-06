@@ -99,7 +99,7 @@ export default async function EditBookPage({
       <div>
         <Link
           href="/admin/books"
-          className="text-sm font-semibold text-slate-600 hover:text-violet-700"
+          className="text-sm font-semibold text-[var(--booknook-muted)] hover:text-[var(--booknook-primary)]"
         >
           ← Back to Books
         </Link>
@@ -115,18 +115,18 @@ export default async function EditBookPage({
           Admin
         </p>
 
-        <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
+        <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">
           Edit Book
         </h1>
 
-        <p className="mt-2 max-w-2xl text-slate-500">
+        <p className="mt-2 max-w-2xl text-[var(--booknook-muted)]">
           Update the book information, pricing,
           cover, publishing settings, and ebook
           files.
         </p>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-5 shadow-sm sm:p-8">
         <BookForm book={formBook} />
       </div>
     </div>
