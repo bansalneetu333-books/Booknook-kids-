@@ -91,7 +91,7 @@ export default async function HomePage() {
                 </div>
 
                 <Link href="/books" className="shrink-0 text-sm font-black text-indigo-600">
-                  Browse →
+                  See all books →
                 </Link>
               </div>
 
