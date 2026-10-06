@@ -229,10 +229,10 @@ export async function GET(request: Request) {
               order.razorpay_payment_id,
 
             status:
-              order.payment_status,
+              order.status,
 
             amount: Number(
-              order.total_amount
+              order.amount
             ),
 
             currency:
@@ -304,21 +304,21 @@ export async function GET(request: Request) {
       paidOrders:
         formattedOrders.filter(
           (order) =>
-            order.payment_status ===
+            order.status ===
             "paid"
         ).length,
 
       pendingOrders:
         formattedOrders.filter(
           (order) =>
-            order.payment_status ===
+            order.status ===
             "pending"
         ).length,
 
       failedOrders:
         formattedOrders.filter(
           (order) =>
-            order.payment_status ===
+            order.status ===
             "failed"
         ).length,
 
@@ -326,7 +326,7 @@ export async function GET(request: Request) {
         formattedOrders
           .filter(
             (order) =>
-              order.payment_status ===
+              order.status ===
               "paid"
           )
           .reduce(
@@ -335,7 +335,7 @@ export async function GET(request: Request) {
               order
             ) =>
               total +
-              order.total_amount,
+              order.amount,
             0
           ),
     };
