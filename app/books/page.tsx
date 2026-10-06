@@ -25,7 +25,11 @@ export default async function BooksPage({
       book.author.toLowerCase().includes(search);
 
     const matchesGenre =
-      !genre || book.genre?.toLowerCase() === genre;
+      !genre ||
+      (book.genre ?? "")
+        .split("/")
+        .map((value) => value.trim().toLowerCase())
+        .includes(genre);
 
     const matchesAge =
       !age || book.age_category?.toLowerCase().includes(age);
