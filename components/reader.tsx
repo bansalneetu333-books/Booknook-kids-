@@ -131,15 +131,51 @@ export function EpubReader({
 
         bookRef.current = book;
 
+        // Booknook Kids books are fixed-layout EPUBs. Keep every
+        // EPUB page as a single page and let epub.js scale it
+        // proportionally to the available reader viewport.
         const rendition = book.renderTo(
           containerRef.current,
           {
             width: "100%",
             height: "100%",
             flow: "paginated",
-            spread: "auto",
+            spread: "none",
+            minSpreadWidth: 0,
           }
         );
+
+        // Protect fixed-layout pages from browser/device margins
+        // and accidental horizontal overflow. The EPUB's own
+        // viewport and page ratio remain the source of truth.
+        rendition.hooks.content.register((contents: any) => {
+          const doc = contents?.document;
+          if (!doc) return;
+
+          const style = doc.createElement("style");
+          style.textContent = `
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+              overflow: hidden !important;
+              box-sizing: border-box !important;
+            }
+
+            *, *::before, *::after {
+              box-sizing: border-box !important;
+            }
+
+            img, svg, video, canvas {
+              max-width: 100% !important;
+              max-height: 100% !important;
+            }
+          `;
+          doc.head.appendChild(style);
+        });
 
         renditionRef.current = rendition;
 
@@ -306,7 +342,12 @@ export function EpubReader({
           <h1 className="truncate font-black">{title}</h1>
           <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white">Open PDF</a>
         </header>
-        <iframe title={title} src={pdfUrl} className="h-[75vh] w-full bg-white" />
+        <iframe
+          title={title}
+          src={pdfUrl}
+          className="h-[min(78vh,calc(100dvh-180px))] min-h-[500px] w-full bg-white"
+          style={{ border: 0 }}
+        />
       </section>
     );
   }
@@ -387,7 +428,7 @@ export function EpubReader({
 
         <div
           ref={containerRef}
-          className="h-[70vh] min-h-[500px] w-full"
+          className="h-[min(78vh,calc(100dvh-220px))] min-h-[420px] w-full overflow-hidden bg-white"
         />
 
       </div>
