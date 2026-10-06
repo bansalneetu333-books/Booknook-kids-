@@ -33,75 +33,74 @@ export default function AdminAnalyticsPage() {
       setLoading(true);
       setError("");
 
-      const response = await fetch(
-        "/api/admin/dashboard",
-        {
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/admin/analytics", {
+        cache: "no-store",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data?.error ||
-            "Unable to load analytics."
-        );
+        throw new Error(data?.error || "Unable to load analytics.");
       }
 
-      const dashboardData: DashboardData = {
-        totalBooks: Number(
-          data?.totalBooks ?? data?.total_books ?? 0
-        ),
-        publishedBooks: Number(
-          data?.publishedBooks ??
-            data?.published_books ??
-            0
-        ),
-        totalCustomers: Number(
-          data?.totalCustomers ??
-            data?.total_customers ??
-            0
-        ),
-        totalOrders: Number(
-          data?.totalOrders ??
-            data?.total_orders ??
-            0
-        ),
-        paidOrders: Number(
-          data?.paidOrders ??
-            data?.paid_orders ??
-            0
-        ),
-        revenue: Number(
-          data?.revenue ?? 0
-        ),
-      };
+      const monthly = Array.isArray(data?.monthlySales)
+        ? data.monthlySales
+        : [];
 
-      setDashboard(dashboardData);
+      setMonthlySales(
+        monthly.map(
+          (item: {
+            month?: string;
+            paid_orders?: number;
+            revenue?: number;
+            gross_revenue?: number;
+          }) => ({
+            month: String(item.month ?? ""),
+            orders: Number(item.paid_orders ?? 0),
+            revenue: Number(item.gross_revenue ?? item.revenue ?? 0),
+          })
+        )
+      );
 
-      if (Array.isArray(data?.monthlySales)) {
-        setMonthlySales(
-          data.monthlySales.map(
-            (item: {
-              month?: string;
-              orders?: number;
-              revenue?: number;
-            }) => ({
-              month: String(
-                item.month ?? ""
-              ),
-              orders: Number(
-                item.orders ?? 0
-              ),
-              revenue: Number(
-                item.revenue ?? 0
-              ),
-            })
-          )
-        );
-      } else {
-        setMonthlySales([]);
+      const daily = Array.isArray(data?.dailySales)
+        ? data.dailySales
+        : [];
+
+      const paidOrders = daily.reduce(
+        (n: number, item: { paid_orders?: number }) =>
+          n + Number(item.paid_orders ?? 0),
+        0
+      );
+
+      const revenue = daily.reduce(
+        (n: number, item: { gross_revenue?: number }) =>
+          n + Number(item.gross_revenue ?? 0),
+        0
+      );
+
+      setDashboard((previous) => ({
+        totalBooks: previous?.totalBooks ?? 0,
+        publishedBooks: previous?.publishedBooks ?? 0,
+        totalCustomers: previous?.totalCustomers ?? 0,
+        totalOrders: previous?.totalOrders ?? paidOrders,
+        paidOrders,
+        revenue,
+      }));
+
+      const dashboardResponse = await fetch("/api/admin/dashboard", {
+        cache: "no-store",
+      });
+      const dashboardData = await dashboardResponse.json();
+
+      if (dashboardResponse.ok) {
+        setDashboard({
+          totalBooks: Number(dashboardData?.totalBooks ?? 0),
+          publishedBooks: Number(dashboardData?.publishedBooks ?? 0),
+          totalCustomers: Number(dashboardData?.totalCustomers ?? 0),
+          totalOrders: Number(dashboardData?.totalOrders ?? 0),
+          paidOrders: Number(dashboardData?.paidOrders ?? paidOrders),
+          revenue: Number(dashboardData?.revenue ?? revenue),
+        });
       }
     } catch (err) {
       setError(
