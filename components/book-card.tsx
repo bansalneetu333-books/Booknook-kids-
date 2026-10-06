@@ -29,14 +29,14 @@ export function BookCard({ book }: BookCardProps) {
   return (
     <article className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl">
       <Link href={`/books/${book.slug}`} className="block">
-        <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100">
+        <div className="relative aspect-[2/3] overflow-hidden bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100">
           {cover ? (
             <Image
               src={cover}
               alt={book.title}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 220px"
-              className="object-cover transition duration-300 group-hover:scale-105"
+              className="object-contain object-center transition duration-300 group-hover:scale-[1.02]"
             />
           ) : (
             <div className="flex h-full items-center justify-center p-6 text-center">
