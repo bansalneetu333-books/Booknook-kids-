@@ -9,6 +9,7 @@ const navigation = [
   { label: "Books", href: "/books" },
   { label: "Free Reading", href: "/free-reading" },
   { label: "Library", href: "/library" },
+  { label: "Cart", href: "/cart" },
   { label: "Wishlist", href: "/wishlist" },
   { label: "Account", href: "/account" },
 ];
