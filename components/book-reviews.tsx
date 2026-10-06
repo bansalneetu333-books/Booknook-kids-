@@ -1,0 +1,12 @@
+"use client";
+import { useEffect, useState } from "react";
+export function BookReviews({ bookId }: { bookId: string }) {
+  const [data, setData] = useState<any>({ reviews: [], average: 0, count: 0 });
+  const [rating, setRating] = useState(5);
+  const [review, setReview] = useState("");
+  const [message, setMessage] = useState("");
+  async function load(){ const r=await fetch(`/api/reviews?bookId=${bookId}`,{cache:"no-store"}); if(r.ok)setData(await r.json()); }
+  useEffect(()=>{void load()},[bookId]);
+  async function submit(){setMessage("");const r=await fetch("/api/reviews",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({bookId,rating,review})});const d=await r.json();if(!r.ok){setMessage(d.error||"Unable to save review.");return;}setReview("");setMessage("Thank you — your review is saved.");void load();}
+  return <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-black uppercase tracking-wider text-violet-600">Reader reviews</p><h2 className="mt-1 text-2xl font-black">What readers think</h2></div><div className="text-right"><div className="text-2xl font-black">⭐ {data.average ? data.average.toFixed(1) : "—"}</div><p className="text-xs text-slate-500">{data.count} review{data.count===1?"":"s"}</p></div></div><div className="mt-6 rounded-2xl bg-slate-50 p-4"><div className="flex items-center gap-1">{[1,2,3,4,5].map(n=><button key={n} type="button" onClick={()=>setRating(n)} className="text-2xl" aria-label={`${n} stars`}>{n<=rating?"★":"☆"}</button>)}</div><textarea value={review} onChange={e=>setReview(e.target.value)} placeholder="Share your experience…" className="mt-3 min-h-24 w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm"/><button onClick={()=>void submit()} className="mt-3 rounded-full bg-violet-600 px-5 py-2.5 text-sm font-black text-white">Submit Review</button>{message&&<p className="mt-2 text-sm font-semibold text-slate-600">{message}</p>}</div>{data.reviews.length>0&&<div className="mt-5 space-y-3">{data.reviews.map((r:any)=><article key={r.id} className="rounded-2xl border border-slate-100 p-4"><div className="font-black">{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>{r.review&&<p className="mt-2 text-sm leading-6 text-slate-600">{r.review}</p>}<p className="mt-2 text-xs text-slate-400">{new Date(r.created_at).toLocaleDateString("en-IN")}</p></article>)}</div>}</section>;
+}
