@@ -10,6 +10,8 @@ export default async function HomePage() {
   const featured = await getFeaturedBooks();
   const latest = await getPublishedBooks();
   const freeBooks = await getFreeBooks();
+  const featuredHome = (featured.length ? featured : latest).slice(0, 5);
+  const newPicks = latest.slice(0, 5);
   const supabase = await createClient();
   const { data: content } = await supabase.from("site_content").select("key,value");
   const map = Object.fromEntries((content ?? []).map((item) => [item.key, item.value]));
@@ -47,7 +49,7 @@ export default async function HomePage() {
               </div>
 
               <div className="mt-5 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {(featured.length ? featured : latest.slice(0, 5)).map((book) => (
+                {featuredHome.map((book) => (
                   <BookCard key={book.id} book={book} />
                 ))}
               </div>
@@ -81,9 +83,9 @@ export default async function HomePage() {
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-sm font-black text-pink-600">
-                    🌟 More to explore
+                    🌟 Fresh picks
                   </p>
-                  <h2 className="mt-1 text-3xl font-black">New Shelf</h2>
+                  <h2 className="mt-1 text-3xl font-black">New Picks</h2>
                 </div>
 
                 <Link href="/books" className="shrink-0 text-sm font-black text-indigo-600">
@@ -92,7 +94,7 @@ export default async function HomePage() {
               </div>
 
               <div className="mt-5 grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {latest.slice(0, 10).map((book) => (
+                {newPicks.map((book) => (
                   <BookCard key={book.id} book={book} />
                 ))}
               </div>
