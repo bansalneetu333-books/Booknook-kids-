@@ -39,7 +39,7 @@ export default async function BookDetailsPage({
     : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-pink-50">
+    <main className="bn-page">
       {/* Breadcrumb */}
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <Link
