@@ -143,12 +143,7 @@ export function BookForm({ book }: { book?: Book }) {
       return;
     }
 
-    if (pdf && !epub) {
-      setStatus(
-        "Select the EPUB together with the PDF."
-      );
-      return;
-    }
+
 
     if (epub && epub.size > MAX_FILE) {
       setStatus("EPUB is over 50 MB.");
@@ -186,7 +181,7 @@ export function BookForm({ book }: { book?: Book }) {
           .map((name) => BOOK_CATEGORIES.find((category) => category.name === name)?.slug)
           .filter(Boolean),
         ageCategory: form.ageCategory.trim(),
-        published: false,
+        published: book?.published ?? false,
         featured: form.featured,
         isFree: form.isFree,
       };
