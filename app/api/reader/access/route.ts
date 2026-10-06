@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         )
         .eq("book_id", bookId)
         .eq("orders.user_id", user.id)
-        .eq("orders.status", "paid")
+        .eq("orders.payment_status", "paid")
         .limit(1)
         .maybeSingle();
 
