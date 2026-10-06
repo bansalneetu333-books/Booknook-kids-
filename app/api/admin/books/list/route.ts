@@ -205,7 +205,7 @@ export async function GET(request: Request) {
             }
           : null,
       };
-    });
+    }));
 
     // ------------------------------------------------------------
     // 5. Summary
