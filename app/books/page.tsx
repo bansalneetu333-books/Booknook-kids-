@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site-header";
 import { getPublishedBooks } from "@/lib/books";
 import { BOOK_CATEGORIES } from "@/lib/categories";
 
-type SearchParams = Promise<{ q?: string; genre?: string; age?: string }>;
+type SearchParams = Promise<{ q?: string; genre?: string; category?: string; age?: string }>;
 
 export default async function BooksPage({
   searchParams
@@ -16,6 +16,7 @@ export default async function BooksPage({
 
   const search = params.q?.trim().toLowerCase();
   const genre = params.genre?.trim().toLowerCase();
+  const category = params.category?.trim().toLowerCase();
   const age = params.age?.trim().toLowerCase();
 
   const books = allBooks.filter((book) => {
@@ -31,10 +32,19 @@ export default async function BooksPage({
         .map((value) => value.trim().toLowerCase())
         .includes(genre);
 
+    const matchesCategory =
+      !category ||
+      (book.genre ?? "")
+        .split("/")
+        .map((value) => value.trim().toLowerCase())
+        .includes(
+          BOOK_CATEGORIES.find((item) => item.slug === category)?.name.toLowerCase() ?? category
+        );
+
     const matchesAge =
       !age || book.age_category?.toLowerCase().includes(age);
 
-    return matchesSearch && matchesGenre && matchesAge;
+    return matchesSearch && matchesGenre && matchesCategory && matchesAge;
   });
 
   return (
@@ -61,7 +71,7 @@ export default async function BooksPage({
             <Link
               href="/books"
               className={`shrink-0 rounded-2xl px-4 py-2.5 text-sm font-black ${
-                !params.genre
+                !params.genre && !params.category
                   ? "bg-indigo-600 text-white"
                   : "border bg-white text-slate-700"
               }`}
@@ -72,9 +82,9 @@ export default async function BooksPage({
             {BOOK_CATEGORIES.map((c) => (
               <Link
                 key={c.slug}
-                href={`/books?genre=${encodeURIComponent(c.name)}`}
+                href={`/books?category=${encodeURIComponent(c.slug)}`}
                 className={`flex shrink-0 items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black ${
-                  params.genre === c.name
+                  params.category === c.slug
                     ? "bg-indigo-600 text-white"
                     : "border bg-white text-slate-700"
                 }`}
