@@ -16,6 +16,8 @@ type Book = {
   published: boolean;
   featured: boolean;
   isFree?: boolean;
+  epubAvailable?: boolean;
+  pdfAvailable?: boolean;
   categories?: { name: string; slug: string; icon?: string | null }[];
   created_at: string;
   version?: {
@@ -396,6 +398,13 @@ export default function AdminBooksPage() {
                           Free Reading
                         </span>
                       )}
+
+                      <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${book.epubAvailable ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}`}>
+                        {book.epubAvailable ? "EPUB ✓" : "EPUB —"}
+                      </span>
+                      <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${book.pdfAvailable ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-500"}`}>
+                        {book.pdfAvailable ? "PDF ✓" : "PDF —"}
+                      </span>
                     </div>
                   </div>
                 </div>
