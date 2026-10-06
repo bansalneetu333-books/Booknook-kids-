@@ -321,7 +321,7 @@ export default function AdminBooksPage() {
                 className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"
               >
                 <div className="flex gap-4 p-5">
-                  <div className="h-28 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-100 to-pink-100">
+                  <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-100 to-pink-100">
                     {cover ? (
                       <Image
                         src={cover}
