@@ -45,6 +45,7 @@ export default async function EditBookPage({
         age_category,
         published,
         featured,
+        new_pick,
         is_free,
         cover_path,
         book_categories (
@@ -84,6 +85,8 @@ export default async function EditBookPage({
       Boolean(book.published),
     featured:
       Boolean(book.featured),
+    new_pick:
+      Boolean(book.new_pick),
     is_free:
       Boolean(book.is_free),
     categories:
