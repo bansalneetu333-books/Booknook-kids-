@@ -123,15 +123,15 @@ export default function AdminWhatsAppPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-violet-600">
+          <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">
             Admin
           </p>
 
-          <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
+          <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">
             WhatsApp
           </h1>
 
-          <p className="mt-2 max-w-2xl text-slate-500">
+          <p className="mt-2 max-w-2xl text-[var(--booknook-muted)]">
             Manage customer WhatsApp preferences and message
             activity.
           </p>
@@ -141,7 +141,7 @@ export default function AdminWhatsAppPage() {
           type="button"
           onClick={loadWhatsApp}
           disabled={loading}
-          className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-[1.25rem] border border-[#ddd9e8] bg-white px-5 py-3 text-sm font-bold text-[var(--booknook-ink)] transition hover:bg-[#f7f8fc] disabled:opacity-60"
         >
           {loading
             ? "Refreshing..."
@@ -173,61 +173,61 @@ export default function AdminWhatsAppPage() {
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
+        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             WhatsApp Contacts
           </p>
 
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+          <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
             {preferences.length}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Opted In
           </p>
 
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+          <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
             {optedInCount}
           </p>
 
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-[#8a90a0]">
             Customers who gave WhatsApp consent
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Sent / Delivered / Read
           </p>
 
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+          <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
             {sentCount}
           </p>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
-          <h2 className="text-xl font-extrabold text-slate-900">
+      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+        <div className="border-b border-[var(--booknook-border)] p-6">
+          <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Customer WhatsApp Preferences
           </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--booknook-muted)]">
             Customers must explicitly opt in before notification
             or marketing messages are sent.
           </p>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-[var(--booknook-muted)]">
             Loading WhatsApp contacts...
           </div>
         ) : preferences.length === 0 ? (
@@ -236,11 +236,11 @@ export default function AdminWhatsAppPage() {
               📱
             </div>
 
-            <h3 className="mt-3 font-extrabold text-slate-900">
+            <h3 className="mt-3 font-extrabold text-[var(--booknook-ink)]">
               No WhatsApp contacts yet
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--booknook-muted)]">
               WhatsApp details will appear here after customers
               add their number and consent.
             </p>
@@ -254,12 +254,12 @@ export default function AdminWhatsAppPage() {
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="font-extrabold text-slate-900">
+                    <p className="font-extrabold text-[var(--booknook-ink)]">
                       {item.phone_number ||
                         "No phone number"}
                     </p>
 
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-[var(--booknook-muted)]">
                       Updated{" "}
                       {formatDate(
                         item.updated_at
@@ -301,19 +301,19 @@ export default function AdminWhatsAppPage() {
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
-          <h2 className="text-xl font-extrabold text-slate-900">
+      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+        <div className="border-b border-[var(--booknook-border)] p-6">
+          <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Message Activity
           </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--booknook-muted)]">
             Message status history from the WhatsApp system.
           </p>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-[var(--booknook-muted)]">
             Loading message activity...
           </div>
         ) : messages.length === 0 ? (
@@ -322,11 +322,11 @@ export default function AdminWhatsAppPage() {
               💬
             </div>
 
-            <h3 className="mt-3 font-extrabold text-slate-900">
+            <h3 className="mt-3 font-extrabold text-[var(--booknook-ink)]">
               No messages yet
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--booknook-muted)]">
               WhatsApp message activity will appear here once
               the messaging system is connected.
             </p>
@@ -335,8 +335,8 @@ export default function AdminWhatsAppPage() {
           <>
             <div className="hidden overflow-x-auto md:block">
               <table className="min-w-full">
-                <thead className="border-b border-slate-200 bg-slate-50">
-                  <tr className="text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                <thead className="border-b border-[var(--booknook-border)] bg-[#f7f8fc]">
+                  <tr className="text-left text-xs font-bold uppercase tracking-wider text-[var(--booknook-muted)]">
                     <th className="px-6 py-4">
                       Phone
                     </th>
@@ -363,31 +363,31 @@ export default function AdminWhatsAppPage() {
                   {messages.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-slate-50"
+                      className="hover:bg-[#f7f8fc]"
                     >
-                      <td className="px-6 py-5 text-sm font-semibold text-slate-700">
+                      <td className="px-6 py-5 text-sm font-semibold text-[var(--booknook-ink)]">
                         {item.phone_number ||
                           "—"}
                       </td>
 
-                      <td className="px-6 py-5 text-sm text-slate-600">
+                      <td className="px-6 py-5 text-sm text-[var(--booknook-muted)]">
                         {item.message_type ||
                           "—"}
                       </td>
 
-                      <td className="px-6 py-5 text-sm text-slate-600">
+                      <td className="px-6 py-5 text-sm text-[var(--booknook-muted)]">
                         {item.template_name ||
                           "—"}
                       </td>
 
                       <td className="px-6 py-5">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold capitalize text-slate-700">
+                        <span className="rounded-full bg-[#f1f2f7] px-3 py-1 text-xs font-bold capitalize text-[var(--booknook-ink)]">
                           {item.status ||
                             "pending"}
                         </span>
                       </td>
 
-                      <td className="px-6 py-5 text-sm text-slate-500">
+                      <td className="px-6 py-5 text-sm text-[var(--booknook-muted)]">
                         {formatDate(
                           item.sent_at ||
                             item.created_at
@@ -407,34 +407,34 @@ export default function AdminWhatsAppPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-extrabold text-slate-900">
+                      <p className="font-extrabold text-[var(--booknook-ink)]">
                         {item.phone_number ||
                           "Unknown"}
                       </p>
 
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="mt-1 text-xs text-[var(--booknook-muted)]">
                         {item.message_type ||
                           "Message"}
                       </p>
                     </div>
 
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold capitalize text-slate-700">
+                    <span className="rounded-full bg-[#f1f2f7] px-3 py-1 text-xs font-bold capitalize text-[var(--booknook-ink)]">
                       {item.status ||
                         "pending"}
                     </span>
                   </div>
 
-                  <div className="mt-4 rounded-xl bg-slate-50 p-3">
-                    <p className="text-xs font-semibold text-slate-400">
+                  <div className="mt-4 rounded-xl bg-[#f7f8fc] p-3">
+                    <p className="text-xs font-semibold text-[#8a90a0]">
                       Template
                     </p>
 
-                    <p className="mt-1 break-all text-sm font-semibold text-slate-700">
+                    <p className="mt-1 break-all text-sm font-semibold text-[var(--booknook-ink)]">
                       {item.template_name ||
                         "—"}
                     </p>
 
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-[var(--booknook-muted)]">
                       {formatDate(
                         item.sent_at ||
                           item.created_at
@@ -463,7 +463,7 @@ function PreferenceBadge({
       className={`rounded-full px-3 py-1 text-xs font-bold ${
         enabled
           ? "bg-emerald-100 text-emerald-700"
-          : "bg-slate-100 text-slate-500"
+          : "bg-[#f1f2f7] text-[var(--booknook-muted)]"
       }`}
     >
       {enabled ? "✓" : "×"} {label}
