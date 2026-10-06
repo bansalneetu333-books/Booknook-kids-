@@ -327,6 +327,32 @@ export function BookForm({ book }: { book?: Book }) {
           }
 
           uploaded[item.kind] = item;
+
+          // Save the cover immediately after its upload succeeds.
+          // This keeps the cover linked even if a later EPUB/PDF upload fails.
+          if (item.kind === "cover") {
+            const coverSaveResponse = await fetch("/api/admin/books", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                ...metadata,
+                bookId,
+                published: publish,
+                coverPath: item.path,
+              }),
+            });
+
+            const coverSaveData = await coverSaveResponse.json();
+
+            if (!coverSaveResponse.ok) {
+              throw new Error(
+                coverSaveData.error ??
+                  "The cover uploaded but could not be saved to the book."
+              );
+            }
+          }
         }
 
         if (
@@ -376,29 +402,6 @@ export function BookForm({ book }: { book?: Book }) {
             );
           }
 
-          if (uploaded.cover) {
-            const coverSaveResponse = await fetch("/api/admin/books", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                ...metadata,
-                bookId,
-                published: publish,
-                coverPath: uploaded.cover.path,
-              }),
-            });
-
-            const coverSaveData = await coverSaveResponse.json();
-
-            if (!coverSaveResponse.ok) {
-              throw new Error(
-                coverSaveData.error ??
-                  "The cover uploaded but could not be linked to the book."
-              );
-            }
-          }
         } else if (publish) {
           const publishResponse =
             await fetch(
