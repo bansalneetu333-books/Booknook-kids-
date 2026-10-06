@@ -139,15 +139,15 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-violet-600">
+          <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">
             Admin
           </p>
 
-          <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
+          <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">
             Analytics
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-[var(--booknook-muted)]">
             Overview of your Booknook Kids store activity.
           </p>
         </div>
@@ -156,20 +156,20 @@ export default function AdminAnalyticsPage() {
           type="button"
           onClick={loadAnalytics}
           disabled={loading}
-          className="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+          className="rounded-[1.25rem] border border-[#ddd9e8] bg-white px-5 py-3 text-sm font-bold text-[var(--booknook-ink)] transition hover:bg-[#f7f8fc] disabled:opacity-60"
         >
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
+        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
       {loading && !dashboard ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-10 text-center text-sm text-[var(--booknook-muted)] shadow-sm">
           Loading analytics...
         </div>
       ) : (
@@ -207,79 +207,79 @@ export default function AdminAnalyticsPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold text-slate-500">
+            <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+              <p className="text-sm font-semibold text-[var(--booknook-muted)]">
                 Paid Orders
               </p>
 
-              <p className="mt-2 text-3xl font-extrabold text-slate-900">
+              <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
                 {dashboard?.paidOrders ?? 0}
               </p>
 
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-[var(--booknook-muted)]">
                 Successfully completed purchases
               </p>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold text-slate-500">
+            <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+              <p className="text-sm font-semibold text-[var(--booknook-muted)]">
                 Revenue
               </p>
 
-              <p className="mt-2 text-3xl font-extrabold text-slate-900">
+              <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
                 {formatMoney(
                   dashboard?.revenue ?? 0
                 )}
               </p>
 
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-[var(--booknook-muted)]">
                 From recorded paid orders
               </p>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-semibold text-slate-500">
+            <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+              <p className="text-sm font-semibold text-[var(--booknook-muted)]">
                 Order Conversion
               </p>
 
-              <p className="mt-2 text-3xl font-extrabold text-slate-900">
+              <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
                 {conversionRate}%
               </p>
 
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-[var(--booknook-muted)]">
                 Paid orders ÷ total orders
               </p>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm sm:p-8">
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900">
+              <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
                 Monthly Sales
               </h2>
 
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-[var(--booknook-muted)]">
                 Monthly sales data will appear here when the
                 dashboard API provides it.
               </p>
             </div>
 
             {monthlySales.length === 0 ? (
-              <div className="mt-6 rounded-2xl bg-slate-50 p-8 text-center">
+              <div className="mt-6 rounded-2xl bg-[#f7f8fc] p-8 text-center">
                 <div className="text-4xl">📊</div>
 
-                <p className="mt-3 font-bold text-slate-800">
+                <p className="mt-3 font-bold text-[var(--booknook-ink)]">
                   No monthly sales data available yet
                 </p>
 
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-[var(--booknook-muted)]">
                   Your current store totals are shown above.
                 </p>
               </div>
             ) : (
               <div className="mt-6 overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="border-b border-slate-200 text-left text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <thead className="border-b border-[var(--booknook-border)] text-left text-xs font-bold uppercase tracking-wider text-[var(--booknook-muted)]">
                     <tr>
                       <th className="px-4 py-3">
                         Month
@@ -299,15 +299,15 @@ export default function AdminAnalyticsPage() {
                     {monthlySales.map(
                       (item, index) => (
                         <tr key={`${item.month}-${index}`}>
-                          <td className="px-4 py-4 font-semibold text-slate-800">
+                          <td className="px-4 py-4 font-semibold text-[var(--booknook-ink)]">
                             {item.month || "—"}
                           </td>
 
-                          <td className="px-4 py-4 text-slate-600">
+                          <td className="px-4 py-4 text-[var(--booknook-muted)]">
                             {item.orders}
                           </td>
 
-                          <td className="px-4 py-4 font-extrabold text-slate-900">
+                          <td className="px-4 py-4 font-extrabold text-[var(--booknook-ink)]">
                             {formatMoney(
                               item.revenue
                             )}
@@ -336,18 +336,18 @@ function MetricCard({
   value: number;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-xl">
           {icon}
         </div>
 
-        <p className="text-sm font-semibold text-slate-500">
+        <p className="text-sm font-semibold text-[var(--booknook-muted)]">
           {label}
         </p>
       </div>
 
-      <p className="mt-5 text-3xl font-extrabold text-slate-900">
+      <p className="mt-5 text-3xl font-extrabold text-[var(--booknook-ink)]">
         {value.toLocaleString("en-IN")}
       </p>
     </div>
