@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import AuthSessionKeeper from "@/components/auth-session-keeper";
+import AnalyticsTracker from "@/components/analytics-tracker";
 
 export const metadata: Metadata = {
   title: "Booknook Kids",
@@ -15,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body><AuthSessionKeeper />{children}</body>
+      <body><AuthSessionKeeper /><AnalyticsTracker />{children}</body>
     </html>
   );
 }
