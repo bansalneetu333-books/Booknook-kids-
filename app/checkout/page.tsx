@@ -42,21 +42,21 @@ export default async function CheckoutPage({
 
   if (validBooks.length !== bookIds.length) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-12">
-        <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <main className="min-h-screen bg-[#fffdf9] px-4 py-12">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-[var(--booknook-border)] bg-white p-8 text-center shadow-sm">
           <div className="mb-4 text-5xl">📚</div>
 
-          <h1 className="text-2xl font-extrabold text-slate-900">
+          <h1 className="text-2xl font-extrabold text-[var(--booknook-ink)]">
             Book not found
           </h1>
 
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-[var(--booknook-muted)]">
             This book is no longer available for purchase.
           </p>
 
           <Link
             href="/books"
-            className="mt-6 inline-flex rounded-full bg-violet-600 px-6 py-3 font-bold text-white transition hover:bg-violet-700"
+            className="mt-6 inline-flex rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-bold text-white transition hover:opacity-90"
           >
             Browse Books
           </Link>
@@ -70,15 +70,15 @@ export default async function CheckoutPage({
 
   if (availableBooks.length === 0) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-12">
-        <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <main className="min-h-screen bg-[#fffdf9] px-4 py-12">
+        <div className="mx-auto max-w-2xl rounded-3xl border border-[var(--booknook-border)] bg-white p-8 text-center shadow-sm">
           <div className="mb-4 text-5xl">🎉</div>
 
-          <h1 className="text-2xl font-extrabold text-slate-900">
+          <h1 className="text-2xl font-extrabold text-[var(--booknook-ink)]">
             You already own this book
           </h1>
 
-          <p className="mt-2 text-slate-600">
+          <p className="mt-2 text-[var(--booknook-muted)]">
             All selected books are already in your
             Booknook Kids library.
           </p>
@@ -86,14 +86,14 @@ export default async function CheckoutPage({
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/library"
-              className="rounded-full bg-violet-600 px-6 py-3 font-bold text-white transition hover:bg-violet-700"
+              className="rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-bold text-white transition hover:opacity-90"
             >
               Go to My Library
             </Link>
 
             <Link
               href="/books"
-              className="rounded-full border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
+              className="rounded-full border border-slate-300 bg-white px-6 py-3 font-bold text-[var(--booknook-ink)] transition hover:bg-[#fffdf9]"
             >
               Back to Books
             </Link>
@@ -114,12 +114,12 @@ export default async function CheckoutPage({
       <div className="mx-auto max-w-5xl">
         <Link
           href={`/books/${book.slug}`}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-violet-700"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--booknook-muted)] hover:text-violet-700"
         >
           ← Back to Book
         </Link>
 
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--booknook-border)] bg-white shadow-xl">
           <div className="grid gap-0 md:grid-cols-2">
             {/* Book preview */}
             <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
@@ -154,34 +154,34 @@ export default async function CheckoutPage({
                 DIGITAL EBOOK
               </span>
 
-              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-[var(--booknook-ink)]">
                 {book.title}
               </h1>
 
               {availableBooks.length === 1 && book.author && (
-                <p className="mt-2 text-slate-500">
+                <p className="mt-2 text-[var(--booknook-muted)]">
                   By {book.author}
                 </p>
               )}
 
-              <div className="my-7 border-t border-slate-200" />
+              <div className="my-7 border-t border-[var(--booknook-border)]" />
 
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-600">
+                <span className="font-semibold text-[var(--booknook-muted)]">
                   Price
                 </span>
 
-                <span className="text-3xl font-extrabold text-slate-900">
+                <span className="text-3xl font-extrabold text-[var(--booknook-ink)]">
                   ₹{total.toFixed(2)}
                 </span>
               </div>
 
-              <div className="mt-7 rounded-2xl bg-slate-50 p-5">
-                <h2 className="font-extrabold text-slate-900">
+              <div className="mt-7 rounded-2xl bg-[#fffdf9] p-5">
+                <h2 className="font-extrabold text-[var(--booknook-ink)]">
                   What you&apos;ll get
                 </h2>
 
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                <ul className="mt-3 space-y-2 text-sm text-[var(--booknook-muted)]">
                   <li>✓ Your ebook in your personal library</li>
                   <li>✓ Online reading access</li>
                   <li>✓ Reading progress saved automatically</li>
@@ -197,7 +197,7 @@ export default async function CheckoutPage({
                 />
               </div>
 
-              <p className="mt-4 text-center text-xs leading-5 text-slate-500">
+              <p className="mt-4 text-center text-xs leading-5 text-[var(--booknook-muted)]">
                 Payments are processed securely through Razorpay.
                 Your ebook becomes available after successful
                 payment verification.
