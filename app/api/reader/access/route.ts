@@ -103,8 +103,7 @@ export async function POST(request: Request) {
     const { data: version, error: versionError } =
       await admin
         .from("book_versions")
-        .select(
-          `
+        .select(`
             id,
             book_id,
             file_path,
@@ -112,12 +111,26 @@ export async function POST(request: Request) {
             file_type,
             is_current,
             active
-          `
-        )
+          `)
         .eq("book_id", bookId)
         .eq("is_current", true)
         .eq("active", true)
         .maybeSingle();
+
+    let fallbackEpubPath: string | null = null;
+    if (!version && !versionError) {
+      const { data: legacyBook, error: legacyError } = await admin
+        .from("books")
+        .select("epub_path")
+        .eq("id", bookId)
+        .maybeSingle();
+
+      if (legacyError) {
+        console.error("Legacy EPUB lookup failed:", legacyError);
+      } else {
+        fallbackEpubPath = legacyBook?.epub_path ?? null;
+      }
+    }
 
     if (versionError) {
       console.error(
@@ -134,24 +147,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!version) {
+    if (!version && !fallbackEpubPath) {
       return NextResponse.json(
-        {
-          error:
-            "No active version is available for this book.",
-        },
+        { error: "No EPUB file is attached to this book." },
         { status: 404 }
       );
     }
 
-    /*
-     * Prefer epub_path. Fall back to file_path
-     * for versions created by the earlier upload
-     * flow.
-     */
     const filePath =
-      version.epub_path ||
-      version.file_path;
+      version?.epub_path ||
+      version?.file_path ||
+      fallbackEpubPath;
 
     if (!filePath) {
       return NextResponse.json(
