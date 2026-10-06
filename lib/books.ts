@@ -122,7 +122,7 @@ export async function getBookBySlug(
     .from("books")
     .select(BOOK_FIELDS)
     .eq("slug", slug)
-    .eq("published", true)
+    .or("published.eq.true,is_published.eq.true")
     .maybeSingle();
 
   if (error) {
