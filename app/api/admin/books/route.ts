@@ -101,15 +101,61 @@ export async function POST(request: Request) {
     };
 
     async function syncCategories(bookId: string) {
-      const { data: categories, error: categoriesError } = await supabase
+      let { data: categories, error: categoriesError } = await supabase
         .from("categories")
         .select("id,slug")
         .in("slug", categorySlugs);
 
       if (categoriesError) throw categoriesError;
 
+      const foundSlugs = new Set(
+        (categories ?? []).map((category) => category.slug)
+      );
+
+      const missingSlugs = categorySlugs.filter(
+        (slug) => !foundSlugs.has(slug)
+      );
+
+      if (missingSlugs.length > 0) {
+        const names = new Map(
+          [
+            ["adventure", "Adventure"],
+            ["science", "Science"],
+            ["money", "Money"],
+            ["friendship", "Friendship"],
+            ["history", "History"],
+            ["superheroes", "Superheroes"],
+            ["fantasy", "Fantasy"],
+            ["comics", "Comics"],
+            ["learning", "Learning"],
+            ["life-skills", "Life Skills"],
+          ]
+        );
+
+        const { error: createCategoriesError } = await supabase
+          .from("categories")
+          .insert(
+            missingSlugs.map((slug) => ({
+              slug,
+              name: names.get(slug) ?? slug,
+            }))
+          );
+
+        if (createCategoriesError && createCategoriesError.code !== "23505") {
+          throw createCategoriesError;
+        }
+
+        const refreshed = await supabase
+          .from("categories")
+          .select("id,slug")
+          .in("slug", categorySlugs);
+
+        if (refreshed.error) throw refreshed.error;
+        categories = refreshed.data;
+      }
+
       if (!categories || categories.length !== new Set(categorySlugs).size) {
-        throw new Error("One or more selected categories are invalid.");
+        throw new Error("One or more selected categories could not be saved.");
       }
 
       const { error: deleteError } = await supabase
