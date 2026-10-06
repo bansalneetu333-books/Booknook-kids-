@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 type CheckoutPageProps = {
   searchParams: Promise<{
     bookId?: string;
+    bookIds?: string;
   }>;
 };
 
@@ -16,9 +17,9 @@ export default async function CheckoutPage({
   searchParams,
 }: CheckoutPageProps) {
   const params = await searchParams;
-  const bookId = params.bookId;
+  const bookIds = params.bookIds?.split(",").filter(Boolean) || (params.bookId ? [params.bookId] : []);
 
-  if (!bookId) {
+  if (bookIds.length === 0) {
     redirect("/books");
   }
 
@@ -31,14 +32,15 @@ export default async function CheckoutPage({
   if (!user) {
     redirect(
       `/login?next=${encodeURIComponent(
-        `/checkout?bookId=${bookId}`
+        `/checkout?bookIds=${bookIds.join(",")}`
       )}`
     );
   }
 
-  const book = await getCheckoutBook(bookId);
+  const books = await Promise.all(bookIds.map((id) => getCheckoutBook(id)));
+  const validBooks = books.filter((book): book is NonNullable<typeof book> => Boolean(book));
 
-  if (!book) {
+  if (validBooks.length !== bookIds.length) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12">
         <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -63,10 +65,10 @@ export default async function CheckoutPage({
     );
   }
 
-  const alreadyPurchased =
-    await hasPurchasedBook(book.id);
+  const purchased = await Promise.all(validBooks.map((book) => hasPurchasedBook(book.id)));
+  const availableBooks = validBooks.filter((_, index) => !purchased[index]);
 
-  if (alreadyPurchased) {
+  if (availableBooks.length === 0) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-12">
         <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -77,7 +79,7 @@ export default async function CheckoutPage({
           </h1>
 
           <p className="mt-2 text-slate-600">
-            <strong>{book.title}</strong> is already in your
+            All selected books are already in your
             Booknook Kids library.
           </p>
 
@@ -101,6 +103,8 @@ export default async function CheckoutPage({
     );
   }
 
+  const total = availableBooks.reduce((sum, book) => sum + Number(book.price), 0);
+  const book = availableBooks[0];
   const coverUrl = book.cover_path
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/${book.cover_path}`
     : null;
@@ -154,7 +158,7 @@ export default async function CheckoutPage({
                 {book.title}
               </h1>
 
-              {book.author && (
+              {availableBooks.length === 1 && book.author && (
                 <p className="mt-2 text-slate-500">
                   By {book.author}
                 </p>
@@ -168,7 +172,7 @@ export default async function CheckoutPage({
                 </span>
 
                 <span className="text-3xl font-extrabold text-slate-900">
-                  ₹{Number(book.price).toFixed(2)}
+                  ₹{total.toFixed(2)}
                 </span>
               </div>
 
@@ -187,9 +191,9 @@ export default async function CheckoutPage({
 
               <div className="mt-7">
                 <CheckoutButton
-                  bookId={book.id}
-                  price={Number(book.price)}
-                  title={book.title}
+                  bookIds={availableBooks.map((item) => item.id)}
+                  price={total}
+                  title={availableBooks.length > 1 ? `${availableBooks.length} Book Cart` : book.title}
                 />
               </div>
 
