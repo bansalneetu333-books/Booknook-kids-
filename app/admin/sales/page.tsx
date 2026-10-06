@@ -63,28 +63,28 @@ export default function AdminSalesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-sm font-black uppercase tracking-widest text-violet-600">Admin</p>
-        <h1 className="mt-1 text-3xl font-black text-slate-900">Sales</h1>
-        <p className="mt-2 text-slate-500">Revenue and paid-book sales.</p>
+        <p className="text-sm font-black uppercase tracking-widest text-[var(--booknook-primary)]">Admin</p>
+        <h1 className="mt-1 text-3xl font-black text-[var(--booknook-ink)]">Sales</h1>
+        <p className="mt-2 text-[var(--booknook-muted)]">Revenue and paid-book sales.</p>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Revenue</p>
+          <p className="text-sm font-bold text-[var(--booknook-muted)]">Revenue</p>
           <p className="mt-2 text-3xl font-black">₹{revenue.toFixed(2)}</p>
         </div>
         <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Paid Orders</p>
+          <p className="text-sm font-bold text-[var(--booknook-muted)]">Paid Orders</p>
           <p className="mt-2 text-3xl font-black">{orders.length}</p>
         </div>
         <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-slate-500">Books Sold</p>
+          <p className="text-sm font-bold text-[var(--booknook-muted)]">Books Sold</p>
           <p className="mt-2 text-3xl font-black">
             {orders.reduce((n, order) => n + (order.items?.length ?? 0), 0)}
           </p>
@@ -94,16 +94,16 @@ export default function AdminSalesPage() {
       <section className="rounded-3xl bg-white p-6 shadow-sm">
         <h2 className="text-xl font-black">Revenue by Book</h2>
         {loading ? (
-          <p className="mt-5 text-slate-500">Loading sales...</p>
+          <p className="mt-5 text-[var(--booknook-muted)]">Loading sales...</p>
         ) : byBook.length === 0 ? (
-          <p className="mt-5 text-slate-500">No paid sales yet.</p>
+          <p className="mt-5 text-[var(--booknook-muted)]">No paid sales yet.</p>
         ) : (
           <div className="mt-5 divide-y">
             {byBook.map(([title, stats]) => (
               <div key={title} className="flex items-center justify-between gap-4 py-4">
                 <div>
-                  <div className="font-bold text-slate-900">{title}</div>
-                  <div className="text-sm text-slate-500">{stats.sales} sold</div>
+                  <div className="font-bold text-[var(--booknook-ink)]">{title}</div>
+                  <div className="text-sm text-[var(--booknook-muted)]">{stats.sales} sold</div>
                 </div>
                 <div className="font-black">₹{stats.revenue.toFixed(2)}</div>
               </div>
