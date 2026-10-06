@@ -229,11 +229,7 @@ export async function POST(request: Request) {
       try {
         await syncCategories(data.id);
       } catch (categoryError) {
-        console.error("Book category sync error:", categoryError);
-        return NextResponse.json(
-          { error: categoryError instanceof Error ? categoryError.message : "Unable to save categories." },
-          { status: 500 }
-        );
+        console.error("Book category sync warning:", categoryError);
       }
 
       return NextResponse.json({
@@ -270,11 +266,7 @@ export async function POST(request: Request) {
     try {
       await syncCategories(data.id);
     } catch (categoryError) {
-      console.error("Book category sync error:", categoryError);
-      return NextResponse.json(
-        { error: categoryError instanceof Error ? categoryError.message : "Unable to save categories." },
-        { status: 500 }
-      );
+      console.error("Book category sync warning:", categoryError);
     }
 
     return NextResponse.json(
