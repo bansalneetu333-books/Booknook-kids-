@@ -13,7 +13,7 @@ export async function POST() {
 
     const { data: books, error: booksError } = await supabase
       .from("books")
-      .select("id,slug,title,cover_path");
+      .select("id,slug,title,cover_path,cover_url");
 
     if (booksError) throw booksError;
 
@@ -45,7 +45,10 @@ export async function POST() {
 
       const { error: updateError } = await supabase
         .from("books")
-        .update({ cover_path: coverPath })
+        .update({
+          cover_path: coverPath,
+          cover_url: "/api/books/cover?path=" + encodeURIComponent(coverPath),
+        })
         .eq("id", book.id);
 
       if (updateError) {
