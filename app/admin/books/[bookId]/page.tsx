@@ -104,6 +104,13 @@ export default async function EditBookPage({
           ← Back to Books
         </Link>
 
+        <Link
+          href={`/admin/books/${book.id}/preview`}
+          className="ml-4 inline-flex rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white"
+        >
+          📖 Preview Reader
+        </Link>
+
         <p className="mt-5 text-sm font-bold uppercase tracking-wider text-violet-600">
           Admin
         </p>
