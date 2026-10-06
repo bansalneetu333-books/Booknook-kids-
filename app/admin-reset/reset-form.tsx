@@ -154,20 +154,20 @@ export default function AdminResetPage() {
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-md items-center justify-center">
         <section className="w-full rounded-[2rem] border border-slate-800 bg-white p-6 shadow-2xl sm:p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600 text-2xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--booknook-primary)] text-2xl">
               {step === "password" ? "🔐" : "📚"}
             </div>
-            <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-violet-600">
+            <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-[var(--booknook-primary)]">
               Booknook Kids
             </p>
-            <h1 className="mt-2 text-3xl font-black text-slate-900">
+            <h1 className="mt-2 text-3xl font-black text-[var(--booknook-ink)]">
               {step === "email"
                 ? "Reset Admin Password"
                 : step === "code"
                   ? "Enter Reset Code"
                   : "Create New Password"}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-[var(--booknook-muted)]">
               {step === "email"
                 ? "We'll send a verification code to the administrator email."
                 : step === "code"
@@ -194,7 +194,7 @@ export default function AdminResetPage() {
               <div>
                 <label
                   htmlFor="admin-reset-email"
-                  className="mb-2 block text-sm font-bold text-slate-700"
+                  className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]"
                 >
                   Admin email
                 </label>
@@ -205,14 +205,14 @@ export default function AdminResetPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-3.5 text-[var(--booknook-ink)] outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-violet-600 px-5 py-3.5 font-black text-white shadow-lg hover:bg-violet-700 disabled:opacity-60"
+                className="w-full rounded-2xl bg-[var(--booknook-primary)] px-5 py-3.5 font-black text-white shadow-lg hover:opacity-90 disabled:opacity-60"
               >
                 {loading ? "Sending..." : "Send Reset Code"}
               </button>
@@ -224,7 +224,7 @@ export default function AdminResetPage() {
               <div>
                 <label
                   htmlFor="reset-code"
-                  className="mb-2 block text-sm font-bold text-slate-700"
+                  className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]"
                 >
                   Reset code
                 </label>
@@ -240,14 +240,14 @@ export default function AdminResetPage() {
                     setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
                   }
                   placeholder="Enter code"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-center text-2xl font-black tracking-[0.3em] text-slate-900 outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-3.5 text-center text-2xl font-black tracking-[0.3em] text-[var(--booknook-ink)] outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-violet-600 px-5 py-3.5 font-black text-white shadow-lg hover:bg-violet-700 disabled:opacity-60"
+                className="w-full rounded-2xl bg-[var(--booknook-primary)] px-5 py-3.5 font-black text-white shadow-lg hover:opacity-90 disabled:opacity-60"
               >
                 {loading ? "Verifying..." : "Verify Reset Code"}
               </button>
@@ -260,7 +260,7 @@ export default function AdminResetPage() {
                   setMessage(null);
                   setSuccess(null);
                 }}
-                className="w-full text-sm font-bold text-violet-600 hover:text-violet-800"
+                className="w-full text-sm font-bold text-[var(--booknook-primary)] hover:text-violet-800"
               >
                 Send a new code
               </button>
@@ -272,7 +272,7 @@ export default function AdminResetPage() {
               <div>
                 <label
                   htmlFor="new-password"
-                  className="mb-2 block text-sm font-bold text-slate-700"
+                  className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]"
                 >
                   New password
                 </label>
@@ -284,14 +284,14 @@ export default function AdminResetPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"
                   required
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-3.5 text-[var(--booknook-ink)] outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="confirm-password"
-                  className="mb-2 block text-sm font-bold text-slate-700"
+                  className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]"
                 >
                   Confirm password
                 </label>
@@ -303,14 +303,14 @@ export default function AdminResetPage() {
                   onChange={(e) => setConfirm(e.target.value)}
                   autoComplete="new-password"
                   required
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-3.5 text-[var(--booknook-ink)] outline-none focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-2xl bg-violet-600 px-5 py-3.5 font-black text-white shadow-lg hover:bg-violet-700 disabled:opacity-60"
+                className="w-full rounded-2xl bg-[var(--booknook-primary)] px-5 py-3.5 font-black text-white shadow-lg hover:opacity-90 disabled:opacity-60"
               >
                 {loading ? "Updating..." : "Create New Password"}
               </button>
@@ -319,7 +319,7 @@ export default function AdminResetPage() {
 
           <Link
             href="/admin-login"
-            className="mt-7 block text-center text-sm font-bold text-slate-500 hover:text-violet-600"
+            className="mt-7 block text-center text-sm font-bold text-[var(--booknook-muted)] hover:text-[var(--booknook-primary)]"
           >
             ← Back to Admin Login
           </Link>
