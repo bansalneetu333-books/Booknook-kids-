@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       .from("books")
       .select("id,title,published,is_free")
       .eq("id", bookId)
-      .eq("published", true)
+      .or("published.eq.true,is_published.eq.true")
       .maybeSingle();
 
     if (bookError) return NextResponse.json({ error: "Unable to verify book." }, { status: 500 });
