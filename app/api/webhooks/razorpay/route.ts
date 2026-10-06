@@ -125,15 +125,18 @@ export async function POST(request: Request) {
        * application cannot associate with an order.
        */
       if (!order) {
-        console.warn(
-          "Verified Razorpay webhook received for unknown order:",
+        console.error(
+          "Verified Razorpay webhook received for an unknown order:",
           razorpayOrderId
         );
 
-        return NextResponse.json({
-          received: true,
-          matched: false,
-        });
+        // Return a retryable error. A verified payment must never be
+        // acknowledged as successfully processed when it cannot be
+        // associated with a local order.
+        return NextResponse.json(
+          { error: "Order not found; webhook will be retried." },
+          { status: 500 }
+        );
       }
 
       /*
