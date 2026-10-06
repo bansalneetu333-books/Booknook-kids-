@@ -42,13 +42,6 @@ export async function POST() {
         missingFiles.push(book.title);
         continue;
       }
-      const shouldBeFree =
-        normalizedTitle === "door 2050" ||
-        normalizedTitle === "rani laxmi bai" ||
-        normalizedTitle === "rani lakshmi bai" ||
-        normalizedTitle === "rani laxmi bai" ||
-        normalizedTitle === "rani lakshmi bai";
-
       const update: Record<string, unknown> = {
         published: true,
         is_published: true,
