@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       let { data: order, error: findError } = await admin
         .from("orders")
         .select(
-          "id,user_id,status,razorpay_order_id,razorpay_payment_id"
+          "id,user_id,payment_status,razorpay_order_id,razorpay_payment_id"
         )
         .eq("razorpay_order_id", razorpayOrderId)
         .maybeSingle();
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         const fallback = await admin
           .from("orders")
           .select(
-            "id,user_id,status,razorpay_order_id,razorpay_payment_id"
+            "id,user_id,payment_status,razorpay_order_id,razorpay_payment_id"
           )
           .eq("id", orderEntity.receipt)
           .maybeSingle();
@@ -141,7 +141,7 @@ export async function POST(request: Request) {
        * If the order is already paid, do not perform
        * another update.
        */
-      if (order.status === "paid") {
+      if (order.payment_status === "paid") {
         return NextResponse.json({
           received: true,
           alreadyProcessed: true,
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
       } = await admin
         .from("orders")
         .update({
-          status: "paid",
+          payment_status: "paid",
           razorpay_payment_id:
             razorpayPaymentId ??
             order.razorpay_payment_id,
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
         })
         .eq("id", order.id)
         .select(
-          "id,status,razorpay_order_id,razorpay_payment_id"
+          "id,payment_status,razorpay_order_id,razorpay_payment_id"
         )
         .single();
 
