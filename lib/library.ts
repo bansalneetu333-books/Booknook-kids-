@@ -88,7 +88,7 @@ export async function getMyLibrary(): Promise<
       `
     )
     .eq("orders.user_id", user.id)
-    .eq("orders.status", "paid")
+    .eq("orders.payment_status", "paid")
     .order("created_at", {
       ascending: false,
     });
@@ -167,7 +167,7 @@ export async function ownsBook(
     )
     .eq("book_id", bookId)
     .eq("orders.user_id", user.id)
-    .eq("orders.status", "paid")
+    .eq("orders.payment_status", "paid")
     .limit(1);
 
   if (error) {
@@ -198,8 +198,8 @@ export async function getPurchaseHistory() {
         id,
         razorpay_order_id,
         razorpay_payment_id,
-        status,
-        amount,
+        payment_status,
+        total_amount,
         currency,
         created_at,
         updated_at,
@@ -238,9 +238,9 @@ export async function getPurchaseHistory() {
         order.razorpay_order_id,
       razorpayPaymentId:
         order.razorpay_payment_id,
-      status: order.status,
+      status: order.payment_status,
       amount: Number(
-        order.amount ?? 0
+        order.total_amount ?? 0
       ),
       currency:
         order.currency ?? "INR",
