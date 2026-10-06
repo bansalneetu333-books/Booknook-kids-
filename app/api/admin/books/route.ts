@@ -16,6 +16,7 @@ type BookPayload = {
   featured?: boolean;
   isFree?: boolean;
   categorySlugs?: string[];
+  coverPath?: string | null;
 };
 
 function cleanString(value: unknown) {
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     const description = cleanString(body.description);
     const genre = cleanString(body.genre);
     const ageCategory = cleanString(body.ageCategory);
+    const coverPath = cleanString(body.coverPath);
     const categorySlugs = Array.isArray(body.categorySlugs)
       ? body.categorySlugs.filter((value): value is string => typeof value === "string" && value.trim().length > 0).map((value) => value.trim().toLowerCase())
       : [];
@@ -95,6 +97,7 @@ export async function POST(request: Request) {
       featured: Boolean(body.featured),
       is_featured: Boolean(body.featured),
       is_free: Boolean(body.isFree),
+      ...(coverPath ? { cover_path: coverPath } : {}),
     };
 
     async function syncCategories(bookId: string) {
