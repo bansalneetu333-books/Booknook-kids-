@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type CheckoutButtonProps = {
-  bookId: string;
+  bookId?: string;
+  bookIds?: string[];
   price: number;
   title?: string;
 };
@@ -37,6 +38,7 @@ declare global {
 
 export function CheckoutButton({
   bookId,
+  bookIds,
   price,
   title,
 }: CheckoutButtonProps) {
@@ -111,6 +113,7 @@ export function CheckoutButton({
           },
           body: JSON.stringify({
             bookId,
+            bookIds,
           }),
         }
       );
