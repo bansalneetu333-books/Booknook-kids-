@@ -145,15 +145,15 @@ export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
   const { data, error } = await supabase
     .from("books")
     .select(`${BOOK_FIELDS},
-      book_categories!inner (
-        categories!inner (
+      book_categories (
+        categories (
           name,
           slug,
           icon
         )
       )
     `)
-    .eq("published", true)
+    .or("published.eq.true,is_published.eq.true")
     .eq("is_free", true)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
