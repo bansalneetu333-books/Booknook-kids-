@@ -51,7 +51,7 @@ export default async function ReaderPage({
 
           <a
             href={`/books/${book.id}`}
-            className="mt-6 inline-block rounded-full bg-indigo-600 px-6 py-3 font-bold text-white"
+            className="mt-6 inline-block rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-bold text-white"
           >
             Back to Book
           </a>
@@ -61,7 +61,7 @@ export default async function ReaderPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-100">
+    <main className="min-h-screen bg-[#0f172a]">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-center justify-between gap-3 p-3">
           <a
