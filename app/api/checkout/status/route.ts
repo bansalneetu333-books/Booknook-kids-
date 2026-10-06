@@ -63,8 +63,8 @@ export async function GET(
           user_id,
           razorpay_order_id,
           razorpay_payment_id,
-          status,
-          amount,
+          payment_status,
+          total_amount,
           currency,
           created_at,
           updated_at
@@ -125,9 +125,9 @@ export async function GET(
       found: true,
       order: {
         id: order.id,
-        status: order.status,
+        status: order.payment_status,
         amount: Number(
-          order.amount
+          order.total_amount
         ),
         currency:
           order.currency,
