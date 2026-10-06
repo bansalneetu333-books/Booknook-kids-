@@ -22,10 +22,10 @@ export default async function AdminBookPreviewPage({
   if (!book) notFound();
 
   return (
-    <main className="min-h-screen bg-slate-100">
+    <main className="min-h-screen bg-[#f1f2f7]">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between gap-3 p-4">
-          <Link href={`/admin/books/${book.id}`} className="text-sm font-bold text-violet-700">
+          <Link href={`/admin/books/${book.id}`} className="text-sm font-bold text-[var(--booknook-primary)]">
             ← Back to Edit Book
           </Link>
           <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-black text-amber-700">
