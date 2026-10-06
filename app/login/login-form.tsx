@@ -143,16 +143,16 @@ export default function LoginForm() {
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl shadow-sm">
                 📚
               </span>
-              <span className="text-2xl font-black text-slate-900">
+              <span className="text-2xl font-black text-[var(--booknook-ink)]">
                 Booknook Kids
               </span>
             </Link>
 
-            <h1 className="mt-7 text-3xl font-black text-slate-900">
+            <h1 className="mt-7 text-3xl font-black text-[var(--booknook-ink)]">
               {step === "email" ? "Welcome! 👋" : "Check your email ✉️"}
             </h1>
 
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-[var(--booknook-muted)]">
               {step === "email"
                 ? "Enter your email to sign in or create your Booknook Kids account."
                 : `We sent an 8-digit OTP to ${email}.`}
@@ -177,7 +177,7 @@ export default function LoginForm() {
               <div>
                 <label
                   htmlFor="email"
-                  className="mb-2 block text-sm font-bold text-slate-700"
+                  className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]"
                 >
                   Email Address
                 </label>
@@ -191,7 +191,7 @@ export default function LoginForm() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#fffdf9] px-4 py-3.5 text-[var(--booknook-ink)] outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
@@ -208,7 +208,7 @@ export default function LoginForm() {
               <div>
                 <label
                   htmlFor="otp"
-                  className="mb-2 block text-sm font-bold text-slate-700"
+                  className="mb-2 block text-sm font-bold text-[var(--booknook-ink)]"
                 >
                   Enter 8-digit OTP
                 </label>
@@ -225,7 +225,7 @@ export default function LoginForm() {
                     setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))
                   }
                   placeholder="12345678"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-center text-2xl font-black tracking-[0.35em] text-slate-900 outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
+                  className="w-full rounded-2xl border border-[var(--booknook-border)] bg-[#fffdf9] px-4 py-3.5 text-center text-2xl font-black tracking-[0.35em] text-[var(--booknook-ink)] outline-none transition focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100"
                 />
               </div>
 
@@ -245,7 +245,7 @@ export default function LoginForm() {
                   setMessage(null);
                   setSuccess(null);
                 }}
-                className="w-full text-sm font-bold text-violet-600 hover:text-violet-800"
+                className="w-full text-sm font-bold text-[var(--booknook-primary)] hover:text-violet-800"
               >
                 Change email address
               </button>
@@ -254,7 +254,7 @@ export default function LoginForm() {
 
           <Link
             href="/"
-            className="mt-7 block text-center text-sm font-semibold text-slate-400 hover:text-slate-600"
+            className="mt-7 block text-center text-sm font-semibold text-[var(--booknook-muted)] hover:text-[var(--booknook-muted)]"
           >
             ← Back to Booknook Kids
           </Link>
@@ -262,7 +262,7 @@ export default function LoginForm() {
           <div className="mt-5 text-center">
             <Link
               href="/admin-login"
-              className="text-xs font-semibold text-slate-400 hover:text-slate-600"
+              className="text-xs font-semibold text-[var(--booknook-muted)] hover:text-[var(--booknook-muted)]"
             >
               Admin login
             </Link>
