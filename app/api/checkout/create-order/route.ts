@@ -98,7 +98,7 @@ export async function POST(request: Request) {
         .select(`book_id, orders!inner(user_id,status)`)
         .in("book_id", bookIds)
         .eq("orders.user_id", user.id)
-        .eq("orders.status", "paid");
+        .eq("orders.payment_status", "paid");
 
     if (purchaseLookupError) {
       return NextResponse.json({ error: "Unable to check previous purchases." }, { status: 500 });
