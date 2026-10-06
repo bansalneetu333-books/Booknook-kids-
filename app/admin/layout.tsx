@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/admin";
 const navigation = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/books", label: "Books", icon: "📚" },
+  { href: "/admin/availability", label: "File Availability", icon: "✓" },
   { href: "/admin/categories", label: "Categories", icon: "🏷️" },
   { href: "/admin/homepage", label: "Homepage", icon: "🏠" },
   { href: "/admin/customers", label: "Customers", icon: "👥" },
