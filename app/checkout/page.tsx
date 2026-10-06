@@ -92,10 +92,10 @@ export default async function CheckoutPage({
             </Link>
 
             <Link
-              href={`/books/${book.slug}`}
+              href="/books"
               className="rounded-full border border-slate-300 bg-white px-6 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
             >
-              Back to Book
+              Back to Books
             </Link>
           </div>
         </div>
