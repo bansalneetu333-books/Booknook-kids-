@@ -37,15 +37,15 @@ export default async function ReaderPage({
 
   if (!book.is_free && !ownership) {
     return (
-      <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
-        <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
+      <main className="grid min-h-screen place-items-center bg-[#0f172a] p-6">
+        <div className="max-w-md bn-surface p-8 text-center">
           <div className="text-5xl">🔒</div>
 
           <h1 className="mt-4 text-2xl font-black">
             You don&apos;t have access to this book.
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-400">
             Purchase the book to open the complete reader.
           </p>
 
