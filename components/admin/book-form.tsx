@@ -18,6 +18,7 @@ type Book = {
   age_category: string;
   published: boolean;
   featured: boolean;
+  new_pick?: boolean;
   is_free?: boolean;
   cover_path?: string | null;
   categories?: string[];
@@ -62,6 +63,7 @@ export function BookForm({ book }: { book?: Book }) {
     ageCategory: book?.age_category ?? "6–16",
     published: book?.published ?? false,
     featured: book?.featured ?? false,
+    newPick: book?.new_pick ?? false,
     isFree: book?.is_free ?? false,
   });
 
@@ -188,6 +190,7 @@ export function BookForm({ book }: { book?: Book }) {
         ageCategory: form.ageCategory.trim(),
         published: false,
         featured: form.featured,
+        newPick: form.newPick,
         isFree: form.isFree,
       };
 
@@ -682,6 +685,11 @@ export function BookForm({ book }: { book?: Book }) {
                 Customers can read this book online without buying it.
               </span>
             </span>
+          </label>
+
+          <label className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+            <input type="checkbox" checked={form.newPick} onChange={(e) => update("newPick", e.target.checked)} />
+            <span className="text-sm font-bold">🌟 New Pick</span>
           </label>
 
           <label className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
