@@ -117,27 +117,6 @@ export async function POST(request: Request) {
     const totalPrice = booksToBuy.reduce((sum, book) => sum + Number(book.price), 0);
     const firstBook = booksToBuy[0];
 
-    /*
-     * Some existing rows use `published`,
-     * while older rows may use `is_published`.
-     *
-     * A book is available for purchase when
-     * either field indicates it is published.
-     */
-    const isPublished =
-      book.published === true ||
-      book.is_published === true;
-
-    if (!isPublished) {
-      return NextResponse.json(
-        {
-          error:
-            "This book is not currently available for purchase.",
-        },
-        { status: 400 }
-      );
-    }
-
     const price = totalPrice;
 
     if (
@@ -155,60 +134,6 @@ export async function POST(request: Request) {
 
     const amountInPaise =
       Math.round(price * 100);
-
-    /*
-     * Prevent buying the same book twice.
-     */
-    const { data: existingPurchase, error: purchaseError } =
-      await supabase
-        .from("order_items")
-        .select(
-          `
-            id,
-            orders!inner (
-              id,
-              user_id,
-              status
-            )
-          `
-        )
-        .eq("book_id", book.id)
-        .eq(
-          "orders.user_id",
-          user.id
-        )
-        .eq(
-          "orders.status",
-          "paid"
-        )
-        .limit(1)
-        .maybeSingle();
-
-    if (purchaseError) {
-      console.error(
-        "Purchase check error:",
-        purchaseError
-      );
-
-      return NextResponse.json(
-        {
-          error:
-            "Unable to check previous purchases.",
-        },
-        { status: 500 }
-      );
-    }
-
-    if (existingPurchase) {
-      return NextResponse.json(
-        {
-          error:
-            "You already own this book.",
-          alreadyPurchased: true,
-        },
-        { status: 409 }
-      );
-    }
 
     /*
      * Create our local pending order first.
@@ -252,7 +177,7 @@ export async function POST(request: Request) {
         .insert(
           booksToBuy.map((book) => ({
             order_id: localOrder.id,
-            book_ids: booksToBuy.map((book) => book.id).join(","),
+            book_id: book.id,
             price: Number(book.price),
           }))
         );
@@ -287,11 +212,11 @@ export async function POST(request: Request) {
         await createRazorpayOrder({
           amount: amountInPaise,
           currency:
-            book.currency || "INR",
+            firstBook.currency || "INR",
           receipt: localOrder.id,
           notes: {
             order_id: localOrder.id,
-            book_id: book.id,
+            book_ids: booksToBuy.map((book) => book.id).join(","),
             user_id: user.id,
           },
         });
