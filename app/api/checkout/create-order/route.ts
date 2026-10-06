@@ -143,13 +143,13 @@ export async function POST(request: Request) {
         .from("orders")
         .insert({
           user_id: user.id,
-          status: "pending",
-          amount: price,
+          payment_status: "pending",
+          total_amount: Math.round(price),
           currency:
             firstBook.currency || "INR",
         })
         .select(
-          "id,user_id,status,amount,currency,created_at"
+          "id,user_id,payment_status,total_amount,currency,created_at"
         )
         .single();
 
@@ -264,7 +264,7 @@ export async function POST(request: Request) {
         localOrder.id
       )
       .select(
-        "id,user_id,status,amount,currency,razorpay_order_id,created_at"
+        "id,user_id,payment_status,total_amount,currency,razorpay_order_id,created_at"
       )
       .single();
 
@@ -319,9 +319,9 @@ export async function POST(request: Request) {
       order: {
         id: updatedOrder.id,
         status:
-          updatedOrder.status,
+          updatedOrder.payment_status,
         amount:
-          Number(updatedOrder.amount),
+          Number(updatedOrder.total_amount),
         currency:
           updatedOrder.currency,
         razorpayOrderId:
