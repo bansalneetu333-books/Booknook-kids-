@@ -193,15 +193,15 @@ export default function AdminHomepagePage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-violet-600">
+          <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">
             Admin
           </p>
 
-          <h1 className="mt-1 text-3xl font-extrabold text-slate-900">
+          <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">
             Homepage
           </h1>
 
-          <p className="mt-2 max-w-2xl text-slate-500">
+          <p className="mt-2 max-w-2xl text-[var(--booknook-muted)]">
             Control which books are published and highlighted
             on the Booknook Kids homepage.
           </p>
@@ -209,81 +209,81 @@ export default function AdminHomepagePage() {
 
         <Link
           href="/admin/books/new"
-          className="rounded-xl bg-violet-600 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-violet-700"
+          className="rounded-xl bg-[var(--booknook-primary)] px-5 py-3 text-center text-sm font-bold text-white transition hover:opacity-90"
         >
           + Add New Book
         </Link>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
+        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
       {message && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
+        <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700">
           {message}
         </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Total Books
           </p>
 
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+          <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
             {books.length}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Published
           </p>
 
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+          <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
             {publishedBooks.length}
           </p>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">
+        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Featured
           </p>
 
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+          <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
             {featuredBooks.length}
           </p>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-6">
-          <h2 className="text-xl font-extrabold text-slate-900">
+      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+        <div className="border-b border-[var(--booknook-border)] p-6">
+          <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Homepage Books
           </h2>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-[var(--booknook-muted)]">
             Featured books can be highlighted in your homepage
             book section.
           </p>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-sm text-slate-500">
+          <div className="p-8 text-center text-sm text-[var(--booknook-muted)]">
             Loading books...
           </div>
         ) : books.length === 0 ? (
           <div className="p-10 text-center">
             <div className="text-4xl">📚</div>
 
-            <h3 className="mt-3 font-extrabold text-slate-900">
+            <h3 className="mt-3 font-extrabold text-[var(--booknook-ink)]">
               No books yet
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-[var(--booknook-muted)]">
               Add your first book from the admin books section.
             </p>
           </div>
@@ -296,7 +296,7 @@ export default function AdminHomepagePage() {
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-extrabold text-slate-900">
+                    <h3 className="font-extrabold text-[var(--booknook-ink)]">
                       {book.title}
                     </h3>
 
@@ -311,17 +311,17 @@ export default function AdminHomepagePage() {
                         Published
                       </span>
                     ) : (
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                      <span className="rounded-full bg-[#f1f2f7] px-3 py-1 text-xs font-bold text-[var(--booknook-muted)]">
                         Draft
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-[var(--booknook-muted)]">
                     {book.author || "Unknown author"}
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[#8a90a0]">
                     Sort order: {book.sort_order ?? 0}
                   </p>
                 </div>
@@ -329,7 +329,7 @@ export default function AdminHomepagePage() {
                 <div className="flex flex-wrap gap-2">
                   <Link
                     href={`/admin/books/${book.id}`}
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+                    className="rounded-[1.25rem] border border-[#ddd9e8] bg-white px-4 py-2.5 text-sm font-bold text-[var(--booknook-ink)] transition hover:bg-[#f7f8fc]"
                   >
                     Edit
                   </Link>
@@ -361,8 +361,8 @@ export default function AdminHomepagePage() {
                     }
                     className={`rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${
                       book.featured
-                        ? "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-                        : "bg-violet-600 text-white hover:bg-violet-700"
+                        ? "border border-[#ddd9e8] bg-white text-[var(--booknook-ink)] hover:bg-[#f7f8fc]"
+                        : "bg-[var(--booknook-primary)] text-white hover:opacity-90"
                     }`}
                   >
                     {savingId === book.id
