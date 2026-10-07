@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
 
 type Preferences = {
   phone_number: string | null;
@@ -112,12 +113,12 @@ export default function WhatsAppPreferencesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f8fc]">
+    <>\n      <SiteHeader />\n      <main className="bn-page">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
 
         <Link
           href="/account"
-          className="text-sm font-bold text-violet-600 hover:text-[var(--booknook-primary)]"
+          className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-[var(--booknook-primary)] shadow-sm ring-1 ring-[var(--booknook-border)] hover:bg-violet-50"
         >
           ← Back to My Account
         </Link>
@@ -355,7 +356,7 @@ export default function WhatsAppPreferencesPage() {
             type="button"
             onClick={savePreferences}
             disabled={saving}
-            className="w-full rounded-2xl bg-[var(--booknook-primary)] px-6 py-4 text-base font-extrabold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-full bg-[var(--booknook-primary)] px-6 py-4 text-base font-extrabold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Saving Preferences..." : "Save WhatsApp Preferences"}
           </button>
