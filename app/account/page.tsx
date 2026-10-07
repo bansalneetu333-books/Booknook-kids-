@@ -31,7 +31,9 @@ export default async function AccountPage() {
     "";
 
   return (
-    <div className="bn-page">
+    <>
+      <SiteHeader />
+      <div className="bn-page">
       <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
         <div>
           <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">
@@ -150,7 +152,8 @@ export default async function AccountPage() {
           </Link>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
