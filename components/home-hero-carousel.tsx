@@ -8,44 +8,38 @@ type SlideBook = {
   id: string;
   title: string;
   slug: string;
-  author?: string | null;
-  description?: string | null;
   cover_path?: string | null;
   cover_url?: string | null;
-  is_free?: boolean;
 };
 
 type HeroProps = { books: SlideBook[] };
 
 const messages = [
   {
-    eyebrow: "WELCOME TO BOOKNOOK KIDS",
-    title: "Every Comic. A New World. 🌈",
-    text: "Adventure, science, money, friendship, history, superheroes and more — discover a new world every time you open a comic.",
+    eyebrow: "EVERY COMIC. A NEW WORLD.",
+    title: "Stories that spark curiosity. 🌈",
+    text: "Discover illustrated adventures, ideas and skills made for curious young readers.",
     accent: "from-violet-700 via-fuchsia-600 to-orange-400",
   },
   {
     eyebrow: "READ • DISCOVER • GROW",
-    title: "Big Ideas. Fun Stories. 📚",
-    text: "Comics made to entertain curious kids while opening the door to new ideas, skills and possibilities.",
+    title: "Big ideas. Fun stories. 📚",
+    text: "Open a comic and step into a world built to entertain, inspire and teach.",
     accent: "from-sky-700 via-cyan-600 to-emerald-500",
   },
   {
     eyebrow: "YOUR NEXT ADVENTURE IS HERE",
-    title: "Pick a World. Start Reading. 🚀",
-    text: "Explore the collection and find the comic that matches today's curiosity.",
+    title: "Pick a world. Start reading. 🚀",
+    text: "Explore science, money, friendship, history, superheroes and more.",
     accent: "from-pink-700 via-rose-600 to-orange-500",
   },
 ];
 
 export function HomeHeroCarousel({ books }: HeroProps) {
-  const slides = useMemo(() => {
-    const covers = books
-      .filter((book) => book.cover_path || book.cover_url)
-      .slice(0, 4);
-    return covers.length ? covers : [];
-  }, [books]);
-
+  const slides = useMemo(
+    () => books.filter((book) => book.cover_path || book.cover_url).slice(0, 4),
+    [books]
+  );
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -60,36 +54,36 @@ export function HomeHeroCarousel({ books }: HeroProps) {
 
   return (
     <section className={"relative overflow-hidden bg-gradient-to-br " + message.accent}>
-      <div className="mx-auto grid min-h-[520px] max-w-7xl items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8 lg:py-14">
+      <div className="mx-auto grid min-h-[430px] max-w-7xl items-center gap-5 px-4 py-7 sm:min-h-[470px] sm:px-6 sm:py-9 lg:grid-cols-[1fr_.9fr] lg:px-8">
         <div className="relative z-10 text-white">
-          <span className="inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-2 text-[11px] font-black uppercase tracking-[0.18em] backdrop-blur">
+          <span className="inline-flex rounded-full border border-white/25 bg-white/15 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] backdrop-blur sm:text-[11px]">
             {message.eyebrow}
           </span>
 
-          <h1 className="mt-5 max-w-2xl text-4xl font-black leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-4 max-w-xl text-[2.55rem] font-black leading-[0.98] tracking-tight sm:text-5xl lg:text-6xl">
             {message.title}
           </h1>
 
-          <p className="mt-5 max-w-xl text-base font-semibold leading-7 text-white/90 sm:text-lg">
+          <p className="mt-4 max-w-lg text-sm font-semibold leading-6 text-white/90 sm:text-base sm:leading-7">
             {message.text}
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap gap-2.5">
             <Link
               href="/books"
-              className="rounded-full bg-white px-7 py-3.5 text-sm font-black text-slate-950 shadow-xl transition hover:-translate-y-0.5"
+              className="rounded-full bg-white px-6 py-3 text-sm font-black text-slate-950 shadow-xl transition hover:-translate-y-0.5"
             >
               Explore Comics →
             </Link>
             <Link
               href="/free-reading"
-              className="rounded-full border border-white/40 bg-white/10 px-6 py-3.5 text-sm font-black text-white backdrop-blur transition hover:bg-white/20"
+              className="rounded-full border border-white/40 bg-white/10 px-5 py-3 text-sm font-black text-white backdrop-blur transition hover:bg-white/20"
             >
               Read Free
             </Link>
           </div>
 
-          <div className="mt-8 flex gap-2">
+          <div className="mt-5 flex gap-2">
             {messages.map((item, index) => (
               <button
                 key={item.eyebrow}
@@ -97,18 +91,18 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                 aria-label={"Show hero " + (index + 1)}
                 onClick={() => setActive(index)}
                 className={
-                  "h-2.5 rounded-full transition-all " +
-                  (active === index ? "w-9 bg-white" : "w-2.5 bg-white/45")
+                  "h-2 rounded-full transition-all " +
+                  (active === index ? "w-9 bg-white" : "w-2 bg-white/45")
                 }
               />
             ))}
           </div>
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-[560px]">
-          <div className="absolute inset-4 rounded-[3rem] bg-white/15 blur-2xl" />
+        <div className="relative z-10 mx-auto w-full max-w-[480px]">
+          <div className="absolute inset-8 rounded-[3rem] bg-white/15 blur-2xl" />
           {slides.length ? (
-            <div className="relative flex h-[390px] items-center justify-center sm:h-[430px]">
+            <div className="relative h-[270px] sm:h-[330px]">
               {slides.map((book, index) => {
                 const cover =
                   book.cover_url ||
@@ -118,17 +112,17 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                 if (!cover) return null;
 
                 const positions = [
-                  "left-[4%] top-[9%] -rotate-[10deg]",
-                  "left-[25%] top-[1%] rotate-[3deg]",
-                  "right-[7%] top-[12%] rotate-[10deg]",
-                  "right-[23%] bottom-[2%] -rotate-[4deg]",
+                  "left-[2%] top-[8%] -rotate-[9deg]",
+                  "left-[24%] top-[0%] rotate-[2deg]",
+                  "right-[3%] top-[10%] rotate-[9deg]",
+                  "right-[20%] bottom-[0%] -rotate-[3deg]",
                 ];
 
                 return (
                   <div
                     key={book.id}
                     className={
-                      "absolute h-[285px] w-[190px] overflow-hidden rounded-2xl border-4 border-white/90 bg-white shadow-2xl transition-transform duration-500 sm:h-[330px] sm:w-[220px] " +
+                      "absolute h-[220px] w-[147px] overflow-hidden rounded-2xl border-4 border-white/90 bg-white shadow-2xl transition-transform duration-500 sm:h-[285px] sm:w-[190px] " +
                       positions[index]
                     }
                     style={{ zIndex: slides.length - index }}
@@ -137,7 +131,7 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                       src={cover}
                       alt={book.title}
                       fill
-                      sizes="220px"
+                      sizes="190px"
                       className="object-cover"
                     />
                   </div>
@@ -145,10 +139,10 @@ export function HomeHeroCarousel({ books }: HeroProps) {
               })}
             </div>
           ) : (
-            <div className="relative flex h-[390px] items-center justify-center sm:h-[430px]">
-              <div className="rounded-[2rem] border border-white/25 bg-white/15 p-12 text-center text-white backdrop-blur">
-                <div className="text-7xl">📚</div>
-                <p className="mt-4 text-xl font-black">Your next comic is waiting.</p>
+            <div className="relative flex h-[270px] items-center justify-center sm:h-[330px]">
+              <div className="rounded-[2rem] border border-white/25 bg-white/15 p-10 text-center text-white backdrop-blur">
+                <div className="text-6xl">📚</div>
+                <p className="mt-3 text-lg font-black">Your next comic is waiting.</p>
               </div>
             </div>
           )}
