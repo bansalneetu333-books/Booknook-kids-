@@ -63,7 +63,7 @@ export default function AdminCustomersPage() {
         </p>
       </div>
 
-      <div className="flex gap-3 rounded-3xl border border-[var(--booknook-border)] bg-white p-4 shadow-sm">
+      <div className="flex gap-3 rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-4 shadow-sm">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -88,7 +88,7 @@ export default function AdminCustomersPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
         {loading ? (
           <div className="p-10 text-center text-[var(--booknook-muted)]">Loading customers...</div>
         ) : customers.length === 0 ? (
