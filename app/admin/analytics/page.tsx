@@ -238,7 +238,7 @@ export default function AdminAnalyticsPage() {
 
             <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
               <p className="text-sm font-semibold text-[var(--booknook-muted)]">
-                Order Conversion
+                Paid Order Rate
               </p>
 
               <p className="mt-2 text-3xl font-extrabold text-[var(--booknook-ink)]">
