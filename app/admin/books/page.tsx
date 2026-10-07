@@ -223,7 +223,7 @@ export default function AdminBooksPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/books/new"
-            className="inline-flex items-center justify-center rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-bold text-white transition hover:opacity-90"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-extrabold text-white transition hover:opacity-90"
           >
             + Add New Book
           </Link>
@@ -327,7 +327,7 @@ export default function AdminBooksPage() {
 
           <Link
             href="/admin/books/new"
-            className="mt-6 inline-flex rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-bold text-white"
+            className="mt-6 inline-flex rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-extrabold text-white"
           >
             Add New Book
           </Link>
@@ -341,7 +341,7 @@ export default function AdminBooksPage() {
             return (
               <article
                 key={book.id}
-                className="overflow-hidden rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm"
+                className="overflow-hidden rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm"
               >
                 <div className="flex gap-4 p-5">
                   <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-100 to-pink-100">
