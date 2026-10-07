@@ -3,6 +3,7 @@ import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { getPublishedBooks } from "@/lib/books";
 import { BOOK_CATEGORIES } from "@/lib/book-categories";
+import { HomeHeroCarousel } from "@/components/home-hero-carousel";
 
 type SearchParams = Promise<{ q?: string; genre?: string; category?: string; age?: string }>;
 
@@ -28,19 +29,14 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
   return (
     <>
       <SiteHeader />
-      <main className="bn-page px-4 py-6 sm:px-6 lg:py-8">
+      <main className="bn-page px-4 py-3 sm:px-6 lg:py-5">
         <div className="mx-auto max-w-7xl">
-          <section className="bn-gradient overflow-hidden rounded-[2rem] p-6 text-white shadow-xl sm:p-8">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/75">Explore BookNook Kids</p>
-            <div className="mt-2 flex items-end justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-black sm:text-4xl">Find your next comic ✨</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
-                  Adventures, mysteries, science, heroes and more — discover your next world.
-                </p>
-              </div>
-              <span className="hidden text-5xl sm:block">📚</span>
-            </div>
+          <HomeHeroCarousel books={allBooks.slice(0, 8)} />
+
+          <section className="mt-4 rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-[var(--booknook-border)] sm:p-7">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--booknook-primary)]">Explore BookNook Kids</p>
+            <h1 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">Find your next comic ✨</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">Adventures, mysteries, science, heroes and more — discover your next world.</p>
           </section>
 
           <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
