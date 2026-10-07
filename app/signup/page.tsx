@@ -41,7 +41,9 @@ export default function SignupPage() {
         onSubmit={submit}
         className="bn-surface w-full max-w-md p-7 sm:p-8"
       >
-        <h1 className="text-3xl font-black">
+        <div className="text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl shadow-sm">📚</div>
+          <h1 className="mt-5 text-3xl font-black text-[var(--booknook-ink)]">
           Create Account ✨
         </h1>
 
@@ -63,7 +65,7 @@ export default function SignupPage() {
         </label>
 
         <input
-          className="mt-2 w-full rounded-2xl border p-3"
+          className="bn-input mt-2 w-full px-4 py-3.5"
           type="email"
           required
           value={email}
