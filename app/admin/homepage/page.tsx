@@ -228,7 +228,7 @@ export default function AdminHomepagePage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Total Books
           </p>
@@ -238,7 +238,7 @@ export default function AdminHomepagePage() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Published
           </p>
@@ -248,7 +248,7 @@ export default function AdminHomepagePage() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Featured
           </p>
@@ -259,7 +259,7 @@ export default function AdminHomepagePage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+      <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
         <div className="border-b border-[var(--booknook-border)] p-6">
           <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Homepage Books
