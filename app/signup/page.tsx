@@ -36,10 +36,10 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#fffdf9] px-6">
+    <main className="bn-page grid min-h-screen place-items-center px-4 py-10 sm:px-6">
       <form
         onSubmit={submit}
-        className="w-full max-w-md bn-surface p-8 shadow-sm"
+        className="bn-surface w-full max-w-md p-7 sm:p-8"
       >
         <h1 className="text-3xl font-black">
           Create Account ✨
@@ -50,7 +50,7 @@ export default function SignupPage() {
         </label>
 
         <input
-          className="mt-2 w-full rounded-2xl border p-3"
+          className="bn-input mt-2 w-full px-4 py-3.5"
           required
           value={fullName}
           onChange={(e) =>
@@ -88,14 +88,14 @@ export default function SignupPage() {
         />
 
         <button
-          className="mt-6 w-full rounded-xl bg-indigo-600 p-3 font-bold text-white"
+          className="bn-button mt-6 w-full"
           type="submit"
         >
           Create Account
         </button>
 
         <p
-          className="mt-4 text-sm text-[var(--booknook-muted)]"
+          className="mt-4 rounded-2xl bg-[#fffdf9] p-3 text-sm text-[var(--booknook-muted)]"
           aria-live="polite"
         >
           {status}
