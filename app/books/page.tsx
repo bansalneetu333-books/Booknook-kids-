@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { getPublishedBooks } from "@/lib/books";
-import { BOOK_CATEGORIES } from "@/lib/categories";
+import { BOOK_CATEGORIES } from "@/lib/book-categories";
 
 type SearchParams = Promise<{ q?: string; genre?: string; category?: string; age?: string }>;
 
