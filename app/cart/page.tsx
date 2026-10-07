@@ -52,7 +52,9 @@ export default function CartPage() {
   }
 
   return (
-    <>\n      <SiteHeader />\n      <main className="bn-page px-4 py-8 sm:px-6">
+    <>\n      <SiteHeader />\n      <>
+      <SiteHeader />
+      <main className="bn-page px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-5xl">
         <Link href="/books" className="text-sm font-bold text-[var(--booknook-primary)]">← Continue shopping</Link>
         <h1 className="mt-4 text-4xl font-black text-[var(--booknook-ink)]">My Cart 🛒</h1>
@@ -103,6 +105,7 @@ export default function CartPage() {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }
