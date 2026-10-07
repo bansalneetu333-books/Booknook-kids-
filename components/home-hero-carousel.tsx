@@ -35,22 +35,42 @@ const messages = [
   },
 ];
 
+const positions = [
+  "left-[1%] top-[13%] -rotate-[9deg]",
+  "left-[25%] top-[1%] rotate-[2deg]",
+  "right-[1%] top-[12%] rotate-[9deg]",
+];
+
 export function HomeHeroCarousel({ books }: HeroProps) {
   const slides = useMemo(
-    () => books.filter((book) => book.cover_path || book.cover_url).slice(0, 4),
+    () => books.filter((book) => book.cover_path || book.cover_url),
     [books]
   );
-  const [active, setActive] = useState(0);
+  const [activeBook, setActiveBook] = useState(0);
+  const [activeMessage, setActiveMessage] = useState(0);
 
   useEffect(() => {
-    const timer = window.setInterval(
-      () => setActive((current) => (current + 1) % messages.length),
-      5000
-    );
-    return () => window.clearInterval(timer);
-  }, []);
+    if (slides.length === 0) return;
 
-  const message = messages[active];
+    const timer = window.setInterval(() => {
+      setActiveBook((current) => (current + 1) % slides.length);
+      setActiveMessage((current) => (current + 1) % messages.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [slides.length]);
+
+  const message = messages[activeMessage];
+
+  const visibleBooks = useMemo(() => {
+    if (!slides.length) return [];
+
+    const count = Math.min(3, slides.length);
+    return Array.from({ length: count }, (_, position) => ({
+      book: slides[(activeBook + position) % slides.length],
+      position,
+    }));
+  }, [activeBook, slides]);
 
   return (
     <section className="bg-[#fffdf9] px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
@@ -64,13 +84,13 @@ export function HomeHeroCarousel({ books }: HeroProps) {
         <div className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
 
-        <div className="relative grid min-h-[390px] items-center gap-3 px-5 py-6 sm:min-h-[430px] sm:px-8 sm:py-8 lg:grid-cols-[1.05fr_.95fr] lg:px-10">
+        <div className="relative grid min-h-[370px] items-center gap-3 px-5 py-6 sm:min-h-[420px] sm:px-8 sm:py-8 lg:grid-cols-[1.05fr_.95fr] lg:px-10">
           <div className="relative z-10 max-w-xl text-white">
             <span className="inline-flex rounded-full border border-white/30 bg-white/15 px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] backdrop-blur sm:text-[11px]">
               {message.eyebrow}
             </span>
 
-            <h1 className="mt-4 max-w-lg text-[2.45rem] font-black leading-[0.98] tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-4 max-w-lg text-[2.35rem] font-black leading-[0.98] tracking-tight sm:text-5xl lg:text-6xl">
               {message.title}
             </h1>
 
@@ -98,33 +118,27 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                 <button
                   key={item.eyebrow}
                   type="button"
-                  aria-label={"Show hero " + (index + 1)}
-                  onClick={() => setActive(index)}
+                  aria-label={"Show hero message " + (index + 1)}
+                  onClick={() => setActiveMessage(index)}
                   className={
                     "h-2 rounded-full transition-all " +
-                    (active === index ? "w-9 bg-white" : "w-2 bg-white/45")
+                    (activeMessage === index ? "w-9 bg-white" : "w-2 bg-white/45")
                   }
                 />
               ))}
             </div>
           </div>
 
-          <div className="relative mx-auto h-[190px] w-full max-w-[390px] sm:h-[250px] lg:h-[310px]">
-            {slides.length ? (
-              slides.map((book, index) => {
+          <div className="relative mx-auto h-[185px] w-full max-w-[390px] sm:h-[245px] lg:h-[305px]">
+            {visibleBooks.length ? (
+              visibleBooks.map(({ book, position }) => {
                 const cover =
                   book.cover_url ||
                   (book.cover_path
                     ? "/api/books/cover?path=" + encodeURIComponent(book.cover_path)
                     : null);
-                if (!cover) return null;
 
-                const positions = [
-                  "left-[2%] top-[13%] -rotate-[9deg]",
-                  "left-[25%] top-[1%] rotate-[2deg]",
-                  "right-[2%] top-[12%] rotate-[9deg]",
-                  "right-[20%] bottom-[-2%] -rotate-[3deg]",
-                ];
+                if (!cover) return null;
 
                 return (
                   <Link
@@ -132,16 +146,16 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                     href={"/books/" + book.slug}
                     aria-label={"View " + book.title}
                     className={
-                      "absolute h-[178px] w-[119px] overflow-hidden rounded-xl border-[3px] border-white/90 bg-white shadow-2xl transition-transform duration-500 hover:scale-[1.03] sm:h-[225px] sm:w-[150px] lg:h-[275px] lg:w-[183px] " +
-                      positions[index]
+                      "absolute h-[174px] w-[116px] overflow-hidden rounded-xl border-[3px] border-white/90 bg-white shadow-2xl transition-all duration-700 hover:scale-[1.03] sm:h-[220px] sm:w-[147px] lg:h-[270px] lg:w-[180px] " +
+                      positions[position]
                     }
-                    style={{ zIndex: slides.length - index }}
+                    style={{ zIndex: visibleBooks.length - position }}
                   >
                     <Image
                       src={cover}
                       alt={book.title}
                       fill
-                      sizes="183px"
+                      sizes="180px"
                       className="object-cover"
                     />
                   </Link>
