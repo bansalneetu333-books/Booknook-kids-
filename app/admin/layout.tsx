@@ -31,7 +31,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc]">
+    <div className="min-h-screen bg-[#f7f8fc] text-[var(--booknook-ink)]">
       <div className="flex min-h-screen">
         <aside className="hidden w-72 shrink-0 border-r border-[var(--booknook-border)] bg-white lg:block">
           <div className="sticky top-0 flex h-screen flex-col">
@@ -40,7 +40,7 @@ export default async function AdminLayout({
                 href="/admin"
                 className="flex items-center gap-3"
               >
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600 text-xl shadow-sm">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-xl shadow-sm">
                   📚
                 </div>
 
@@ -100,7 +100,7 @@ export default async function AdminLayout({
                 href="/admin"
                 className="flex items-center gap-2"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-pink-500 text-lg">
                   📚
                 </div>
 
@@ -117,7 +117,7 @@ export default async function AdminLayout({
 
               <Link
                 href="/"
-                className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-[var(--booknook-ink)]"
+                className="rounded-full border border-[var(--booknook-border)] px-3 py-2 text-xs font-bold text-[var(--booknook-ink)]"
               >
                 Store
               </Link>
