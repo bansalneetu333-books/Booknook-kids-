@@ -4,6 +4,8 @@ import { BookCard } from "@/components/book-card";
 import { getFreeBooks } from "@/lib/books";
 import { BOOK_CATEGORIES } from "@/lib/book-categories";
 
+export const dynamic = "force-dynamic";
+
 type SearchParams = Promise<{ category?: string }>;
 
 export default async function FreeReadingPage({ searchParams }: { searchParams: SearchParams }) {
