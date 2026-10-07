@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { BookCard } from "@/components/book-card";
 import { getFreeBooks } from "@/lib/books";
 import { BOOK_CATEGORIES } from "@/lib/book-categories";
+import { HomeHeroCarousel } from "@/components/home-hero-carousel";
 
 export const dynamic = "force-dynamic";
 
@@ -16,18 +17,14 @@ export default async function FreeReadingPage({ searchParams }: { searchParams: 
   return (
     <>
       <SiteHeader />
-      <main className="bn-page px-4 py-6 sm:px-6 lg:py-8">
+      <main className="bn-page px-4 py-3 sm:px-6 lg:py-5">
         <div className="mx-auto max-w-7xl">
-          <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#6d5dfc] via-[#d92fe9] to-[#55c7f4] p-7 text-white shadow-[0_16px_40px_rgba(23,32,51,0.12)] sm:p-10">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-white/15" />
-            <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-[#ffd45c]/20" />
-            <div className="relative max-w-3xl">
-              <p className="text-xs font-black uppercase tracking-[0.24em] text-white/80">BOOKNOOK KIDS • FREE READING</p>
-              <h1 className="mt-3 text-4xl font-black leading-tight tracking-tight sm:text-5xl">Read. Explore. No purchase needed. 📖✨</h1>
-              <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-white/90 sm:text-lg">
-                Discover selected comics and stories you can read online for free — with new worlds, ideas and adventures to explore.
-              </p>
-            </div>
+          <HomeHeroCarousel books={books.slice(0, 8)} />
+
+          <section className="mt-4 rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-[var(--booknook-border)] sm:p-7">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">BOOKNOOK KIDS • FREE READING</p>
+            <h1 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">Read. Explore. No purchase needed. 📖✨</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">Discover selected comics and stories you can read online for free — with new worlds, ideas and adventures to explore.</p>
           </section>
 
           <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
