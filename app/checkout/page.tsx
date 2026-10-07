@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CheckoutButton } from "@/components/checkout-button";
+import { SiteHeader } from "@/components/site-header";
 import { getCheckoutBook, getPurchasedBookIds } from "@/lib/checkout";
 import { createClient } from "@/lib/supabase/server";
 
@@ -43,7 +44,7 @@ export default async function CheckoutPage({
   if (validBooks.length !== bookIds.length) {
     return (
       <main className="min-h-screen bg-[#fffdf9] px-4 py-12">
-        <div className="mx-auto max-w-2xl rounded-3xl border border-[var(--booknook-border)] bg-white p-8 text-center shadow-sm">
+        <div className="mx-auto max-w-2xl bn-surface p-8 text-center">
           <div className="mb-4 text-5xl">📚</div>
 
           <h1 className="text-2xl font-extrabold text-[var(--booknook-ink)]">
@@ -110,7 +111,7 @@ export default async function CheckoutPage({
     : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-pink-50 px-4 py-10 sm:px-6 lg:px-8">
+    <>\n      <SiteHeader />\n      <main className="bn-page px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <Link
           href={`/books/${book.slug}`}
@@ -119,7 +120,7 @@ export default async function CheckoutPage({
           ← Back to Book
         </Link>
 
-        <div className="overflow-hidden rounded-[2rem] border border-[var(--booknook-border)] bg-white shadow-xl">
+        <div className="bn-surface overflow-hidden">
           <div className="grid gap-0 md:grid-cols-2">
             {/* Book preview */}
             <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
