@@ -52,7 +52,9 @@ export default function CartPage() {
   }
 
   return (
-    <>\n      <SiteHeader />\n      <>
+    <>
+      <SiteHeader />
+      <>
       <SiteHeader />
       <main className="bn-page px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-5xl">
