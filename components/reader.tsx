@@ -127,7 +127,30 @@ export function EpubReader({
           return;
         }
 
-        const book = ePub(data.url);
+        // Download the protected EPUB first, then give epub.js the
+        // bytes. This avoids a common mobile/Safari failure mode where
+        // epub.js waits indefinitely while trying to fetch an archived
+        // EPUB directly from a signed cross-origin URL.
+        const epubResponse = await fetch(data.url, {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!epubResponse.ok) {
+          throw new Error(
+            `Unable to download the book file (HTTP ${epubResponse.status}).`
+          );
+        }
+
+        const epubBytes = await epubResponse.arrayBuffer();
+
+        if (!epubBytes.byteLength) {
+          throw new Error("The EPUB file is empty.");
+        }
+
+        if (cancelled) return;
+
+        const book = ePub(epubBytes);
 
         bookRef.current = book;
 
@@ -231,7 +254,17 @@ export function EpubReader({
           }
         );
 
-        await book.ready;
+        // Do not leave the customer on "Opening your book..." forever
+        // if a malformed/incompatible EPUB never resolves its ready promise.
+        await Promise.race([
+          book.ready,
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("The EPUB could not be opened. Please try again or upload a valid fixed-layout EPUB.")),
+              20000
+            )
+          ),
+        ]);
 
         if (cancelled) {
           book.destroy();
