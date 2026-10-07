@@ -20,9 +20,9 @@ export default function SignupPage() {
       password,
       options: {
         data: {
-          full_name: fullName
-        }
-      }
+          full_name: fullName,
+        },
+      },
     });
 
     if (error) {
@@ -42,10 +42,14 @@ export default function SignupPage() {
         className="bn-surface w-full max-w-md p-7 sm:p-8"
       >
         <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl shadow-sm">📚</div>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl shadow-sm">
+            📚
+          </div>
+
           <h1 className="mt-5 text-3xl font-black text-[var(--booknook-ink)]">
-          Create Account ✨
-        </h1>
+            Create Account ✨
+          </h1>
+        </div>
 
         <label className="mt-6 block text-sm font-semibold">
           Full Name
@@ -55,9 +59,7 @@ export default function SignupPage() {
           className="bn-input mt-2 w-full px-4 py-3.5"
           required
           value={fullName}
-          onChange={(e) =>
-            setFullName(e.target.value)
-          }
+          onChange={(e) => setFullName(e.target.value)}
         />
 
         <label className="mt-4 block text-sm font-semibold">
@@ -69,9 +71,7 @@ export default function SignupPage() {
           type="email"
           required
           value={email}
-          onChange={(e) =>
-            setEmail(e.target.value)
-          }
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         <label className="mt-4 block text-sm font-semibold">
@@ -79,14 +79,12 @@ export default function SignupPage() {
         </label>
 
         <input
-          className="mt-2 w-full rounded-2xl border p-3"
+          className="bn-input mt-2 w-full px-4 py-3.5"
           type="password"
           minLength={8}
           required
           value={password}
-          onChange={(e) =>
-            setPassword(e.target.value)
-          }
+          onChange={(e) => setPassword(e.target.value)}
         />
 
         <button
