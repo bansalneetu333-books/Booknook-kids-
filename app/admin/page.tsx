@@ -145,7 +145,7 @@ export default async function AdminDashboardPage() {
           <Link
             key={card.label}
             href={card.href}
-            className="group rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg"
+            className="group rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -185,7 +185,7 @@ export default async function AdminDashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/admin/books"
-            className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-3xl">📚</div>
 
@@ -200,7 +200,7 @@ export default async function AdminDashboardPage() {
 
           <Link
             href="/admin/orders"
-            className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-3xl">🛒</div>
 
@@ -215,7 +215,7 @@ export default async function AdminDashboardPage() {
 
           <Link
             href="/admin/customers"
-            className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-3xl">👥</div>
 
@@ -230,7 +230,7 @@ export default async function AdminDashboardPage() {
 
           <Link
             href="/admin/whatsapp"
-            className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-3xl">💬</div>
 
@@ -261,7 +261,7 @@ export default async function AdminDashboardPage() {
 
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-bold text-white transition hover:opacity-90"
+            className="inline-flex items-center justify-center rounded-full bg-[var(--booknook-primary)] px-6 py-3 font-extrabold text-white transition hover:opacity-90"
           >
             Open Store →
           </Link>
