@@ -136,7 +136,18 @@ export async function GET(request: Request) {
     // 4. Format version information
     // ------------------------------------------------------------
     const formattedBooks = await Promise.all(filteredBooks.map(async (book) => {
-      const fileAvailability = await getBookFileAvailability(book.id);\n      let resolvedCoverPath = book.cover_path || null;\n      if (!resolvedCoverPath && book.cover_url) {\n        const marker = "/storage/v1/object/public/book-covers/";\n        const index = book.cover_url.indexOf(marker);\n        if (index >= 0) resolvedCoverPath = book.cover_url.slice(index + marker.length).split("?")[0] || null;\n      }\n      if (!resolvedCoverPath && book.slug) {\n        const { data: coverFiles } = await supabase.storage.from("book-covers").list(String(book.slug).trim(), { limit: 100, sortBy: { column: "created_at", order: "desc" } });\n        const cover = (coverFiles ?? []).find((file) => /\\.(jpg|jpeg|png|webp|gif)$/i.test(String(file.name || "")));\n        if (cover) resolvedCoverPath = String(book.slug).trim() + "/" + cover.name;\n      }
+      const fileAvailability = await getBookFileAvailability(book.id);
+      let resolvedCoverPath = book.cover_path || null;
+      if (!resolvedCoverPath && book.cover_url) {
+        const marker = "/storage/v1/object/public/book-covers/";
+        const index = book.cover_url.indexOf(marker);
+        if (index >= 0) resolvedCoverPath = book.cover_url.slice(index + marker.length).split("?")[0] || null;
+      }
+      if (!resolvedCoverPath && book.slug) {
+        const { data: coverFiles } = await supabase.storage.from("book-covers").list(String(book.slug).trim(), { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+        const cover = (coverFiles ?? []).find((file) => /\\.(jpg|jpeg|png|webp|gif)$/i.test(String(file.name || "")));
+        if (cover) resolvedCoverPath = String(book.slug).trim() + "/" + cover.name;
+      }
       const versions = [...(book.book_versions ?? [])].sort(
         (a, b) => {
           const dateA = a.uploaded_at || a.created_at || "";
