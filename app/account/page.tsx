@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { SiteHeader } from "@/components/site-header";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -143,7 +144,7 @@ export default async function AccountPage() {
 
           <Link
             href="/account/whatsapp"
-            className="mt-5 inline-flex rounded-xl bg-[var(--booknook-primary)] px-5 py-3 text-sm font-bold text-white transition hover:opacity-90"
+            className="mt-5 inline-flex rounded-full bg-[var(--booknook-primary)] px-5 py-3 text-sm font-bold text-white transition hover:opacity-90"
           >
             Manage WhatsApp Preferences
           </Link>
