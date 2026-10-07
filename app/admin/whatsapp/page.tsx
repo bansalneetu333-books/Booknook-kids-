@@ -179,7 +179,7 @@ export default function AdminWhatsAppPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             WhatsApp Contacts
           </p>
@@ -189,7 +189,7 @@ export default function AdminWhatsAppPage() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Opted In
           </p>
@@ -203,7 +203,7 @@ export default function AdminWhatsAppPage() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-[var(--booknook-muted)]">
             Sent / Delivered / Read
           </p>
@@ -214,7 +214,7 @@ export default function AdminWhatsAppPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+      <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
         <div className="border-b border-[var(--booknook-border)] p-6">
           <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Customer WhatsApp Preferences
@@ -301,7 +301,7 @@ export default function AdminWhatsAppPage() {
         )}
       </div>
 
-      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+      <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
         <div className="border-b border-[var(--booknook-border)] p-6">
           <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Message Activity
