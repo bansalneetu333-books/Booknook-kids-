@@ -207,6 +207,7 @@ export default async function CheckoutPage({
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
