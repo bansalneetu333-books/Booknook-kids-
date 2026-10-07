@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 
 type CartItem = {
@@ -24,6 +25,7 @@ function getCart(): CartItem[] {
 
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const refresh = () => setItems(getCart());
@@ -95,12 +97,17 @@ export default function CartPage() {
                 <span>{items.length} {items.length === 1 ? "book" : "books"}</span>
                 <span>₹{total.toFixed(2)}</span>
               </div>
-              <Link
-                href={`/checkout?bookIds=${encodeURIComponent(items.map((item) => item.id).join(","))}`}
-                className="mt-6 flex w-full items-center justify-center rounded-full bg-[var(--booknook-primary)] px-6 py-3.5 font-black text-white hover:opacity-90"
+              <button
+                type="button"
+                onClick={() => {
+                  const ids = items.map((item) => item.id).filter(Boolean);
+                  if (!ids.length) return;
+                  router.push(`/checkout?bookIds=${encodeURIComponent(ids.join(","))}`);
+                }}
+                className="mt-6 flex w-full items-center justify-center rounded-full bg-[var(--booknook-primary)] px-6 py-3.5 font-black text-white transition hover:opacity-90 active:scale-[0.99]"
               >
                 Checkout All
-              </Link>
+              </button>
             </aside>
           </div>
         )}
