@@ -63,7 +63,7 @@ export default function AdminAvailabilityPage() {
         <div>
           <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">Admin</p>
           <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">File Availability</h1>
-          <p className="mt-2 text-[var(--booknook-muted)]">Check every book's EPUB, PDF and cover in one place.</p>
+          <p className="mt-2 text-[var(--booknook-muted)]">Check every book&apos;s EPUB, PDF and cover in one place.</p>
         </div>
         <div className="flex gap-2">
           <button
