@@ -54,8 +54,6 @@ export default function CartPage() {
   return (
     <>
       <SiteHeader />
-      <>
-      <SiteHeader />
       <main className="bn-page px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-5xl">
         <Link href="/books" className="text-sm font-bold text-[var(--booknook-primary)]">← Continue shopping</Link>
