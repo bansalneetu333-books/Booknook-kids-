@@ -224,7 +224,7 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white p-6 shadow-sm sm:p-8">
+      <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white p-6 shadow-sm sm:p-8">
         <div>
           <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Add Category
@@ -322,7 +322,7 @@ export default function AdminCategoriesPage() {
         </form>
       </div>
 
-      <div className="rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+      <div className="rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
         <div className="border-b border-[var(--booknook-border)] p-6">
           <h2 className="text-xl font-extrabold text-[var(--booknook-ink)]">
             Existing Categories
