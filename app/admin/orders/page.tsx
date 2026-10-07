@@ -196,7 +196,7 @@ export default function AdminOrdersPage() {
 
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Total Orders
             </p>
@@ -206,7 +206,7 @@ export default function AdminOrdersPage() {
             </p>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Paid Orders
             </p>
@@ -216,7 +216,7 @@ export default function AdminOrdersPage() {
             </p>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Pending
             </p>
@@ -226,7 +226,7 @@ export default function AdminOrdersPage() {
             </p>
           </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
+          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
             <p className="text-sm font-bold text-[var(--booknook-muted)]">
               Revenue
             </p>
@@ -243,7 +243,7 @@ export default function AdminOrdersPage() {
 
         </div>
 
-        <div className="mb-6 rounded-3xl bg-white p-4 shadow-sm">
+        <div className="mb-6 rounded-[1.5rem] bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 lg:flex-row">
 
             <input
@@ -307,7 +307,7 @@ export default function AdminOrdersPage() {
         )}
 
         {loading && orders.length === 0 ? (
-          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
+          <div className="rounded-[1.5rem] bg-white p-10 text-center shadow-sm">
             <div className="text-4xl">
               ⏳
             </div>
@@ -317,7 +317,7 @@ export default function AdminOrdersPage() {
             </p>
           </div>
         ) : visibleOrders.length === 0 ? (
-          <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
+          <div className="rounded-[1.5rem] bg-white p-10 text-center shadow-sm">
             <div className="text-5xl">
               🧾
             </div>
@@ -337,7 +337,7 @@ export default function AdminOrdersPage() {
             {visibleOrders.map((order) => (
               <section
                 key={order.id}
-                className="rounded-3xl bg-white p-5 shadow-sm sm:p-6"
+                className="rounded-[1.5rem] bg-white p-5 shadow-sm sm:p-6"
               >
 
                 <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 lg:flex-row lg:items-start lg:justify-between">
