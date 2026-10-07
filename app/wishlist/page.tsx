@@ -37,7 +37,7 @@ export default async function WishlistPage() {
     .order("created_at", { ascending: false });
 
   const books = (rows ?? [])
-    .map((row) => row.book)
+    .flatMap((row) => row.book ?? [])
     .filter((book): book is WishlistBook => Boolean(book))
     .filter((book) => book.published);
 
