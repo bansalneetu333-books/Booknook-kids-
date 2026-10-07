@@ -14,24 +14,27 @@ export async function GET() {
 
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("categories")
-      .select(
-        "id, name, slug, icon, description, sort_order, created_at"
-      )
-      .order("sort_order", {
-        ascending: true,
-      })
-      .order("name", {
-        ascending: true,
-      });
+      .select("id, name, slug, icon, description, sort_order, created_at")
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+
+    // Support category tables that do not have sort_order yet.
+    if (error) {
+      const fallback = await supabase
+        .from("categories")
+        .select("id, name, slug, icon, description, created_at")
+        .order("name", { ascending: true });
+
+      data = fallback.data as typeof data;
+      error = fallback.error;
+    }
 
     if (error) {
+      console.error("Admin categories lookup error:", error);
       return NextResponse.json(
-        {
-          error:
-            "Unable to load categories.",
-        },
+        { error: error.message || "Unable to load categories." },
         { status: 500 }
       );
     }
