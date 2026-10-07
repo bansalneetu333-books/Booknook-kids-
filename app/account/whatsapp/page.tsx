@@ -363,7 +363,8 @@ export default function WhatsAppPreferencesPage() {
 
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 
