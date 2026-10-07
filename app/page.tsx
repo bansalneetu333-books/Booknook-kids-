@@ -13,6 +13,19 @@ const AGE_GROUPS = [
   { label: "16+ Years", value: "16", icon: "🎓" },
 ];
 
+const CATEGORY_STYLES = [
+  "bg-sky-100/90",
+  "bg-lime-100/90",
+  "bg-amber-100/90",
+  "bg-pink-100/90",
+  "bg-violet-100/90",
+  "bg-emerald-100/90",
+  "bg-purple-100/90",
+  "bg-orange-100/90",
+  "bg-blue-100/90",
+  "bg-yellow-100/90",
+];
+
 export default async function HomePage() {
   const [featured, latest, freeBooks] = await Promise.all([
     getFeaturedBooks(),
@@ -57,15 +70,24 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-4 -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-              {BOOK_CATEGORIES.map((category) => (
+            <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {BOOK_CATEGORIES.map((category, index) => (
                 <Link
                   key={category.slug}
                   href={"/books?category=" + encodeURIComponent(category.slug)}
-                  className="group flex h-[108px] w-[112px] shrink-0 flex-col items-center justify-center rounded-3xl border border-slate-200/80 bg-white p-3 text-center shadow-sm transition hover:-translate-y-1 hover:border-violet-200 hover:shadow-lg sm:w-[128px]"
+                  className="group flex w-[78px] shrink-0 flex-col items-center text-center sm:w-[88px]"
                 >
-                  <span className="text-3xl transition group-hover:scale-110">{category.icon}</span>
-                  <span className="mt-2 text-xs font-extrabold text-slate-700">{category.name}</span>
+                  <span
+                    className={
+                      "flex h-[68px] w-[68px] items-center justify-center rounded-full border border-white shadow-[0_5px_16px_rgba(23,32,51,0.08)] transition duration-200 group-hover:-translate-y-1 group-hover:scale-105 sm:h-[76px] sm:w-[76px] " +
+                      CATEGORY_STYLES[index % CATEGORY_STYLES.length]
+                    }
+                  >
+                    <span className="text-[1.85rem] leading-none sm:text-[2rem]">{category.icon}</span>
+                  </span>
+                  <span className="mt-2 text-[11px] font-extrabold leading-4 text-slate-700 sm:text-xs">
+                    {category.name}
+                  </span>
                 </Link>
               ))}
             </div>
