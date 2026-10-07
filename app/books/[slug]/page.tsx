@@ -40,7 +40,9 @@ export default async function BookDetailsPage({
     : null;
 
   return (
-    <main className="bn-page">
+    <>
+      <SiteHeader />
+      <main className="bn-page">
       {/* Breadcrumb */}
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <Link
@@ -234,6 +236,7 @@ export default async function BookDetailsPage({
           </div>
         </section>
       )}
-    </main>
+      </main>
+    </>
   );
 }
