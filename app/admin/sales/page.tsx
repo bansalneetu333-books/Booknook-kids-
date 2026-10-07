@@ -112,7 +112,7 @@ export default function AdminSalesPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-[var(--booknook-muted)]">
             Revenue
           </p>
@@ -121,7 +121,7 @@ export default function AdminSalesPage() {
           </p>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-[var(--booknook-muted)]">
             Paid Orders
           </p>
@@ -130,7 +130,7 @@ export default function AdminSalesPage() {
           </p>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-[var(--booknook-muted)]">
             Books Sold
           </p>
@@ -140,7 +140,7 @@ export default function AdminSalesPage() {
         </div>
       </div>
 
-      <section className="rounded-3xl bg-white p-6 shadow-sm">
+      <section className="rounded-[1.5rem] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-black">
