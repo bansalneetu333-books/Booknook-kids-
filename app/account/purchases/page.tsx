@@ -14,14 +14,14 @@ export default async function PurchasesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-purple-50">
+    <main className="bn-page">
       <SiteHeader />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
             href="/account"
-            className="text-sm font-semibold text-sky-600 hover:text-sky-700"
+            className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-[var(--booknook-primary)] shadow-sm ring-1 ring-[var(--booknook-border)] hover:bg-violet-50"
           >
             ← Back to account
           </Link>
@@ -50,7 +50,7 @@ export default async function PurchasesPage() {
 
             <Link
               href="/library"
-              className="mt-6 inline-flex rounded-full bg-sky-600 px-6 py-3 font-bold text-white hover:bg-sky-700"
+              className="bn-button mt-6"
             >
               Browse My Library
             </Link>
@@ -97,7 +97,7 @@ export default async function PurchasesPage() {
                     {purchase.book?.slug && (
                       <Link
                         href={`/books/${purchase.book.slug}`}
-                        className="rounded-full bg-sky-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-sky-700"
+                        className="bn-button px-5 py-2.5 text-sm"
                       >
                         View Book
                       </Link>
