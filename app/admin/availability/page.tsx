@@ -88,7 +88,7 @@ export default function AdminAvailabilityPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
         <table className="w-full min-w-[620px] border-collapse">
           <thead>
             <tr className="border-b border-[var(--booknook-border)] bg-[#f7f8fc]">
