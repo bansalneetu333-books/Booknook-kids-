@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BookCard } from "@/components/book-card";
 import { WishlistButton } from "@/components/wishlist-button";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { SiteHeader } from "@/components/site-header";
 import { getBookBySlug, getPublishedBooks } from "@/lib/books";
 
 type BookPageProps = {
@@ -44,7 +45,7 @@ export default async function BookDetailsPage({
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <Link
           href="/books"
-          className="text-sm font-semibold text-slate-600 transition hover:text-violet-700"
+          className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-black text-[var(--booknook-primary)] shadow-sm ring-1 ring-[var(--booknook-border)] transition hover:bg-violet-50"
         >
           ← Back to Books
         </Link>
@@ -52,7 +53,7 @@ export default async function BookDetailsPage({
 
       {/* Book details */}
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+        <div className="overflow-hidden bn-surface">
           <div className="grid gap-0 lg:grid-cols-2">
             {/* Cover */}
             <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
