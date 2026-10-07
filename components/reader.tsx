@@ -195,20 +195,30 @@ export function EpubReader({
               box-sizing: border-box !important;
             }
 
-            img, svg, video, canvas {
-              display: block !important;
-              max-width: 100% !important;
-              max-height: 100% !important;
-              width: auto !important;
-              height: auto !important;
-              object-fit: contain !important;
-              margin-left: auto !important;
-              margin-right: auto !important;
+            body {
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
             }
 
             body > * {
+              width: 100% !important;
+              height: 100% !important;
               max-width: 100% !important;
               max-height: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+
+            img, svg, video, canvas {
+              display: block !important;
+              width: 100% !important;
+              height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+              object-fit: contain !important;
+              object-position: center center !important;
+              margin: 0 auto !important;
             }
           `;
           doc.head.appendChild(style);
@@ -334,7 +344,16 @@ export function EpubReader({
           initialLocation ?? undefined
         );
 
+        // Recalculate the fixed-layout viewport after the first page
+        // is displayed. This is important on iPhone Safari, where the
+        // iframe can initially be measured at the EPUB's native size
+        // instead of the available reader size.
         if (!cancelled) {
+          const width = containerRef.current?.clientWidth ?? 0;
+          const height = containerRef.current?.clientHeight ?? 0;
+          if (width > 0 && height > 0) {
+            rendition.resize(width, height);
+          }
           setLoading(false);
         }
       } catch (err) {
