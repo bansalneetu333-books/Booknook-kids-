@@ -163,8 +163,10 @@ export function EpubReader({
             width: "100%",
             height: "100%",
             flow: "paginated",
+            manager: "default",
             spread: "none",
             minSpreadWidth: 0,
+            allowScriptedContent: false,
           }
         );
 
@@ -186,6 +188,7 @@ export function EpubReader({
               max-height: 100% !important;
               overflow: hidden !important;
               box-sizing: border-box !important;
+              background: #ffffff !important;
             }
 
             *, *::before, *::after {
@@ -193,6 +196,17 @@ export function EpubReader({
             }
 
             img, svg, video, canvas {
+              display: block !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+              width: auto !important;
+              height: auto !important;
+              object-fit: contain !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+            }
+
+            body > * {
               max-width: 100% !important;
               max-height: 100% !important;
             }
