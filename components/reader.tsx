@@ -365,53 +365,171 @@ export function EpubReader({
           initialLocation ?? undefined
         );
 
-        // Fixed-layout EPUBs can be measured before Safari has finished
-        // laying out the iframe. Resize on the next animation frame and
-        // again after a short layout pass so the page fills the reader
-        // instead of appearing as a tiny native-size page in the corner.
+        // epub.js can retain the EPUB's native 1024x1536 view size
+        // on iPhone Safari. For BookNook's portrait fixed-layout books,
+        // explicitly size the whole epub.js stage to the same 2:3 ratio
+        // as the source pages. Do not rely on percentage sizing here.
         if (!cancelled) {
           const resizeReader = () => {
             const el = containerRef.current;
             if (!el) return;
 
-            const width = el.clientWidth;
-            const height = el.clientHeight;
+            const availableWidth = Math.max(
+              1,
+              el.parentElement?.clientWidth ?? el.clientWidth
+            );
+            const maxHeight = Math.max(
+              420,
+              Math.min(window.innerHeight - 220, 900)
+            );
 
-            if (width > 0 && height > 0) {
-              rendition.resize(width, height);
+            const pageWidth = Math.max(
+              1,
+              Math.floor(
+                Math.min(
+                  availableWidth,
+                  maxHeight * (1024 / 1536)
+                )
+              )
+            );
+            const pageHeight = Math.max(
+              1,
+              Math.floor(
+                pageWidth * (1536 / 1024)
+              )
+            );
 
-              // epub.js creates an .epub-view and iframe for each
-              // fixed-layout page. Keep those outer elements tied to
-              // the real reader viewport on Safari as well.
-              const stage = el.querySelector<HTMLElement>(".epub-container");
-              if (stage) {
-                stage.style.width = "100%";
-                stage.style.height = "100%";
-              }
+            el.style.width = pageWidth + "px";
+            el.style.height = pageHeight + "px";
+            el.style.minHeight = pageHeight + "px";
+            el.style.maxHeight = pageHeight + "px";
+            el.style.marginLeft = "auto";
+            el.style.marginRight = "auto";
 
-              el.querySelectorAll<HTMLElement>(".epub-view").forEach((view) => {
-                view.style.width = "100%";
-                view.style.height = "100%";
-                view.style.maxWidth = "100%";
-                view.style.maxHeight = "100%";
-              });
+            rendition.resize(pageWidth, pageHeight);
 
-              el.querySelectorAll<HTMLIFrameElement>("iframe").forEach((iframe) => {
-                iframe.style.width = "100%";
-                iframe.style.height = "100%";
-                iframe.style.maxWidth = "100%";
-                iframe.style.maxHeight = "100%";
-                iframe.style.left = "0";
-                iframe.style.top = "0";
-                iframe.style.margin = "0";
-              });
+            const stage =
+              el.querySelector<HTMLElement>(".epub-container");
+
+            if (stage) {
+              stage.style.setProperty(
+                "width",
+                pageWidth + "px",
+                "important"
+              );
+              stage.style.setProperty(
+                "height",
+                pageHeight + "px",
+                "important"
+              );
+              stage.style.setProperty(
+                "max-width",
+                pageWidth + "px",
+                "important"
+              );
+              stage.style.setProperty(
+                "max-height",
+                pageHeight + "px",
+                "important"
+              );
+              stage.style.setProperty(
+                "overflow",
+                "hidden",
+                "important"
+              );
             }
+
+            el.querySelectorAll<HTMLElement>(".epub-view").forEach(
+              (view) => {
+                view.style.setProperty(
+                  "width",
+                  pageWidth + "px",
+                  "important"
+                );
+                view.style.setProperty(
+                  "height",
+                  pageHeight + "px",
+                  "important"
+                );
+                view.style.setProperty(
+                  "max-width",
+                  pageWidth + "px",
+                  "important"
+                );
+                view.style.setProperty(
+                  "max-height",
+                  pageHeight + "px",
+                  "important"
+                );
+                view.style.setProperty(
+                  "left",
+                  "0px",
+                  "important"
+                );
+                view.style.setProperty(
+                  "top",
+                  "0px",
+                  "important"
+                );
+                view.style.setProperty(
+                  "transform",
+                  "none",
+                  "important"
+                );
+              }
+            );
+
+            el.querySelectorAll<HTMLIFrameElement>("iframe").forEach(
+              (iframe) => {
+                iframe.style.setProperty(
+                  "width",
+                  pageWidth + "px",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "height",
+                  pageHeight + "px",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "max-width",
+                  pageWidth + "px",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "max-height",
+                  pageHeight + "px",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "left",
+                  "0px",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "top",
+                  "0px",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "margin",
+                  "0",
+                  "important"
+                );
+                iframe.style.setProperty(
+                  "transform",
+                  "none",
+                  "important"
+                );
+              }
+            );
           };
 
           resizeReader();
           requestAnimationFrame(resizeReader);
-          window.setTimeout(resizeReader, 250);
-          window.setTimeout(resizeReader, 750);
+          window.setTimeout(resizeReader, 100);
+          window.setTimeout(resizeReader, 500);
+          window.setTimeout(resizeReader, 1000);
 
           setLoading(false);
         }
