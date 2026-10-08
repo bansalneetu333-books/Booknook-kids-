@@ -35,9 +35,7 @@ export default async function BookDetailsPage({
     )
     .slice(0, 4);
 
-  const coverUrl = book.cover_path
-    ? "/api/books/cover?path=" + encodeURIComponent(book.cover_path)
-    : null;
+  const coverUrl = "/api/books/cover?slug=" + encodeURIComponent(book.slug);
 
   return (
     <>
