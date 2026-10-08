@@ -138,6 +138,13 @@ export async function DELETE(request: Request) {
     if (body.clear === true) {
       const { error } = await admin.from("cart_items").delete().eq("user_id", user.id);
       if (error) throw error;
+    } else if (Array.isArray(body.bookIds) && body.bookIds.length) {
+      const { error } = await admin
+        .from("cart_items")
+        .delete()
+        .eq("user_id", user.id)
+        .in("book_id", body.bookIds.map((id: unknown) => String(id)));
+      if (error) throw error;
     } else if (body.bookId) {
       const { error } = await admin
         .from("cart_items")
