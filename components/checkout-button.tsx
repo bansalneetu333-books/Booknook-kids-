@@ -101,6 +101,16 @@ export function CheckoutButton({ bookId, bookIds, price, title }: CheckoutButton
               localStorage.setItem("booknook_cart", JSON.stringify(current.filter(item => !ids.includes(item.id))));
             } catch { /* Cart cleanup is non-critical after payment. */ }
 
+            // Also remove purchased books from the signed-in customer's
+            // persistent Supabase cart.
+            try {
+              await fetch("/api/cart", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ bookIds: ids }),
+              });
+            } catch { /* Payment success must not depend on cart cleanup. */ }
+
             window.dispatchEvent(new Event("booknook-cart-updated"));
             router.push(`/library?payment=success&order=${encodeURIComponent(orderId)}`);
           } catch (error) {
