@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navigation = [
   { label: "Home", href: "/" },
@@ -16,6 +16,36 @@ const navigation = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  const refreshCartCount = () => {
+    try {
+      const local = JSON.parse(localStorage.getItem("booknook_cart") || "[]");
+      if (Array.isArray(local)) {
+        setCartCount(local.length);
+      }
+    } catch {
+      setCartCount(0);
+    }
+
+    fetch("/api/cart", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json();
+        if (typeof data.count === "number") setCartCount(data.count);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    refreshCartCount();
+    window.addEventListener("booknook-cart-updated", refreshCartCount);
+    window.addEventListener("storage", refreshCartCount);
+    return () => {
+      window.removeEventListener("booknook-cart-updated", refreshCartCount);
+      window.removeEventListener("storage", refreshCartCount);
+    };
+  }, [pathname]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
@@ -44,7 +74,12 @@ export function SiteHeader() {
                   : "text-[var(--booknook-muted)] hover:bg-[#f1f2f7] hover:text-[var(--booknook-ink)]")
               }
             >
-              {item.label}
+              {item.label === "Cart" ? (
+                <span className="inline-flex items-center gap-1.5">
+                  Cart
+                  {cartCount > 0 && <span className="rounded-full bg-[var(--booknook-primary)] px-1.5 py-0.5 text-[10px] leading-none text-white">{cartCount}</span>}
+                </span>
+              ) : item.label}
             </Link>
           ))}
           <Link
@@ -58,10 +93,15 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-2 md:hidden">
           <Link
             href="/cart"
-            aria-label="Cart"
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--booknook-border)] bg-white text-lg shadow-sm"
+            aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
+            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--booknook-border)] bg-white text-lg shadow-sm"
           >
             🛒
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[var(--booknook-primary)] px-1.5 py-0.5 text-[10px] font-black leading-4 text-white">
+                {cartCount}
+              </span>
+            )}
           </Link>
           <button
             type="button"
@@ -90,7 +130,7 @@ export function SiteHeader() {
                     : "bg-[#f7f8fc] text-slate-700")
                 }
               >
-                {item.label}
+                {item.label === "Cart" ? `Cart${cartCount ? ` (${cartCount})` : ""}` : item.label}
               </Link>
             ))}
             <Link
