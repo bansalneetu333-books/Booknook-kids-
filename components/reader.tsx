@@ -182,10 +182,12 @@ export function EpubReader({
             html, body {
               margin: 0 !important;
               padding: 0 !important;
-              width: 100% !important;
-              height: 100% !important;
-              max-width: 100% !important;
-              max-height: 100% !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              min-width: 100vw !important;
+              min-height: 100vh !important;
+              max-width: 100vw !important;
+              max-height: 100vh !important;
               overflow: hidden !important;
               box-sizing: border-box !important;
               background: #ffffff !important;
@@ -196,29 +198,35 @@ export function EpubReader({
             }
 
             body {
-              display: flex !important;
-              align-items: center !important;
-              justify-content: center !important;
+              display: block !important;
+              position: relative !important;
             }
 
             body > * {
-              width: 100% !important;
-              height: 100% !important;
-              max-width: 100% !important;
-              max-height: 100% !important;
+              display: block !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              min-width: 100vw !important;
+              min-height: 100vh !important;
+              max-width: 100vw !important;
+              max-height: 100vh !important;
               margin: 0 !important;
               padding: 0 !important;
+              position: relative !important;
+              overflow: hidden !important;
             }
 
             img, svg, video, canvas {
               display: block !important;
               width: 100% !important;
               height: 100% !important;
+              min-width: 100% !important;
+              min-height: 100% !important;
               max-width: 100% !important;
               max-height: 100% !important;
               object-fit: contain !important;
               object-position: center center !important;
-              margin: 0 auto !important;
+              margin: 0 !important;
             }
           `;
           doc.head.appendChild(style);
@@ -344,16 +352,26 @@ export function EpubReader({
           initialLocation ?? undefined
         );
 
-        // Recalculate the fixed-layout viewport after the first page
-        // is displayed. This is important on iPhone Safari, where the
-        // iframe can initially be measured at the EPUB's native size
-        // instead of the available reader size.
+        // Fixed-layout EPUBs can be measured before Safari has finished
+        // laying out the iframe. Resize on the next animation frame and
+        // again after a short layout pass so the page fills the reader
+        // instead of appearing as a tiny native-size page in the corner.
         if (!cancelled) {
-          const width = containerRef.current?.clientWidth ?? 0;
-          const height = containerRef.current?.clientHeight ?? 0;
-          if (width > 0 && height > 0) {
-            rendition.resize(width, height);
-          }
+          const resizeReader = () => {
+            const el = containerRef.current;
+            if (!el) return;
+            const width = el.clientWidth;
+            const height = el.clientHeight;
+            if (width > 0 && height > 0) {
+              rendition.resize(width, height);
+            }
+          };
+
+          resizeReader();
+          requestAnimationFrame(resizeReader);
+          window.setTimeout(resizeReader, 250);
+          window.setTimeout(resizeReader, 750);
+
           setLoading(false);
         }
       } catch (err) {
