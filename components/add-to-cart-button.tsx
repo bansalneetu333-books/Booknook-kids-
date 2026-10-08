@@ -10,27 +10,52 @@ type CartBook = {
   cover_path?: string | null;
 };
 
+function readLocalCart(): CartBook[] {
+  try {
+    const value = JSON.parse(localStorage.getItem("booknook_cart") || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
 export function AddToCartButton({ book }: { book: CartBook }) {
   const [added, setAdded] = useState(false);
 
-  function addToCart() {
+  async function addToCart() {
+    const current = readLocalCart();
+    const next = current.some((item) => item.id === book.id)
+      ? current
+      : [...current, book];
+
+    localStorage.setItem("booknook_cart", JSON.stringify(next));
+    setAdded(true);
+    window.dispatchEvent(new Event("booknook-cart-updated"));
+
+    // Persist to the signed-in customer's cart when possible.
     try {
-      const current = JSON.parse(localStorage.getItem("booknook_cart") || "[]") as CartBook[];
-      if (!current.some((item) => item.id === book.id)) {
-        localStorage.setItem("booknook_cart", JSON.stringify([...current, book]));
-      }
-      setAdded(true);
-      window.dispatchEvent(new Event("booknook-cart-updated"));
+      await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: [book] }),
+      });
     } catch {
-      setAdded(false);
+      // Local cart remains the fallback.
     }
   }
 
   useEffect(() => {
-    try {
-      const current = JSON.parse(localStorage.getItem("booknook_cart") || "[]") as CartBook[];
-      setAdded(current.some((item) => item.id === book.id));
-    } catch {}
+    setAdded(readLocalCart().some((item) => item.id === book.id));
+
+    fetch("/api/cart", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json();
+        if (Array.isArray(data.items)) {
+          setAdded(data.items.some((item: { id: string }) => item.id === book.id));
+        }
+      })
+      .catch(() => {});
   }, [book.id]);
 
   return (
