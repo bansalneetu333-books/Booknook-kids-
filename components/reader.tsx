@@ -157,16 +157,29 @@ export function EpubReader({
         // Booknook Kids books are fixed-layout EPUBs. Keep every
         // EPUB page as a single page and let epub.js scale it
         // proportionally to the available reader viewport.
+        // epub.js sizes fixed-layout iframe views from the numeric
+        // viewport dimensions. Passing "100%" can leave a pre-paginated
+        // page at its native/smaller size on iPhone Safari.
+        const readerWidth = Math.max(
+          1,
+          containerRef.current.clientWidth
+        );
+        const readerHeight = Math.max(
+          1,
+          containerRef.current.clientHeight
+        );
+
         const rendition = book.renderTo(
           containerRef.current,
           {
-            width: "100%",
-            height: "100%",
+            width: readerWidth,
+            height: readerHeight,
             flow: "paginated",
             manager: "default",
             spread: "none",
             minSpreadWidth: 0,
             allowScriptedContent: false,
+            resizeOnOrientationChange: true,
           }
         );
 
@@ -182,12 +195,12 @@ export function EpubReader({
             html, body {
               margin: 0 !important;
               padding: 0 !important;
-              width: 100vw !important;
-              height: 100vh !important;
-              min-width: 100vw !important;
-              min-height: 100vh !important;
-              max-width: 100vw !important;
-              max-height: 100vh !important;
+              width: 100% !important;
+              height: 100% !important;
+              min-width: 100% !important;
+              min-height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
               overflow: hidden !important;
               box-sizing: border-box !important;
               background: #ffffff !important;
@@ -204,12 +217,12 @@ export function EpubReader({
 
             body > * {
               display: block !important;
-              width: 100vw !important;
-              height: 100vh !important;
-              min-width: 100vw !important;
-              min-height: 100vh !important;
-              max-width: 100vw !important;
-              max-height: 100vh !important;
+              width: 100% !important;
+              height: 100% !important;
+              min-width: 100% !important;
+              min-height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
               margin: 0 !important;
               padding: 0 !important;
               position: relative !important;
@@ -360,10 +373,38 @@ export function EpubReader({
           const resizeReader = () => {
             const el = containerRef.current;
             if (!el) return;
+
             const width = el.clientWidth;
             const height = el.clientHeight;
+
             if (width > 0 && height > 0) {
               rendition.resize(width, height);
+
+              // epub.js creates an .epub-view and iframe for each
+              // fixed-layout page. Keep those outer elements tied to
+              // the real reader viewport on Safari as well.
+              const stage = el.querySelector<HTMLElement>(".epub-container");
+              if (stage) {
+                stage.style.width = "100%";
+                stage.style.height = "100%";
+              }
+
+              el.querySelectorAll<HTMLElement>(".epub-view").forEach((view) => {
+                view.style.width = "100%";
+                view.style.height = "100%";
+                view.style.maxWidth = "100%";
+                view.style.maxHeight = "100%";
+              });
+
+              el.querySelectorAll<HTMLIFrameElement>("iframe").forEach((iframe) => {
+                iframe.style.width = "100%";
+                iframe.style.height = "100%";
+                iframe.style.maxWidth = "100%";
+                iframe.style.maxHeight = "100%";
+                iframe.style.left = "0";
+                iframe.style.top = "0";
+                iframe.style.margin = "0";
+              });
             }
           };
 
