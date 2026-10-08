@@ -106,7 +106,6 @@ export default async function CheckoutPage({
 
   const total = availableBooks.reduce((sum, book) => sum + Number(book.price), 0);
   const book = availableBooks[0];
-  const coverUrl = "/api/books/cover?slug=" + encodeURIComponent(book.slug);
 
   return (
     <>
@@ -122,30 +121,25 @@ export default async function CheckoutPage({
 
         <div className="bn-surface overflow-hidden">
           <div className="grid gap-0 md:grid-cols-2">
-            {/* Book preview */}
-            <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
-              <div className="w-full max-w-sm">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-3xl bg-white shadow-2xl">
-                  {coverUrl ? (
-                    <Image
-                      src={coverUrl}
-                      alt={book.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-                      <div className="mb-4 text-7xl">
-                        📚
-                      </div>
-
-                      <h2 className="text-xl font-extrabold text-slate-800">
-                        {book.title}
-                      </h2>
+            {/* Book previews */}
+            <div className="bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-4 sm:p-6">
+              <div className="grid grid-cols-2 gap-3">
+                {availableBooks.map((item) => (
+                  <Link key={item.id} href={`/books/${item.slug}`} className="group">
+                    <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-white shadow-md">
+                      <Image
+                        src={"/api/books/cover?slug=" + encodeURIComponent(item.slug)}
+                        alt={item.title}
+                        fill
+                        sizes="(max-width: 768px) 45vw, 220px"
+                        className="object-cover transition duration-200 group-hover:scale-[1.02]"
+                        unoptimized
+                      />
                     </div>
-                  )}
-                </div>
+                    <p className="mt-1.5 line-clamp-2 text-xs font-black text-[var(--booknook-ink)]">{item.title}</p>
+                    <p className="text-[11px] text-[var(--booknook-muted)]">₹{Number(item.price).toFixed(2)}</p>
+                  </Link>
+                ))}
               </div>
             </div>
 
