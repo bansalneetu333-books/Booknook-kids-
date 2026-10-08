@@ -12,7 +12,7 @@ type BookCardProps = {
 };
 
 export function BookCard({ book }: BookCardProps) {
-  const cover = book.cover_url || (book.cover_path ? "/api/books/cover?path=" + encodeURIComponent(book.cover_path) : null);
+  const cover = "/api/books/cover?slug=" + encodeURIComponent(book.slug);
 
   return (
     <article className="group overflow-hidden rounded-[1.5rem] border border-[#ece8f5] bg-white shadow-[0_8px_24px_rgba(23,32,51,0.06)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_14px_32px_rgba(23,32,51,0.1)]">
