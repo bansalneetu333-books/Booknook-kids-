@@ -116,3 +116,27 @@ button {
   color: white;
   border-color: #334155;
 }
+
+
+/* Compact mobile layout */
+@media (max-width: 639px) {
+  html { font-size: 15px; }
+  .bn-page .text-5xl { font-size: 2.25rem !important; }
+  .bn-page .text-4xl { font-size: 2rem !important; }
+  .bn-page .text-3xl { font-size: 1.65rem !important; }
+  .bn-page .text-2xl { font-size: 1.35rem !important; }
+  .bn-page .text-xl { font-size: 1.1rem !important; }
+  .bn-page .text-lg { font-size: 1rem !important; }
+  .bn-page .p-12, .bn-page .p-10 { padding: 1.25rem !important; }
+  .bn-page .p-8 { padding: 1.1rem !important; }
+  .bn-page .p-7, .bn-page .p-6 { padding: 1rem !important; }
+  .bn-page .mt-12 { margin-top: 1.75rem !important; }
+  .bn-page .mt-10 { margin-top: 1.5rem !important; }
+  .bn-page .mt-8 { margin-top: 1.25rem !important; }
+  .bn-page .mt-7 { margin-top: 1.1rem !important; }
+  .bn-page .mt-6 { margin-top: 1rem !important; }
+  .bn-page .gap-8 { gap: 1.25rem !important; }
+  .bn-page .gap-6 { gap: 1rem !important; }
+  .bn-page .gap-5 { gap: .85rem !important; }
+  .bn-surface { border-radius: 1.35rem; }
+}
