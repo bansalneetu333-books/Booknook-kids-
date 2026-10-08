@@ -187,8 +187,12 @@ export default function CartPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    const ids = items.map((item) => item.id).filter(Boolean);
-                    if (ids.length) router.push("/checkout?bookIds=" + encodeURIComponent(ids.join(",")));
+                    if (items.length) {
+                      // Checkout reads the complete server cart, so every book
+                      // currently in the cart is included—regardless of how
+                      // many items were added or how long the URL becomes.
+                      router.push("/checkout?cart=all");
+                    }
                   }}
                   className="mt-4 flex w-full items-center justify-center rounded-full bg-[var(--booknook-primary)] px-5 py-3 font-black text-white"
                 >
