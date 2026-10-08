@@ -195,51 +195,12 @@ export function EpubReader({
             html, body {
               margin: 0 !important;
               padding: 0 !important;
-              width: 100% !important;
-              height: 100% !important;
-              min-width: 100% !important;
-              min-height: 100% !important;
-              max-width: 100% !important;
-              max-height: 100% !important;
               overflow: hidden !important;
-              box-sizing: border-box !important;
               background: #ffffff !important;
             }
 
             *, *::before, *::after {
               box-sizing: border-box !important;
-            }
-
-            body {
-              display: block !important;
-              position: relative !important;
-            }
-
-            body > * {
-              display: block !important;
-              width: 100% !important;
-              height: 100% !important;
-              min-width: 100% !important;
-              min-height: 100% !important;
-              max-width: 100% !important;
-              max-height: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              position: relative !important;
-              overflow: hidden !important;
-            }
-
-            img, svg, video, canvas {
-              display: block !important;
-              width: 100% !important;
-              height: 100% !important;
-              min-width: 100% !important;
-              min-height: 100% !important;
-              max-width: 100% !important;
-              max-height: 100% !important;
-              object-fit: contain !important;
-              object-position: center center !important;
-              margin: 0 !important;
             }
           `;
           doc.head.appendChild(style);
@@ -361,24 +322,30 @@ export function EpubReader({
           // on previously saved progress.
         }
 
-        await rendition.display(
-          initialLocation ?? undefined
-        );
+        await Promise.race([
+          rendition.display(initialLocation ?? undefined),
+          new Promise((_, reject) =>
+            setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    "The reader took too long to render this EPUB. Please try again."
+                  )
+                ),
+              15000
+            )
+          ),
+        ]);
 
-        // epub.js can retain the EPUB's native 1024x1536 view size
-        // on iPhone Safari. For BookNook's portrait fixed-layout books,
-        // explicitly size the whole epub.js stage to the same 2:3 ratio
-        // as the source pages. Do not rely on percentage sizing here.
+        // Keep the reader viewport stable, but do not overwrite epub.js's
+        // internal transforms. The source pages are 1024x1536 (2:3).
         if (!cancelled) {
           const resizeReader = () => {
             const el = containerRef.current;
             if (!el) return;
 
-            const availableWidth = Math.max(
-              1,
-              el.parentElement?.clientWidth ?? el.clientWidth
-            );
-            const maxHeight = Math.max(
+            const availableWidth = Math.max(1, el.clientWidth);
+            const availableHeight = Math.max(
               420,
               Math.min(window.innerHeight - 220, 900)
             );
@@ -388,23 +355,19 @@ export function EpubReader({
               Math.floor(
                 Math.min(
                   availableWidth,
-                  maxHeight * (1024 / 1536)
+                  availableHeight * (1024 / 1536)
                 )
               )
             );
             const pageHeight = Math.max(
               1,
-              Math.floor(
-                pageWidth * (1536 / 1024)
-              )
+              Math.floor(pageWidth * (1536 / 1024))
             );
 
-            el.style.width = pageWidth + "px";
             el.style.height = pageHeight + "px";
             el.style.minHeight = pageHeight + "px";
             el.style.maxHeight = pageHeight + "px";
-            el.style.marginLeft = "auto";
-            el.style.marginRight = "auto";
+            el.style.width = "100%";
 
             rendition.resize(pageWidth, pageHeight);
 
@@ -419,16 +382,6 @@ export function EpubReader({
               );
               stage.style.setProperty(
                 "height",
-                pageHeight + "px",
-                "important"
-              );
-              stage.style.setProperty(
-                "max-width",
-                pageWidth + "px",
-                "important"
-              );
-              stage.style.setProperty(
-                "max-height",
                 pageHeight + "px",
                 "important"
               );
@@ -461,21 +414,6 @@ export function EpubReader({
                   pageHeight + "px",
                   "important"
                 );
-                view.style.setProperty(
-                  "left",
-                  "0px",
-                  "important"
-                );
-                view.style.setProperty(
-                  "top",
-                  "0px",
-                  "important"
-                );
-                view.style.setProperty(
-                  "transform",
-                  "none",
-                  "important"
-                );
               }
             );
 
@@ -501,26 +439,6 @@ export function EpubReader({
                   pageHeight + "px",
                   "important"
                 );
-                iframe.style.setProperty(
-                  "left",
-                  "0px",
-                  "important"
-                );
-                iframe.style.setProperty(
-                  "top",
-                  "0px",
-                  "important"
-                );
-                iframe.style.setProperty(
-                  "margin",
-                  "0",
-                  "important"
-                );
-                iframe.style.setProperty(
-                  "transform",
-                  "none",
-                  "important"
-                );
               }
             );
           };
@@ -529,7 +447,6 @@ export function EpubReader({
           requestAnimationFrame(resizeReader);
           window.setTimeout(resizeReader, 100);
           window.setTimeout(resizeReader, 500);
-          window.setTimeout(resizeReader, 1000);
 
           setLoading(false);
         }
