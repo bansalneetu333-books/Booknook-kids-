@@ -141,22 +141,32 @@ export default async function CheckoutPage({
             {/* Book previews */}
             <div className="bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-4 sm:p-6">
               <div className="grid grid-cols-2 gap-3">
-                {availableBooks.map((item) => (
-                  <Link key={item.id} href={`/books/${item.slug}`} className="group">
-                    <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-white shadow-md">
-                      <Image
-                        src={"/api/books/cover?slug=" + encodeURIComponent(item.slug)}
-                        alt={item.title}
-                        fill
-                        sizes="(max-width: 768px) 45vw, 220px"
-                        className="object-cover transition duration-200 group-hover:scale-[1.02]"
-                        unoptimized
-                      />
-                    </div>
-                    <p className="mt-1.5 line-clamp-2 text-xs font-black text-[var(--booknook-ink)]">{item.title}</p>
-                    <p className="text-[11px] text-[var(--booknook-muted)]">₹{Number(item.price).toFixed(2)}</p>
-                  </Link>
-                ))}
+                {validBooks.map((item) => {
+                  const owned = purchasedIds.has(item.id);
+                  return (
+                    <Link key={item.id} href={`/books/${item.slug}`} className="group">
+                      <div className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-white shadow-md">
+                        <Image
+                          src={"/api/books/cover?slug=" + encodeURIComponent(item.slug)}
+                          alt={item.title}
+                          fill
+                          sizes="(max-width: 768px) 45vw, 220px"
+                          className={`object-cover transition duration-200 group-hover:scale-[1.02] ${owned ? "opacity-60" : ""}`}
+                          unoptimized
+                        />
+                        {owned && (
+                          <span className="absolute inset-x-2 top-2 rounded-full bg-emerald-600/95 px-2 py-1 text-center text-[10px] font-black text-white">
+                            Already in Library
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1.5 line-clamp-2 text-xs font-black text-[var(--booknook-ink)]">{item.title}</p>
+                      <p className="text-[11px] font-bold text-[var(--booknook-muted)]">
+                        {owned ? "Already purchased" : `₹${Number(item.price).toFixed(2)}`}
+                      </p>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
 
