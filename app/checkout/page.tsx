@@ -11,6 +11,7 @@ type CheckoutPageProps = {
   searchParams: Promise<{
     bookId?: string;
     bookIds?: string;
+    cart?: string;
   }>;
 };
 
@@ -18,13 +19,29 @@ export default async function CheckoutPage({
   searchParams,
 }: CheckoutPageProps) {
   const params = await searchParams;
-  const bookIds = params.bookIds?.split(",").filter(Boolean) || (params.bookId ? [params.bookId] : []);
-
-  if (bookIds.length === 0) {
-    redirect("/books");
-  }
+  let bookIds = params.bookIds?.split(",").filter(Boolean) || (params.bookId ? [params.bookId] : []);
 
   const supabase = await createClient();
+
+  // "Checkout All" deliberately does not put the cart contents into the
+  // URL. Read the complete authenticated cart from Supabase so every
+  // book the customer added is included, whether there are 2, 5, or 50.
+  if (params.cart === "all") {
+    const { data: cartRows, error: cartError } = await supabase
+      .from("cart_items")
+      .select("book_id")
+      .order("created_at", { ascending: true });
+
+    if (cartError) {
+      console.error("Unable to load cart for checkout:", cartError);
+    } else {
+      bookIds = (cartRows ?? []).map((row) => row.book_id).filter(Boolean);
+    }
+  }
+
+  if (bookIds.length === 0) {
+    redirect("/cart");
+  }
 
   const {
     data: { user },
