@@ -106,9 +106,7 @@ export default async function CheckoutPage({
 
   const total = availableBooks.reduce((sum, book) => sum + Number(book.price), 0);
   const book = availableBooks[0];
-  const coverUrl = book.cover_path
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/${book.cover_path}`
-    : null;
+  const coverUrl = "/api/books/cover?slug=" + encodeURIComponent(book.slug);
 
   return (
     <>
