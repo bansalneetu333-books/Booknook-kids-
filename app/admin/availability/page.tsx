@@ -7,18 +7,16 @@ type Book = {
   id: string;
   title: string;
   epubAvailable?: boolean;
-  pdfAvailable?: boolean;
   coverPath?: string | null;
 };
 
-function Status({ available }: { available: boolean }) {
+function Status({ available, label }: { available: boolean; label: string }) {
   return (
     <span
-      className={
-        available
-          ? "inline-flex min-w-16 justify-center rounded-lg bg-emerald-100 px-3 py-2 text-sm font-extrabold text-emerald-700"
-          : "inline-flex min-w-16 justify-center rounded-lg bg-red-100 px-3 py-2 text-sm font-extrabold text-red-700"
-      }
+      aria-label={`${label}: ${available ? "available" : "missing"}`}
+      className={available
+        ? "inline-flex min-w-16 justify-center rounded-xl bg-emerald-100 px-3 py-2 text-sm font-extrabold text-emerald-800"
+        : "inline-flex min-w-16 justify-center rounded-xl bg-rose-100 px-3 py-2 text-sm font-extrabold text-rose-700"}
     >
       {available ? "YES" : "NO"}
     </span>
@@ -37,15 +35,12 @@ export default function AdminAvailabilityPage() {
       const response = await fetch("/api/admin/books/list", { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data?.error || "Unable to load availability.");
-      setBooks(
-        (data.books || []).map((book: Book & { cover_path?: string | null }) => ({
-          id: book.id,
-          title: book.title,
-          epubAvailable: Boolean(book.epubAvailable),
-          pdfAvailable: Boolean(book.pdfAvailable),
-          coverPath: book.cover_path ?? null,
-        }))
-      );
+      setBooks((data.books || []).map((book: Book & { cover_path?: string | null }) => ({
+        id: book.id,
+        title: book.title,
+        epubAvailable: Boolean(book.epubAvailable),
+        coverPath: book.coverPath ?? book.cover_path ?? null,
+      })));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to load availability.");
     } finally {
@@ -53,73 +48,77 @@ export default function AdminAvailabilityPage() {
     }
   }
 
-  useEffect(() => {
-    void load();
-  }, []);
+  useEffect(() => { void load(); }, []);
+
+  const withEpub = books.filter((book) => book.epubAvailable).length;
+  const withCover = books.filter((book) => Boolean(book.coverPath)).length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-[var(--booknook-primary)]">Admin</p>
-          <h1 className="mt-1 text-3xl font-extrabold text-[var(--booknook-ink)]">File Availability</h1>
-          <p className="mt-2 text-[var(--booknook-muted)]">Check every book&apos;s EPUB, PDF and cover in one place.</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="rounded-full border border-[var(--booknook-border)] bg-white px-5 py-3 text-sm font-bold text-[var(--booknook-ink)]"
-          >
-            Refresh
+    <div className="min-w-0 space-y-5 sm:space-y-6">
+      <header className="space-y-3">
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-[var(--booknook-primary)]">Admin tools</p>
+        <h1 className="text-3xl font-extrabold leading-tight text-[var(--booknook-ink)] sm:text-4xl">File Availability</h1>
+        <p className="max-w-2xl text-sm leading-6 text-[var(--booknook-muted)] sm:text-base">
+          Check the EPUB used for online reading and each book cover. PDF files are no longer used.
+        </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button type="button" onClick={() => void load()} disabled={loading}
+            className="rounded-full border border-[var(--booknook-border)] bg-white px-4 py-3 text-sm font-bold text-[var(--booknook-ink)] disabled:opacity-60">
+            {loading ? "Checking…" : "Refresh"}
           </button>
-          <Link
-            href="/admin/books"
-            className="rounded-full bg-[var(--booknook-primary)] px-5 py-3 text-sm font-bold text-white"
-          >
+          <Link href="/admin/books"
+            className="rounded-full bg-[var(--booknook-primary)] px-5 py-3 text-sm font-bold text-white">
             Back to Books
           </Link>
         </div>
-      </div>
+      </header>
 
-      {message && (
-        <div className="rounded-[1.25rem] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {message}
+      {message && <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{message}</div>}
+
+      {!loading && !message && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-[var(--booknook-border)] bg-white p-4">
+            <p className="text-xs font-semibold text-[var(--booknook-muted)]">Total books</p>
+            <p className="mt-1 text-2xl font-extrabold text-[var(--booknook-ink)]">{books.length}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--booknook-border)] bg-white p-4">
+            <p className="text-xs font-semibold text-[var(--booknook-muted)]">EPUB available</p>
+            <p className="mt-1 text-2xl font-extrabold text-emerald-700">{withEpub}<span className="text-sm font-bold text-[var(--booknook-muted)]"> / {books.length}</span></p>
+          </div>
+          <div className="col-span-2 rounded-2xl border border-[var(--booknook-border)] bg-white p-4 sm:col-span-1">
+            <p className="text-xs font-semibold text-[var(--booknook-muted)]">Covers available</p>
+            <p className="mt-1 text-2xl font-extrabold text-emerald-700">{withCover}<span className="text-sm font-bold text-[var(--booknook-muted)]"> / {books.length}</span></p>
+          </div>
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-[1.5rem] border border-[var(--booknook-border)] bg-white shadow-sm">
-        <table className="w-full min-w-[620px] border-collapse">
-          <thead>
-            <tr className="border-b border-[var(--booknook-border)] bg-[#f7f8fc]">
-              <th className="px-5 py-4 text-left text-sm font-extrabold text-[var(--booknook-ink)]">Book</th>
-              <th className="px-5 py-4 text-center text-sm font-extrabold text-[var(--booknook-ink)]">EPUB</th>
-              <th className="px-5 py-4 text-center text-sm font-extrabold text-[var(--booknook-ink)]">PDF</th>
-              <th className="px-5 py-4 text-center text-sm font-extrabold text-[var(--booknook-ink)]">Cover</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={4} className="px-5 py-12 text-center font-semibold text-[var(--booknook-muted)]">Checking files…</td>
-              </tr>
-            ) : books.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-5 py-12 text-center font-semibold text-[var(--booknook-muted)]">No books found.</td>
-              </tr>
-            ) : (
-              books.map((book) => (
-                <tr key={book.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-5 py-4 font-bold text-[var(--booknook-ink)]">{book.title}</td>
-                  <td className="px-5 py-4 text-center"><Status available={Boolean(book.epubAvailable)} /></td>
-                  <td className="px-5 py-4 text-center"><Status available={Boolean(book.pdfAvailable)} /></td>
-                  <td className="px-5 py-4 text-center"><Status available={Boolean(book.coverPath)} /></td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <section className="overflow-hidden rounded-3xl border border-[var(--booknook-border)] bg-white shadow-sm">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-[var(--booknook-border)] bg-[#f7f8fc] px-4 py-4 sm:px-5">
+          <span className="text-xs font-extrabold uppercase tracking-wide text-[var(--booknook-muted)]">Book</span>
+          <span className="text-center text-xs font-extrabold text-[var(--booknook-ink)]">EPUB</span>
+          <span className="text-center text-xs font-extrabold text-[var(--booknook-ink)]">Cover</span>
+        </div>
+        {loading ? (
+          <p className="px-4 py-12 text-center text-sm font-semibold text-[var(--booknook-muted)]">Checking your books…</p>
+        ) : books.length === 0 ? (
+          <p className="px-4 py-12 text-center text-sm font-semibold text-[var(--booknook-muted)]">No books found.</p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {books.map((book) => (
+              <li key={book.id} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-4 py-4 sm:px-5">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-bold leading-5 text-[var(--booknook-ink)]">{book.title}</p>
+                  <p className="mt-1 text-xs text-[var(--booknook-muted)]">
+                    {!book.epubAvailable ? "EPUB missing — check the uploaded file" : "Ready for online reading"}
+                  </p>
+                </div>
+                <Status available={Boolean(book.epubAvailable)} label="EPUB" />
+                <Status available={Boolean(book.coverPath)} label="Cover" />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
