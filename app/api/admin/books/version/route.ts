@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 export const runtime = "nodejs";
 
 const PRIVATE_EBOOK_BUCKET = "ebooks-private";
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 150 * 1024 * 1024;
 
 function cleanPart(value: string) {
   return value
@@ -196,7 +196,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "EPUB files must be 50 MB or smaller.",
+            "EPUB files must be 150 MB or smaller.",
         },
         { status: 400 }
       );
