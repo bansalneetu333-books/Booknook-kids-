@@ -78,19 +78,14 @@ export default function AdminBooksPage() {
 
   async function updateBook(
     bookId: string,
-    action: "publish" | "featured" | "free",
+    action: "publish" | "featured",
     value: boolean
   ) {
     setBusyId(bookId);
     setMessage("");
 
     try {
-      const endpoint =
-        action === "publish"
-          ? "/api/admin/books/publish"
-          : action === "featured"
-          ? "/api/admin/books/featured"
-          : "/api/admin/books/free";
+      const endpoint = action === "publish" ? "/api/admin/books/publish" : "/api/admin/books/featured";
 
       const response = await fetch(endpoint, {
         method: "PATCH",
@@ -99,11 +94,7 @@ export default function AdminBooksPage() {
         },
         body: JSON.stringify({
           bookId,
-          [action === "publish"
-            ? "published"
-            : action === "featured"
-            ? "featured"
-            : "isFree"]: value,
+          [action === "publish" ? "published" : "featured"]: value,
         }),
       });
 
@@ -120,11 +111,7 @@ export default function AdminBooksPage() {
           book.id === bookId
             ? {
                 ...book,
-                ...(action === "publish"
-                  ? { published: value }
-                  : action === "featured"
-                  ? { featured: value }
-                  : { isFree: value }),
+                ...(action === "publish" ? { published: value } : { featured: value }),
               }
             : book
         )
