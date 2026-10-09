@@ -88,12 +88,12 @@ export async function POST(request: Request) {
     const bookData = {
       title, slug, author, description, price,
       genre: genre || categorySlugs.map(s => CATEGORY_NAMES[s] ?? s).join(" / "),
-      age_category: ageCategory,
+      age_category: "",
       published: Boolean(body.published),
       is_published: Boolean(body.published),
       featured: Boolean(body.featured),
       is_featured: Boolean(body.featured),
-      is_free: Boolean(body.isFree),
+      is_free: false,
       ...(coverPath ? { cover_path: coverPath, cover_url: "/api/books/cover?path=" + encodeURIComponent(coverPath) } : {}),
     };
 

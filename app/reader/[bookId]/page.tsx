@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { EpubReader } from "@/components/reader";
-import { DownloadButton } from "@/components/download-button";
 
 export default async function ReaderPage({
   params
@@ -19,7 +18,7 @@ export default async function ReaderPage({
 
   const { data: book } = await supabase
     .from("books")
-    .select("id,title,published,is_free")
+    .select("id,title,published")
     .eq("id", bookId)
     .or("published.eq.true,is_published.eq.true")
     .maybeSingle();
@@ -35,7 +34,7 @@ export default async function ReaderPage({
     .limit(1)
     .maybeSingle();
 
-  if (!book.is_free && !ownership) {
+  if (!ownership) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#0f172a] p-6">
         <div className="max-w-md bn-surface p-8 text-center">
@@ -65,19 +64,12 @@ export default async function ReaderPage({
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-wrap items-center justify-between gap-3 p-3">
           <a
-            href={book.is_free ? "/free-reading" : "/library"}
+            href="/library"
             className="text-sm font-bold text-indigo-600"
           >
-            ← Back to {book.is_free ? "Free Reading" : "Library"}
+            ← Back to Library
           </a>
 
-          {book.is_free ? (
-            <span className="rounded-full bg-emerald-100 px-4 py-2 text-xs font-black text-emerald-700">
-              📖 Free Reading
-            </span>
-          ) : (
-            <DownloadButton bookId={book.id} />
-          )}
         </div>
 
         <EpubReader

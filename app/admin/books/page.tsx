@@ -15,9 +15,7 @@ type Book = {
   cover_path: string | null;
   published: boolean;
   featured: boolean;
-  isFree?: boolean;
   epubAvailable?: boolean;
-  pdfAvailable?: boolean;
   categories?: { name: string; slug: string; icon?: string | null }[];
   created_at: string;
   version?: {
@@ -80,19 +78,14 @@ export default function AdminBooksPage() {
 
   async function updateBook(
     bookId: string,
-    action: "publish" | "featured" | "free",
+    action: "publish" | "featured",
     value: boolean
   ) {
     setBusyId(bookId);
     setMessage("");
 
     try {
-      const endpoint =
-        action === "publish"
-          ? "/api/admin/books/publish"
-          : action === "featured"
-          ? "/api/admin/books/featured"
-          : "/api/admin/books/free";
+      const endpoint = action === "publish" ? "/api/admin/books/publish" : "/api/admin/books/featured";
 
       const response = await fetch(endpoint, {
         method: "PATCH",
@@ -101,11 +94,7 @@ export default function AdminBooksPage() {
         },
         body: JSON.stringify({
           bookId,
-          [action === "publish"
-            ? "published"
-            : action === "featured"
-            ? "featured"
-            : "isFree"]: value,
+          [action === "publish" ? "published" : "featured"]: value,
         }),
       });
 
@@ -122,11 +111,7 @@ export default function AdminBooksPage() {
           book.id === bookId
             ? {
                 ...book,
-                ...(action === "publish"
-                  ? { published: value }
-                  : action === "featured"
-                  ? { featured: value }
-                  : { isFree: value }),
+                ...(action === "publish" ? { published: value } : { featured: value }),
               }
             : book
         )
@@ -227,27 +212,6 @@ export default function AdminBooksPage() {
           >
             + Add New Book
           </Link>
-
-          <button
-            type="button"
-            onClick={async () => {
-              setMessage("Making existing uploaded books available…");
-              try {
-                const response = await fetch("/api/admin/books/repair-availability", { method: "POST" });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data?.error || "Unable to repair book availability.");
-                const count = Array.isArray(data?.repaired) ? data.repaired.length : 0;
-                const freeCount = Array.isArray(data?.freeMarked) ? data.freeMarked.length : 0;
-                setMessage(`Made ${count} uploaded book(s) available${freeCount ? ` and marked ${freeCount} free` : ""}. Refreshing the catalogue…`);
-                await loadBooks();
-              } catch (error) {
-                setMessage(error instanceof Error ? error.message : "Unable to repair book availability.");
-              }
-            }}
-            className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3 font-bold text-white"
-          >
-            📚 Make Uploaded Books Available
-          </button>
 
           <button
             type="button"
@@ -393,18 +357,10 @@ export default function AdminBooksPage() {
                           Featured
                         </span>
                       )}
-                      {book.isFree && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">
-                          Free Reading
-                        </span>
-                      )}
-
                       <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${book.epubAvailable ? "bg-blue-100 text-blue-700" : "bg-[#f1f2f7] text-[var(--booknook-muted)]"}`}>
                         {book.epubAvailable ? "EPUB ✓" : "EPUB —"}
                       </span>
-                      <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${book.pdfAvailable ? "bg-orange-100 text-orange-700" : "bg-[#f1f2f7] text-[var(--booknook-muted)]"}`}>
-                        {book.pdfAvailable ? "PDF ✓" : "PDF —"}
-                      </span>
+
                     </div>
                   </div>
                 </div>
@@ -441,21 +397,6 @@ export default function AdminBooksPage() {
                       {book.published
                         ? "Unpublish"
                         : "Publish"}
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() =>
-                        updateBook(
-                          book.id,
-                          "free",
-                          !book.isFree
-                        )
-                      }
-                      className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-                    >
-                      {book.isFree ? "Remove Free" : "Make Free"}
                     </button>
 
                     <button

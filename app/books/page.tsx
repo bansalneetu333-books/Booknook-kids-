@@ -5,7 +5,7 @@ import { getPublishedBooks } from "@/lib/books";
 import { BOOK_CATEGORIES } from "@/lib/book-categories";
 import { HomeHeroCarousel } from "@/components/home-hero-carousel";
 
-type SearchParams = Promise<{ q?: string; genre?: string; category?: string; age?: string }>;
+type SearchParams = Promise<{ q?: string; genre?: string; category?: string }>;
 
 export default async function BooksPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -13,7 +13,6 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
   const search = params.q?.trim().toLowerCase();
   const genre = params.genre?.trim().toLowerCase();
   const category = params.category?.trim().toLowerCase();
-  const age = params.age?.trim().toLowerCase();
 
   const books = allBooks.filter((book) => {
     const matchesSearch = !search || book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search);
@@ -22,8 +21,7 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
       (book.genre ?? "").split("/").map((v) => v.trim().toLowerCase()).includes(
         BOOK_CATEGORIES.find((item) => item.slug === category)?.name.toLowerCase() ?? category
       );
-    const matchesAge = !age || book.age_category?.toLowerCase().includes(age);
-    return matchesSearch && matchesGenre && matchesCategory && matchesAge;
+    return matchesSearch && matchesGenre && matchesCategory;
   });
 
   return (

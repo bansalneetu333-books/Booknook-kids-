@@ -33,16 +33,16 @@ async function findExistingStorageFile(bookSlug: string) {
   for (const entry of entries ?? []) {
     const name = String(entry.name || "");
     const lower = name.toLowerCase();
-    if (lower.endsWith(".epub") || lower.endsWith(".pdf")) {
-      candidates.push({ path: safeSlug + "/" + name, fileType: lower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof entry.metadata?.size === "number" ? entry.metadata.size : null, createdAt: entry.created_at || "" });
+    if (lower.endsWith(".epub")) {
+      candidates.push({ path: safeSlug + "/" + name, fileType: "application/epub+zip", fileSize: typeof entry.metadata?.size === "number" ? entry.metadata.size : null, createdAt: entry.created_at || "" });
       continue;
     }
     const { data: nested } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET).list(safeSlug + "/" + name, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
     for (const file of nested ?? []) {
       const fileName = String(file.name || "");
       const fileLower = fileName.toLowerCase();
-      if (!fileLower.endsWith(".epub") && !fileLower.endsWith(".pdf")) continue;
-      candidates.push({ path: safeSlug + "/" + name + "/" + fileName, fileType: fileLower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof file.metadata?.size === "number" ? file.metadata.size : null, createdAt: file.created_at || "" });
+      if (!fileLower.endsWith(".epub")) continue;
+      candidates.push({ path: safeSlug + "/" + name + "/" + fileName, fileType: "application/epub+zip", fileSize: typeof file.metadata?.size === "number" ? file.metadata.size : null, createdAt: file.created_at || "" });
     }
   }
   candidates.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -54,7 +54,7 @@ export async function getReadableBookFile(bookId: string) {
 
   if (version) {
     const path = version.epub_path || version.file_path || null;
-    if (path) {
+    if (path && path.toLowerCase().endsWith(".epub") && !String(version.file_type || "").toLowerCase().includes("pdf")) {
       return {
         path,
         fileType: version.file_type || "application/epub+zip",
@@ -76,7 +76,7 @@ export async function getReadableBookFile(bookId: string) {
     throw new Error("Unable to load book file.");
   }
 
-  if (data?.epub_path) {
+  if (data?.epub_path && data.epub_path.toLowerCase().endsWith(".epub")) {
     return {
       path: data.epub_path,
       fileType: "application/epub+zip",
@@ -104,50 +104,34 @@ export async function getReadableBookFile(bookId: string) {
 
 export async function getBookFileAvailability(bookId: string) {
   const supabase = createAdminClient();
-  let epubAvailable = false;
-  let pdfAvailable = false;
   let epubPath: string | null = null;
-  let pdfPath: string | null = null;
 
   const { data: book } = await supabase.from("books").select("slug,epub_path").eq("id", bookId).maybeSingle();
   if (!book) return { epubAvailable: false, pdfAvailable: false, epubPath: null, pdfPath: null };
 
-  if (book.epub_path) {
-    epubAvailable = true;
+  if (book.epub_path && book.epub_path.toLowerCase().endsWith(".epub")) {
     epubPath = book.epub_path;
   }
 
   const { data: versions } = await supabase.from("book_versions")
-    .select("epub_path,file_path,file_type,active,is_current,created_at")
+    .select("epub_path,file_path,file_type,created_at")
     .eq("book_id", bookId)
     .order("created_at", { ascending: false });
 
   for (const version of versions ?? []) {
     const path = version.epub_path || version.file_path || null;
-    if (!path) continue;
+    if (!path || !path.toLowerCase().endsWith(".epub")) continue;
     const type = String(version.file_type || "").toLowerCase();
-    if (type === "application/pdf" || path.toLowerCase().endsWith(".pdf")) {
-      pdfAvailable = true;
-      pdfPath = pdfPath || path;
-    } else {
-      epubAvailable = true;
-      epubPath = epubPath || path;
-    }
+    if (type && !type.includes("epub")) continue;
+    epubPath = epubPath || path;
   }
 
-  if (!epubAvailable || !pdfAvailable) {
+  if (!epubPath) {
     const fallback = await findAllExistingStorageFiles(book.slug);
-    if (!epubAvailable && fallback.epubPath) {
-      epubAvailable = true;
-      epubPath = fallback.epubPath;
-    }
-    if (!pdfAvailable && fallback.pdfPath) {
-      pdfAvailable = true;
-      pdfPath = fallback.pdfPath;
-    }
+    epubPath = fallback.epubPath;
   }
 
-  return { epubAvailable, pdfAvailable, epubPath, pdfPath };
+  return { epubAvailable: Boolean(epubPath), pdfAvailable: false, epubPath, pdfPath: null };
 }
 
 async function findAllExistingStorageFiles(bookSlug: string) {
@@ -159,33 +143,21 @@ async function findAllExistingStorageFiles(bookSlug: string) {
     .list(safeSlug, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
 
   let epubPath: string | null = null;
-  let pdfPath: string | null = null;
-
   for (const entry of entries ?? []) {
     const name = String(entry.name || "");
-    const lower = name.toLowerCase();
-
-    if (lower.endsWith(".epub")) {
+    if (name.toLowerCase().endsWith(".epub")) {
       epubPath = epubPath || safeSlug + "/" + name;
       continue;
     }
-    if (lower.endsWith(".pdf")) {
-      pdfPath = pdfPath || safeSlug + "/" + name;
-      continue;
-    }
-
     const { data: nested } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET)
       .list(safeSlug + "/" + name, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-
     for (const file of nested ?? []) {
       const fileName = String(file.name || "");
-      const fileLower = fileName.toLowerCase();
-      if (fileLower.endsWith(".epub")) epubPath = epubPath || safeSlug + "/" + name + "/" + fileName;
-      if (fileLower.endsWith(".pdf")) pdfPath = pdfPath || safeSlug + "/" + name + "/" + fileName;
+      if (fileName.toLowerCase().endsWith(".epub")) epubPath = epubPath || safeSlug + "/" + name + "/" + fileName;
     }
   }
 
-  return { epubPath, pdfPath };
+  return { epubPath, pdfPath: null };
 }
 
 export async function createEpubSignedUrl(path: string, expiresIn = 300) {
