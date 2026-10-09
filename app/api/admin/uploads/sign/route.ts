@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 const PRIVATE_EBOOK_BUCKET = "ebooks-private";
 const PUBLIC_MEDIA_BUCKET = "book-covers";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 150 * 1024 * 1024;
 const MAX_COVER_SIZE = 8 * 1024 * 1024;
 
 type UploadKind = "cover" | "epub" | "pdf";
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              "EPUB and PDF files must be 50 MB or smaller.",
+              "EPUB and PDF files must be 150 MB or smaller.",
           },
           { status: 400 }
         );
