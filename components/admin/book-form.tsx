@@ -615,8 +615,6 @@ export function BookForm({ book }: { book?: Book }) {
   
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-
         <div className="flex flex-wrap gap-3">
 
           <button
