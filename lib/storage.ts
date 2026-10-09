@@ -33,15 +33,15 @@ async function findExistingStorageFile(bookSlug: string) {
   for (const entry of entries ?? []) {
     const name = String(entry.name || "");
     const lower = name.toLowerCase();
-    if (lower.endsWith(".epub") || lower.endsWith(".pdf")) {
-      candidates.push({ path: safeSlug + "/" + name, fileType: lower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof entry.metadata?.size === "number" ? entry.metadata.size : null, createdAt: entry.created_at || "" });
+    if (lower.endsWith(".epub")) {
+      candidates.push({ path: safeSlug + "/" + name, fileType: "application/epub+zip", fileSize: typeof entry.metadata?.size === "number" ? entry.metadata.size : null, createdAt: entry.created_at || "" });
       continue;
     }
     const { data: nested } = await supabase.storage.from(PRIVATE_EBOOK_BUCKET).list(safeSlug + "/" + name, { limit: 100, sortBy: { column: "created_at", order: "desc" } });
     for (const file of nested ?? []) {
       const fileName = String(file.name || "");
       const fileLower = fileName.toLowerCase();
-      if (!fileLower.endsWith(".epub") && !fileLower.endsWith(".pdf")) continue;
+      if (!fileLower.endsWith(".epub")) continue;
       candidates.push({ path: safeSlug + "/" + name + "/" + fileName, fileType: fileLower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof file.metadata?.size === "number" ? file.metadata.size : null, createdAt: file.created_at || "" });
     }
   }
@@ -126,7 +126,7 @@ export async function getBookFileAvailability(bookId: string) {
     const path = version.epub_path || version.file_path || null;
     if (!path) continue;
     const type = String(version.file_type || "").toLowerCase();
-    if (type === "application/pdf" || path.toLowerCase().endsWith(".pdf")) {
+    if (type === "application/pdf" || path.toLowerCase().endsWith(".pdf")) {\n      continue;\n    }\n    if (type.includes("epub") || path.toLowerCase().endsWith(".epub")) {
       pdfAvailable = true;
       pdfPath = pdfPath || path;
     } else {
