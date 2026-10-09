@@ -24,38 +24,19 @@ export async function POST() {
     }
 
     const repaired: string[] = [];
-    const freeMarked: string[] = [];
     const missingFiles: string[] = [];
 
     for (const book of books ?? []) {
-      const normalizedTitle = normalize(book.title);
-      const shouldBeFree =
-        normalizedTitle === "door 2050" ||
-        normalizedTitle === "rani laxmi bai" ||
-        normalizedTitle === "rani lakshmi bai" ||
-        normalizedTitle === "rani laxmi bai" ||
-        normalizedTitle === "rani lakshmi bai";
-
       const file = await getReadableBookFile(book.id);
-
-      if (!file && !shouldBeFree) {
+      if (!file || !file.path.toLowerCase().endsWith(".epub")) {
         missingFiles.push(book.title);
         continue;
       }
-      const update: Record<string, unknown> = {
-        published: true,
-        is_published: true,
-      };
 
-      if (shouldBeFree) {
-        update.is_free = true;
-        freeMarked.push(book.title);
-      }
-
-      if (!book.published || !book.is_published || shouldBeFree) {
+      if (!book.published || !book.is_published) {
         const { error: updateError } = await supabase
           .from("books")
-          .update(update)
+          .update({ published: true, is_published: true, is_free: false })
           .eq("id", book.id);
 
         if (updateError) {
@@ -70,10 +51,9 @@ export async function POST() {
     return NextResponse.json({
       ok: true,
       repaired,
-      freeMarked,
       missingFiles,
       message: repaired.length
-        ? "Existing uploaded books with files are now available on the website."
+        ? "Books with EPUB files are published. All books remain paid and use the online reader."
         : "No uploaded book files were found to repair.",
     });
   } catch (error) {
