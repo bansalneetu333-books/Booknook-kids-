@@ -19,6 +19,7 @@ type Book = {
   published: boolean;
   featured: boolean;
   cover_path?: string | null;
+  epub_path?: string | null;
   categories?: string[];
 };
 
@@ -70,6 +71,8 @@ export function BookForm({ book }: { book?: Book }) {
 
   const [cover, setCover] = useState<File | null>(null);
   const [epub, setEpub] = useState<File | null>(null);
+  const [coverSaved, setCoverSaved] = useState(Boolean(book?.cover_path));
+  const [epubSaved, setEpubSaved] = useState(Boolean(book?.epub_path));
 
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -294,6 +297,8 @@ export function BookForm({ book }: { book?: Book }) {
           }
 
           uploaded[item.kind] = item;
+          if (item.kind === "cover") setCoverSaved(true);
+          if (item.kind === "epub") setEpubSaved(true);
 
           // Save the cover immediately after its upload succeeds.
           // This keeps the cover linked even if the EPUB upload fails.
@@ -573,42 +578,18 @@ export function BookForm({ book }: { book?: Book }) {
 
         <div className="grid gap-4 sm:grid-cols-3">
 
-          <label className="grid gap-2 rounded-2xl border border-dashed p-4 text-sm font-bold">
-            Cover
-
-            <span className="text-xs font-medium text-slate-500">
-              Small image • 8 MB max
-            </span>
-
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) =>
-                chooseCover(
-                  e.target.files?.[0] ??
-                    null
-                )
-              }
-            />
+          <label className={`grid gap-2 rounded-2xl border-2 p-4 text-sm font-bold transition ${cover || coverSaved ? "border-emerald-300 bg-emerald-50" : "border-dashed border-slate-300 bg-white"}`}>
+            <span className="flex items-center justify-between gap-2">Cover {(cover || coverSaved) && <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-extrabold text-emerald-800">✓ {cover ? "Selected" : "Saved"}</span>}</span>
+            <span className="text-xs font-medium text-slate-500">Image • 8 MB max</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => chooseCover(e.target.files?.[0] ?? null)} />
+            {!cover && coverSaved && <span className="text-xs font-semibold text-emerald-700">Previously uploaded cover is saved.</span>}
           </label>
 
-          <label className="grid gap-2 rounded-2xl border border-dashed p-4 text-sm font-bold">
-            EPUB
-
-            <span className="text-xs font-medium text-slate-500">
-              Reader file • 150 MB max
-            </span>
-
-            <input
-              type="file"
-              accept=".epub,application/epub+zip,application/zip"
-              onChange={(e) =>
-                chooseEpub(
-                  e.target.files?.[0] ??
-                    null
-                )
-              }
-            />
+          <label className={`grid gap-2 rounded-2xl border-2 p-4 text-sm font-bold transition ${epub || epubSaved ? "border-emerald-300 bg-emerald-50" : "border-dashed border-slate-300 bg-white"}`}>
+            <span className="flex items-center justify-between gap-2">EPUB {(epub || epubSaved) && <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-extrabold text-emerald-800">✓ {epub ? "Selected" : "Saved"}</span>}</span>
+            <span className="text-xs font-medium text-slate-500">Online reader file • 150 MB max</span>
+            <input type="file" accept=".epub,application/epub+zip" onChange={(e) => chooseEpub(e.target.files?.[0] ?? null)} />
+            {!epub && epubSaved && <span className="text-xs font-semibold text-emerald-700">Previously uploaded EPUB is saved.</span>}
           </label>
 
   
