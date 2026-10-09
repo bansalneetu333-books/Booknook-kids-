@@ -553,6 +553,7 @@ export function BookForm({ book }: { book?: Book }) {
               })}
             </div>
           </div>
+        </div>
 
         <label className="grid gap-2 text-sm font-bold">
           About
