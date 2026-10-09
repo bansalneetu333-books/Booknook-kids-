@@ -42,7 +42,7 @@ async function findExistingStorageFile(bookSlug: string) {
       const fileName = String(file.name || "");
       const fileLower = fileName.toLowerCase();
       if (!fileLower.endsWith(".epub")) continue;
-      candidates.push({ path: safeSlug + "/" + name + "/" + fileName, fileType: fileLower.endsWith(".pdf") ? "application/pdf" : "application/epub+zip", fileSize: typeof file.metadata?.size === "number" ? file.metadata.size : null, createdAt: file.created_at || "" });
+      candidates.push({ path: safeSlug + "/" + name + "/" + fileName, fileType: "application/epub+zip", fileSize: typeof file.metadata?.size === "number" ? file.metadata.size : null, createdAt: file.created_at || "" });
     }
   }
   candidates.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
