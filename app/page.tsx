@@ -8,13 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const AGE_GROUPS = [
-  { label: "6–8 Years", value: "6-8", icon: "🧒" },
-  { label: "9–12 Years", value: "9-12", icon: "🧑" },
-  { label: "13–16 Years", value: "13-16", icon: "🧑‍🎓" },
-  { label: "16+ Years", value: "16", icon: "🎓" },
-];
-
 const CATEGORY_STYLES = [
   "bg-sky-100/90",
   "bg-lime-100/90",
@@ -38,7 +31,6 @@ export default async function HomePage() {
     new Map([...featured, ...latest].map((book) => [book.id, book])).values()
   ).slice(0, 6);
   const newPicks = latest.slice(0, 8);
-  const freeBooks = latest.filter((book) => book.is_free).slice(0, 4);
 
   const supabase = await createClient();
   const { data: content } = await supabase.from("site_content").select("key,value");
