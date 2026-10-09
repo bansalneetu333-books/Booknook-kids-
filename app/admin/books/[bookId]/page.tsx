@@ -47,6 +47,7 @@ export default async function EditBookPage({
         featured,
         is_free,
         cover_path,
+        epub_path,
         book_categories (
           categories (
             name
@@ -92,6 +93,8 @@ export default async function EditBookPage({
         .filter(Boolean),
     cover_path:
       book.cover_path ?? null,
+    epub_path:
+      book.epub_path ?? null,
   };
 
   return (
