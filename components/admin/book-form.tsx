@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BOOK_CATEGORIES } from "@/lib/book-categories";
 
-const MAX_FILE = 50 * 1024 * 1024;
+const MAX_FILE = 150 * 1024 * 1024;
 const MAX_COVER = 8 * 1024 * 1024;
 
 type Book = {
@@ -90,7 +90,7 @@ export function BookForm({ book }: { book?: Book }) {
 
   function chooseEpub(file: File | null) {
     if (file && file.size > MAX_FILE) {
-      setStatus("EPUB is over 50 MB.");
+      setStatus("EPUB is over 150 MB.");
       return;
     }
 
@@ -100,7 +100,7 @@ export function BookForm({ book }: { book?: Book }) {
 
   function choosePdf(file: File | null) {
     if (file && file.size > MAX_FILE) {
-      setStatus("PDF is over 50 MB.");
+      setStatus("PDF is over 150 MB.");
       return;
     }
 
@@ -146,12 +146,12 @@ export function BookForm({ book }: { book?: Book }) {
 
 
     if (epub && epub.size > MAX_FILE) {
-      setStatus("EPUB is over 50 MB.");
+      setStatus("EPUB is over 150 MB.");
       return;
     }
 
     if (pdf && pdf.size > MAX_FILE) {
-      setStatus("PDF is over 50 MB.");
+      setStatus("PDF is over 150 MB.");
       return;
     }
 
@@ -653,7 +653,7 @@ export function BookForm({ book }: { book?: Book }) {
             EPUB
 
             <span className="text-xs font-medium text-slate-500">
-              Reader file • 50 MB max
+              Reader file • 150 MB max
             </span>
 
             <input
@@ -672,7 +672,7 @@ export function BookForm({ book }: { book?: Book }) {
             PDF
 
             <span className="text-xs font-medium text-slate-500">
-              Download file • 50 MB max
+              Download file • 150 MB max
             </span>
 
             <input
