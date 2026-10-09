@@ -18,7 +18,6 @@ type Book = {
   age_category: string;
   published: boolean;
   featured: boolean;
-  is_free?: boolean;
   cover_path?: string | null;
   categories?: string[];
 };
@@ -92,16 +91,6 @@ export function BookForm({ book }: { book?: Book }) {
     }
 
     setEpub(file);
-    setStatus("");
-  }
-
-  function choosePdf(file: File | null) {
-    if (file && file.size > MAX_FILE) {
-      setStatus("PDF is over 150 MB.");
-      return;
-    }
-
-    setPdf(file);
     setStatus("");
   }
 
@@ -307,7 +296,7 @@ export function BookForm({ book }: { book?: Book }) {
           uploaded[item.kind] = item;
 
           // Save the cover immediately after its upload succeeds.
-          // This keeps the cover linked even if a later EPUB/PDF upload fails.
+          // This keeps the cover linked even if the EPUB upload fails.
           if (item.kind === "cover") {
             const coverSaveResponse = await fetch("/api/admin/books", {
               method: "POST",
