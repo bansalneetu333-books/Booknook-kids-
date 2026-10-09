@@ -399,8 +399,6 @@ export default function AdminBooksPage() {
                         : "Publish"}
                     </button>
 
-           </button>
-
                     <button
                       type="button"
                       disabled={busy}
