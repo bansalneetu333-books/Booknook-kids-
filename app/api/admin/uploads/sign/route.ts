@@ -7,7 +7,7 @@ const PUBLIC_MEDIA_BUCKET = "book-covers";
 const MAX_FILE_SIZE = 150 * 1024 * 1024;
 const MAX_COVER_SIZE = 8 * 1024 * 1024;
 
-type UploadKind = "cover" | "epub" | "pdf";
+type UploadKind = "cover" | "epub";
 
 type UploadRequest = {
   bookId?: string;
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
     for (const file of files) {
       if (
         !file ||
-        !["cover", "epub", "pdf"].includes(
+        !["cover", "epub"].includes(
           file.kind
         )
       ) {
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              "EPUB and PDF files must be 150 MB or smaller.",
+              "EPUB files must be 150 MB or smaller.",
           },
           { status: 400 }
         );
