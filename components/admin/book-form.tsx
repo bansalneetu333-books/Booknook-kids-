@@ -24,7 +24,7 @@ type Book = {
 };
 
 type SignedUpload = {
-  kind: "cover" | "epub" | "pdf";
+  kind: "cover" | "epub";
   bucket: string;
   path: string;
   token: string;
@@ -59,10 +59,8 @@ export function BookForm({ book }: { book?: Book }) {
     description: book?.description ?? "",
     price: String(book?.price ?? 199),
     genre: book?.genre ?? BOOK_CATEGORIES[0].name,
-    ageCategory: book?.age_category ?? "6–16",
     published: book?.published ?? false,
     featured: book?.featured ?? false,
-    isFree: book?.is_free ?? false,
   });
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
@@ -178,10 +176,8 @@ export function BookForm({ book }: { book?: Book }) {
         categorySlugs: selectedCategories
           .map((name) => BOOK_CATEGORIES.find((category) => category.name === name)?.slug)
           .filter(Boolean),
-        ageCategory: form.ageCategory.trim(),
         published: publish,
         featured: form.featured,
-        isFree: form.isFree,
       };
 
       setStatus("Saving details…");
@@ -229,14 +225,6 @@ export function BookForm({ book }: { book?: Book }) {
             }
           : null,
 
-        pdf
-          ? {
-              kind: "pdf" as const,
-              size: pdf.size,
-              type: "application/pdf",
-              extension: "pdf",
-            }
-          : null,
       ].filter(Boolean) as Array<{
         kind: "cover" | "epub" | "pdf";
         size: number;
@@ -314,8 +302,6 @@ export function BookForm({ book }: { book?: Book }) {
                   contentType:
                     item.kind === "epub"
                       ? "application/epub+zip"
-                      : item.kind === "pdf"
-                      ? "application/pdf"
                       : file.type,
                 }
               );
@@ -373,15 +359,7 @@ export function BookForm({ book }: { book?: Book }) {
                 body: JSON.stringify({
                   bookId,
 
-                  ...(uploaded.epub
-                    ? {
-                        version,
-                        epubPath:
-                          uploaded.epub.path,
-                        epubSize:
-                          epub?.size ?? 0,
-                      }
-                    : {}),
+                  ...(uploaded.epub ? { version, epubPath: uploaded.epub.path, epubSize: epub?.size ?? 0 } : {}),
 
                   coverPath:
                     uploaded.cover?.path ??
@@ -595,22 +573,7 @@ export function BookForm({ book }: { book?: Book }) {
             </div>
           </div>
 
-          <label className="grid gap-2 text-sm font-bold">
-            Age
-
-            <input
-              className="rounded-2xl border p-3.5"
-              value={form.ageCategory}
-              onChange={(e) =>
-                update(
-                  "ageCategory",
-                  e.target.value
-                )
-              }
-              placeholder="6–16"
-            />
-          </label>
-        </div>
+          </div>
 
         <label className="grid gap-2 text-sm font-bold">
           About
@@ -668,51 +631,10 @@ export function BookForm({ book }: { book?: Book }) {
             />
           </label>
 
-          <label className="grid gap-2 rounded-2xl border border-dashed p-4 text-sm font-bold">
-            PDF
-
-            <span className="text-xs font-medium text-slate-500">
-              Download file • 150 MB max
-            </span>
-
-            <input
-              type="file"
-              accept="application/pdf,.pdf"
-              onChange={(e) =>
-                choosePdf(
-                  e.target.files?.[0] ??
-                    null
-                )
-              }
-            />
-          </label>
-
+  
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-            <input
-              type="checkbox"
-              checked={form.isFree}
-              onChange={(e) => update("isFree", e.target.checked)}
-            />
-            <span>
-              <span className="block text-sm font-black text-emerald-800">📖 Free Reading</span>
-              <span className="mt-1 block text-xs font-medium text-emerald-700">
-                Customers can read this book online without buying it.
-              </span>
-            </span>
-          </label>
-
-          <label className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => update("featured", e.target.checked)}
-            />
-            <span className="text-sm font-bold">Show on Home</span>
-          </label>
-        </div>
 
         <div className="flex flex-wrap gap-3">
 
