@@ -15,9 +15,7 @@ type Book = {
   cover_path: string | null;
   published: boolean;
   featured: boolean;
-  isFree?: boolean;
   epubAvailable?: boolean;
-  pdfAvailable?: boolean;
   categories?: { name: string; slug: string; icon?: string | null }[];
   created_at: string;
   version?: {
@@ -231,27 +229,6 @@ export default function AdminBooksPage() {
           <button
             type="button"
             onClick={async () => {
-              setMessage("Making existing uploaded books available…");
-              try {
-                const response = await fetch("/api/admin/books/repair-availability", { method: "POST" });
-                const data = await response.json();
-                if (!response.ok) throw new Error(data?.error || "Unable to repair book availability.");
-                const count = Array.isArray(data?.repaired) ? data.repaired.length : 0;
-                const freeCount = Array.isArray(data?.freeMarked) ? data.freeMarked.length : 0;
-                setMessage(`Made ${count} uploaded book(s) available${freeCount ? ` and marked ${freeCount} free` : ""}. Refreshing the catalogue…`);
-                await loadBooks();
-              } catch (error) {
-                setMessage(error instanceof Error ? error.message : "Unable to repair book availability.");
-              }
-            }}
-            className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3 font-bold text-white"
-          >
-            📚 Make Uploaded Books Available
-          </button>
-
-          <button
-            type="button"
-            onClick={async () => {
               setMessage("Checking Supabase for existing cover files…");
               try {
                 const response = await fetch("/api/admin/books/repair-covers", {
@@ -393,18 +370,10 @@ export default function AdminBooksPage() {
                           Featured
                         </span>
                       )}
-                      {book.isFree && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">
-                          Free Reading
-                        </span>
-                      )}
-
                       <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${book.epubAvailable ? "bg-blue-100 text-blue-700" : "bg-[#f1f2f7] text-[var(--booknook-muted)]"}`}>
                         {book.epubAvailable ? "EPUB ✓" : "EPUB —"}
                       </span>
-                      <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${book.pdfAvailable ? "bg-orange-100 text-orange-700" : "bg-[#f1f2f7] text-[var(--booknook-muted)]"}`}>
-                        {book.pdfAvailable ? "PDF ✓" : "PDF —"}
-                      </span>
+
                     </div>
                   </div>
                 </div>
