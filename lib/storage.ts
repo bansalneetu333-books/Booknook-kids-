@@ -54,7 +54,7 @@ export async function getReadableBookFile(bookId: string) {
 
   if (version) {
     const path = version.epub_path || version.file_path || null;
-    if (path) {
+    if (path && path.toLowerCase().endsWith(".epub") && !String(version.file_type || "").toLowerCase().includes("pdf")) {
       return {
         path,
         fileType: version.file_type || "application/epub+zip",
@@ -76,7 +76,7 @@ export async function getReadableBookFile(bookId: string) {
     throw new Error("Unable to load book file.");
   }
 
-  if (data?.epub_path) {
+  if (data?.epub_path && data.epub_path.toLowerCase().endsWith(".epub")) {
     return {
       path: data.epub_path,
       fileType: "application/epub+zip",
