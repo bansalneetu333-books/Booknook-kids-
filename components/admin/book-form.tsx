@@ -71,7 +71,6 @@ export function BookForm({ book }: { book?: Book }) {
 
   const [cover, setCover] = useState<File | null>(null);
   const [epub, setEpub] = useState<File | null>(null);
-  const [pdf, setPdf] = useState<File | null>(null);
 
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -148,11 +147,6 @@ export function BookForm({ book }: { book?: Book }) {
       return;
     }
 
-    if (pdf && pdf.size > MAX_FILE) {
-      setStatus("PDF is over 150 MB.");
-      return;
-    }
-
     if (cover && cover.size > MAX_COVER) {
       setStatus("Cover is over 8 MB.");
       return;
@@ -226,7 +220,7 @@ export function BookForm({ book }: { book?: Book }) {
           : null,
 
       ].filter(Boolean) as Array<{
-        kind: "cover" | "epub" | "pdf";
+        kind: "cover" | "epub";
         size: number;
         type: string;
         extension: string;
@@ -281,9 +275,7 @@ export function BookForm({ book }: { book?: Book }) {
           const file =
             item.kind === "cover"
               ? cover
-              : item.kind === "epub"
-              ? epub
-              : pdf;
+              : epub;
 
           if (!file) continue;
 
