@@ -23,7 +23,7 @@ export default function NewBookPage() {
 
         <p className="mt-2 max-w-2xl text-[var(--booknook-muted)]">
           Add your ebook, cover, description, price and publishing
-          settings. EPUB and PDF files up to 50 MB are supported.
+          settings. EPUB and PDF files up to 150 MB are supported.
         </p>
       </div>
 
