@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getFeaturedBooks, getPublishedBooks } from "@/lib/books";
+import { getPublishedBooks } from "@/lib/books";
 import { BookCard } from "@/components/book-card";
 import { SiteHeader } from "@/components/site-header";
 import { HomeHeroCarousel } from "@/components/home-hero-carousel";
@@ -22,14 +22,11 @@ const CATEGORY_STYLES = [
 ];
 
 export default async function HomePage() {
-  const [featured, latest] = await Promise.all([
-    getFeaturedBooks(),
-    getPublishedBooks(),
-  ]);
-
-  const featuredBooks = Array.from(
-    new Map([...featured, ...latest].map((book) => [book.id, book])).values()
-  ).slice(0, 6);
+  // Load the published catalogue once, then derive homepage sections in memory.
+  // This avoids a duplicate books query on every homepage request.
+  const latest = await getPublishedBooks();
+  const featured = latest.filter((book) => book.featured);
+  const featuredBooks = (featured.length ? featured : latest).slice(0, 6);
   const newPicks = latest.slice(0, 8);
 
   const supabase = await createClient();
