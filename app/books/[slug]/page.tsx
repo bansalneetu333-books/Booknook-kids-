@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BookCard } from "@/components/book-card";
+import { BookDetailShowcase } from "@/components/book-detail-showcase";
 import { WishlistButton } from "@/components/wishlist-button";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { SiteHeader } from "@/components/site-header";
@@ -57,23 +58,12 @@ export default async function BookDetailsPage({
           <div className="grid gap-0 lg:grid-cols-2">
             {/* Book cover gallery: cover first, then optional preview images */}
             <div className="bg-gradient-to-br from-violet-100 via-pink-50 to-sky-100 p-4 sm:p-8 lg:p-10">
-              <div className="mx-auto max-w-md">
-                <div className="relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-white p-3 shadow-xl sm:p-4">
-                  <div className="relative aspect-[3/4]">
-                    <Image
-                      src={coverUrl}
-                      alt={book.title + " cover"}
-                      fill
-                      priority
-                      sizes="(max-width: 1024px) 90vw, 500px"
-                      className="object-contain"
-                    />
-                  </div>
-                </div>
-                <p className="mt-3 text-center text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
-                  Book cover · Digital edition
-                </p>
-              </div>
+              <BookDetailShowcase
+                title={book.title}
+                coverUrl={coverUrl}
+                description={book.description}
+                genre={book.genre}
+              />
             </div>
 
             {/* Information */}
