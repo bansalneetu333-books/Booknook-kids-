@@ -136,18 +136,6 @@ export async function GET(request: Request) {
     // 4. Format version information
     // ------------------------------------------------------------
     const formattedBooks = await Promise.all(filteredBooks.map(async (book) => {
-      const fileAvailability = await getBookFileAvailability(book.id);
-      let resolvedCoverPath = book.cover_path || null;
-      if (!resolvedCoverPath && book.cover_url) {
-        const marker = "/storage/v1/object/public/book-covers/";
-        const index = book.cover_url.indexOf(marker);
-        if (index >= 0) resolvedCoverPath = book.cover_url.slice(index + marker.length).split("?")[0] || null;
-      }
-      if (!resolvedCoverPath && book.slug) {
-        const { data: coverFiles } = await supabase.storage.from("book-covers").list(String(book.slug).trim(), { limit: 100, sortBy: { column: "created_at", order: "desc" } });
-        const cover = (coverFiles ?? []).find((file) => /\\.(jpg|jpeg|png|webp|gif)$/i.test(String(file.name || "")));
-        if (cover) resolvedCoverPath = String(book.slug).trim() + "/" + cover.name;
-      }
       const versions = [...(book.book_versions ?? [])].sort(
         (a, b) => {
           const dateA = a.uploaded_at || a.created_at || "";
@@ -165,6 +153,44 @@ export async function GET(request: Request) {
         versions.find((version) => version.is_current === true) ??
         null;
 
+      // Use paths already returned by the catalogue query first. Only do the
+      // more expensive Storage fallback when the database has no usable EPUB path.
+      const hasDatabaseEpubPath =
+        Boolean(book.epub_path && String(book.epub_path).toLowerCase().endsWith(".epub")) ||
+        versions.some((version) => {
+          const path = version.epub_path || version.file_path || "";
+          const type = String(version.file_type || "").toLowerCase();
+          return String(path).toLowerCase().endsWith(".epub") && !type.includes("pdf");
+        });
+
+      const fileAvailability = hasDatabaseEpubPath
+        ? {
+            epubAvailable: true,
+            pdfAvailable: false,
+            epubPath: book.epub_path || versions.find((version => {
+              const path = version.epub_path || version.file_path || "";
+              const type = String(version.file_type || "").toLowerCase();
+              return String(path).toLowerCase().endsWith(".epub") && !type.includes("pdf");
+            }))?.epub_path || versions.find((version => {
+              const path = version.epub_path || version.file_path || "";
+              const type = String(version.file_type || "").toLowerCase();
+              return String(path).toLowerCase().endsWith(".epub") && !type.includes("pdf");
+            }))?.file_path || null,
+            pdfPath: null,
+          }
+        : await getBookFileAvailability(book.id);
+
+      let resolvedCoverPath = book.cover_path || null;
+      if (!resolvedCoverPath && book.cover_url) {
+        const marker = "/storage/v1/object/public/book-covers/";
+        const index = book.cover_url.indexOf(marker);
+        if (index >= 0) resolvedCoverPath = book.cover_url.slice(index + marker.length).split("?")[0] || null;
+      }
+      if (!resolvedCoverPath && book.slug) {
+        const { data: coverFiles } = await supabase.storage.from("book-covers").list(String(book.slug).trim(), { limit: 100, sortBy: { column: "created_at", order: "desc" } });
+        const cover = (coverFiles ?? []).find((file) => /\\.(jpg|jpeg|png|webp|gif)$/i.test(String(file.name || "")));
+        if (cover) resolvedCoverPath = String(book.slug).trim() + "/" + cover.name;
+      }
       return {
         id: book.id,
         title: book.title,
