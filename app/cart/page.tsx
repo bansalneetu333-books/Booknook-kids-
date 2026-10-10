@@ -188,10 +188,13 @@ export default function CartPage() {
                   type="button"
                   onClick={() => {
                     if (items.length) {
-                      // Checkout reads the complete server cart, so every book
-                      // currently in the cart is included—regardless of how
-                      // many items were added or how long the URL becomes.
-                      router.push("/checkout?cart=all");
+                      // Guest carts live in localStorage, so pass their IDs to
+                      // checkout. Signed-in carts are read from Supabase to keep
+                      // the complete server-side cart in one place.
+                      const destination = authenticated
+                        ? "/checkout?cart=all"
+                        : "/checkout?bookIds=" + items.map((item) => encodeURIComponent(item.id)).join(",");
+                      router.push(destination);
                     }
                   }}
                   className="mt-4 flex w-full items-center justify-center rounded-full bg-[var(--booknook-primary)] px-5 py-3 font-black text-white"
