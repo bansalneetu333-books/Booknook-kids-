@@ -51,12 +51,25 @@ export default function CartPage() {
     try {
       const response = await fetch("/api/cart", { cache: "no-store" });
       if (response.ok) {
-        const data = await response.json();
+        let data = await response.json();
         setAuthenticated(Boolean(data.authenticated));
-        if (data.authenticated && Array.isArray(data.items)) {
-          setItems(data.items);
-          setOrders(Array.isArray(data.orders) ? data.orders : []);
-          localStorage.setItem("booknook_cart", JSON.stringify(data.items));
+        if (data.authenticated) {
+          if (local.length) {
+            await fetch("/api/cart", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ items: local }),
+            });
+            const refreshed = await fetch("/api/cart", { cache: "no-store" });
+            if (refreshed.ok) data = await refreshed.json();
+          }
+          if (Array.isArray(data.items)) {
+            setItems(data.items);
+            setOrders(Array.isArray(data.orders) ? data.orders : []);
+            localStorage.setItem("booknook_cart", JSON.stringify(data.items));
+          }
+        } else {
+          setItems(local);
         }
       }
     } catch {
