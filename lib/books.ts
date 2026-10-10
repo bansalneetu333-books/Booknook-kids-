@@ -118,25 +118,33 @@ export async function getBookBySlug(
 ): Promise<Book | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // Older catalogue links may contain a book UUID instead of its slug.
+  // Resolve by slug first, then by ID so existing links do not lead to 404.
+  const { data: bySlug, error: slugError } = await supabase
     .from("books")
     .select(BOOK_FIELDS)
     .eq("slug", slug)
     .or("published.eq.true,is_published.eq.true")
     .maybeSingle();
 
-  if (error) {
-    console.error(
-      "Unable to load book:",
-      error
-    );
+  if (slugError) {
+    console.error("Unable to load book by slug:", slugError);
+  }
+  if (bySlug) return normalizeBook(bySlug);
 
+  const { data: byId, error: idError } = await supabase
+    .from("books")
+    .select(BOOK_FIELDS)
+    .eq("id", slug)
+    .or("published.eq.true,is_published.eq.true")
+    .maybeSingle();
+
+  if (idError) {
+    console.error("Unable to load book by ID:", idError);
     return null;
   }
 
-  return data
-    ? normalizeBook(data)
-    : null;
+  return byId ? normalizeBook(byId) : null;
 }
 
 export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
