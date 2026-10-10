@@ -52,34 +52,27 @@ export default async function BookDetailsPage({
       </div>
 
       {/* Book details */}
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <div className="overflow-hidden bn-surface">
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+        <div className="overflow-hidden rounded-[2rem] border border-violet-100 bg-white shadow-[0_18px_55px_rgba(54,40,105,0.10)]">
           <div className="grid gap-0 lg:grid-cols-2">
-            {/* Cover */}
-            <div className="flex items-center justify-center bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100 p-8 sm:p-12">
-              <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white p-3 shadow-2xl sm:p-4">
-                <div className="relative aspect-[3/4]">
-                  {coverUrl ? (
+            {/* Book cover gallery: cover first, then optional preview images */}
+            <div className="bg-gradient-to-br from-violet-100 via-pink-50 to-sky-100 p-4 sm:p-8 lg:p-10">
+              <div className="mx-auto max-w-md">
+                <div className="relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-white p-3 shadow-xl sm:p-4">
+                  <div className="relative aspect-[3/4]">
                     <Image
                       src={coverUrl}
-                      alt={book.title}
+                      alt={book.title + " cover"}
                       fill
                       priority
                       sizes="(max-width: 1024px) 90vw, 500px"
                       className="object-contain"
                     />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-                      <div className="mb-5 text-7xl">
-                        📚
-                      </div>
-
-                      <h2 className="text-xl font-extrabold text-slate-800">
-                        {book.title}
-                      </h2>
-                    </div>
-                  )}
+                  </div>
                 </div>
+                <p className="mt-3 text-center text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
+                  Book cover · Digital edition
+                </p>
               </div>
             </div>
 
