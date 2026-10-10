@@ -43,10 +43,13 @@ export function BookCard({ book }: BookCardProps) {
           <h3 className="line-clamp-2 text-sm font-extrabold text-slate-900 sm:text-base">{book.title}</h3>
           {book.author && <p className="mt-1 line-clamp-1 text-xs text-slate-500 sm:text-sm">By {book.author}</p>}
           <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-            <span className="text-base font-black text-slate-900 sm:text-lg">
-              {typeof book.price === "number" ? `₹${book.price.toFixed(2)}` : "View details"}
+            <span className="min-w-0 whitespace-nowrap text-sm font-black text-slate-900 sm:text-lg">
+              {typeof book.price === "number" && book.price > 0 ? `₹${book.price.toFixed(2)}` : "View details"}
             </span>
-            <span className="rounded-full bg-[#6d5dfc] px-3 py-2 text-[11px] font-black text-white sm:text-xs">View Book</span>
+            <span className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-[#6d5dfc] px-2.5 py-2 text-[11px] font-black leading-none text-white transition-colors group-hover:bg-[#5848ed] sm:px-3 sm:text-xs">
+              <span className="sm:hidden">View</span>
+              <span className="hidden sm:inline">View Book</span>
+            </span>
           </div>
         </div>
       </Link>
