@@ -86,11 +86,6 @@ export default async function BookDetailsPage({
             {/* Information */}
             <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
               <div className="flex flex-wrap gap-2">
-                {book.is_free && (
-                  <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-700">
-                    📖 Free Reading
-                  </span>
-                )}
                 {book.genre && (
                   <span className="w-fit rounded-full bg-violet-100 px-3 py-1.5 text-xs font-bold text-violet-700">
                     {book.genre}
@@ -107,15 +102,6 @@ export default async function BookDetailsPage({
                   By{" "}
                   <span className="font-semibold text-slate-700">
                     {book.author}
-                  </span>
-                </p>
-              )}
-
-              {book.age_category && (
-                <p className="mt-2 text-sm text-slate-500">
-                  Recommended age:{" "}
-                  <span className="font-semibold text-slate-700">
-                    {book.age_category}
                   </span>
                 </p>
               )}
@@ -141,11 +127,9 @@ export default async function BookDetailsPage({
                   </p>
 
                   <p className="mt-1 text-3xl font-extrabold text-slate-900">
-                    {book.is_free
-                      ? "Free"
-                      : Number(book.price) > 0
+                    {Number(book.price) > 0
                       ? `₹${Number(book.price).toFixed(2)}`
-                      : "Free"}
+                      : "Price unavailable"}
                   </p>
                 </div>
 
@@ -155,32 +139,23 @@ export default async function BookDetailsPage({
               </div>
 
               <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                {book.is_free ? (
+                <>
                   <Link
-                    href={`/reader/${book.id}`}
-                    className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                    href={`/checkout?bookId=${book.id}`}
+                    className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
                   >
-                    📖 Read Free
+                    🛒 Buy Now
                   </Link>
-                ) : (
-                  <>
-                    <Link
-                      href={`/checkout?bookId=${book.id}`}
-                      className="inline-flex items-center justify-center rounded-full bg-violet-600 px-6 py-3.5 font-bold text-white shadow-sm transition hover:bg-violet-700"
-                    >
-                      🛒 Buy Now
-                    </Link>
-                    <AddToCartButton
-                      book={{
-                        id: book.id,
-                        title: book.title,
-                        slug: book.slug,
-                        price: Number(book.price),
-                        cover_path: book.cover_path,
-                      }}
-                    />
-                  </>
-                )}
+                  <AddToCartButton
+                    book={{
+                      id: book.id,
+                      title: book.title,
+                      slug: book.slug,
+                      price: Number(book.price),
+                      cover_path: book.cover_path,
+                    }}
+                  />
+                </>
 
                 <WishlistButton bookId={book.id} />
               </div>
