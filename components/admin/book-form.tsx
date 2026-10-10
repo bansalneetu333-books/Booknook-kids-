@@ -24,7 +24,7 @@ type Book = {
 };
 
 type SignedUpload = {
-  kind: "cover" | "epub";
+  kind: "cover" | "epub" | "preview";
   bucket: string;
   path: string;
   token: string;
@@ -71,6 +71,7 @@ export function BookForm({ book }: { book?: Book }) {
 
   const [cover, setCover] = useState<File | null>(null);
   const [epub, setEpub] = useState<File | null>(null);
+  const [previewFiles, setPreviewFiles] = useState<File[]>([]);
   const [coverSaved, setCoverSaved] = useState(Boolean(book?.cover_path));
   const [epubSaved, setEpubSaved] = useState(Boolean(book?.epub_path));
 
@@ -203,19 +204,15 @@ export function BookForm({ book }: { book?: Book }) {
           : null,
 
         epub
-          ? {
-              kind: "epub" as const,
-              size: epub.size,
-              type: "application/epub+zip",
-              extension: "epub",
-            }
+          ? { kind: "epub" as const, size: epub.size, type: "application/epub+zip", extension: "epub" }
           : null,
-
+        ...previewFiles.map((file) => ({ kind: "preview" as const, size: file.size, type: file.type || "image/jpeg", extension: extension(file), name: file.name })),
       ].filter(Boolean) as Array<{
-        kind: "cover" | "epub";
+        kind: "cover" | "epub" | "preview";
         size: number;
         type: string;
         extension: string;
+        name?: string;
       }>;
 
       if (files.length > 0) {
@@ -267,7 +264,9 @@ export function BookForm({ book }: { book?: Book }) {
           const file =
             item.kind === "cover"
               ? cover
-              : epub;
+              : item.kind === "epub"
+              ? epub
+              : previewFiles.find((candidate) => candidate.name === item.name);
 
           if (!file) continue;
 
@@ -594,6 +593,19 @@ export function BookForm({ book }: { book?: Book }) {
 
   
         </div>
+
+        <label className="grid gap-2 rounded-2xl border-2 border-dashed border-violet-200 bg-violet-50/50 p-4 text-sm font-bold sm:col-span-2">
+          <span>Sample pages for slideshow</span>
+          <span className="text-xs font-medium text-slate-500">Choose up to 5 JPG, PNG, WEBP or AVIF images, 8 MB each. These appear in the book preview slideshow.</span>
+          <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={(e) => {
+            const selected = Array.from(e.target.files ?? []);
+            if (selected.length > 5) { setStatus("Choose up to 5 sample pages."); setPreviewFiles(selected.slice(0, 5)); return; }
+            if (selected.some((file) => file.size > MAX_COVER)) { setStatus("Each sample page must be 8 MB or smaller."); return; }
+            setPreviewFiles(selected);
+            setStatus("");
+          }} />
+          {previewFiles.length > 0 && <span className="text-xs font-semibold text-violet-700">{previewFiles.length} sample page(s) selected. They upload when you save.</span>}
+        </label>
 
         <div className="flex flex-wrap gap-3">
 
