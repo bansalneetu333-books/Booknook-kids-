@@ -63,6 +63,7 @@ export default async function BookDetailsPage({
                 coverUrl={coverUrl}
                 description={book.description}
                 genre={book.genre}
+                slug={book.slug}
               />
             </div>
 
