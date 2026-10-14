@@ -175,15 +175,15 @@ export default function AdminBooksPage() {
     }
   }
 
-  function coverUrl(path: string | null) {
-    if (!path) return null;
+  function coverUrl(path: string | null, slug: string | null) {
+    if (!path && !slug) return null;
 
-    const base =
-      process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-    if (!base) return null;
-
-    return `${base}/storage/v1/object/public/book-covers/${path}`;
+    // Use the server route so covers work even when the Storage bucket
+    // is private or a legacy book has an incomplete cover_path.
+    const params = new URLSearchParams();
+    if (path) params.set("path", path);
+    if (slug) params.set("slug", slug);
+    return "/api/books/cover?" + params.toString();
   }
 
   return (
@@ -299,7 +299,7 @@ export default function AdminBooksPage() {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {books.map((book) => {
-            const cover = coverUrl(book.cover_path);
+            const cover = coverUrl(book.cover_path, book.slug);
             const busy = busyId === book.id;
 
             return (
