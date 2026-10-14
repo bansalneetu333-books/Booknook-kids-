@@ -169,8 +169,18 @@ export async function createEpubSignedUrl(path: string, expiresIn = 300) {
     .createSignedUrl(normalizedPath, expiresIn);
 
   if (error || !data?.signedUrl) {
-    console.error("Signed URL error:", error);
-    throw new Error("Unable to prepare book access.");
+    console.error("Signed URL error:", {
+      bucket: PRIVATE_EBOOK_BUCKET,
+      path: normalizedPath,
+      message: error?.message,
+      statusCode: error?.statusCode,
+      error: error?.name,
+    });
+    throw new Error(
+      error?.message
+        ? `Unable to prepare book access: ${error.message}`
+        : `Unable to prepare book access for storage path: ${normalizedPath}`
+    );
   }
   return data.signedUrl;
 }
