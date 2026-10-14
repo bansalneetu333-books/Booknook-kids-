@@ -28,6 +28,7 @@ type SignedUpload = {
   bucket: string;
   path: string;
   token: string;
+  name?: string;
 };
 
 function slugify(value: string) {
