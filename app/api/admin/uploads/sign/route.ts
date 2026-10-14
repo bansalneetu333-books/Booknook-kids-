@@ -7,7 +7,7 @@ const PUBLIC_MEDIA_BUCKET = "book-covers";
 const MAX_FILE_SIZE = 150 * 1024 * 1024;
 const MAX_COVER_SIZE = 8 * 1024 * 1024;
 
-type UploadKind = "cover" | "epub";
+type UploadKind = "cover" | "epub" | "preview";
 
 type UploadRequest = {
   bookId?: string;
@@ -17,6 +17,7 @@ type UploadRequest = {
     size: number;
     type: string;
     extension: string;
+    name?: string;
   }>;
 };
 
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
       bucket: string;
       path: string;
       token: string;
+      name?: string;
     }> = [];
 
     const usedKinds = new Set<UploadKind>();
@@ -112,7 +114,7 @@ export async function POST(request: Request) {
     for (const file of files) {
       if (
         !file ||
-        !["cover", "epub"].includes(
+        !["cover", "epub", "preview"].includes(
           file.kind
         )
       ) {
@@ -146,20 +148,20 @@ export async function POST(request: Request) {
       }
 
       if (
-        file.kind === "cover" &&
+        file.kind !== "epub" &&
         file.size > MAX_COVER_SIZE
       ) {
         return NextResponse.json(
           {
             error:
-              "Cover image must be 8 MB or smaller.",
+              "Cover and preview images must be 8 MB or smaller.",
           },
           { status: 400 }
         );
       }
 
       if (
-        file.kind !== "cover" &&
+        file.kind === "epub" &&
         file.size > MAX_FILE_SIZE
       ) {
         return NextResponse.json(
@@ -184,17 +186,15 @@ export async function POST(request: Request) {
       let path: string;
 
       if (file.kind === "cover") {
-        bucket =
-          PUBLIC_MEDIA_BUCKET;
-
-        path =
-          `${safeBookSlug}/cover-${Date.now()}.${extension}`;
+        bucket = PUBLIC_MEDIA_BUCKET;
+        path = `${safeBookSlug}/cover-${Date.now()}.${extension}`;
+      } else if (file.kind === "preview") {
+        bucket = PUBLIC_MEDIA_BUCKET;
+        const safeName = cleanPart(file.name || `preview-${Date.now()}.${extension}`);
+        path = `${safeBookSlug}/previews/${Date.now()}-${safeName}`;
       } else {
-        bucket =
-          PRIVATE_EBOOK_BUCKET;
-
-        path =
-          `${safeBookSlug}/v${safeVersion}/${file.kind}.${extension}`;
+        bucket = PRIVATE_EBOOK_BUCKET;
+        path = `${safeBookSlug}/v${safeVersion}/epub.${extension}`;
       }
 
       const { data, error } =
@@ -223,6 +223,7 @@ export async function POST(request: Request) {
         bucket,
         path,
         token: data.token,
+        ...(file.kind === "preview" && file.name ? { name: file.name } : {}),
       });
     }
 
