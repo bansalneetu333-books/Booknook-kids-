@@ -124,7 +124,11 @@ export async function POST(request: Request) {
         );
       }
 
-      if (usedKinds.has(file.kind)) {
+      // A book may have multiple preview images, but only one cover and EPUB per request.
+      if (
+        file.kind !== "preview" &&
+        usedKinds.has(file.kind)
+      ) {
         return NextResponse.json(
           {
             error: `Duplicate ${file.kind} upload.`,
@@ -133,7 +137,9 @@ export async function POST(request: Request) {
         );
       }
 
-      usedKinds.add(file.kind);
+      if (file.kind !== "preview") {
+        usedKinds.add(file.kind);
+      }
 
       if (
         !Number.isFinite(file.size) ||
