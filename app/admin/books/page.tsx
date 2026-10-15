@@ -375,7 +375,7 @@ export default function AdminBooksPage() {
                     </Link>
 
                     <Link
-                      href={`/books/${book.slug}`}
+                      href={`/books/${book.id}`}
                       target="_blank"
                       className="rounded-[1.25rem] border border-[var(--booknook-border)] px-3 py-2 text-center text-xs font-bold text-[var(--booknook-ink)] hover:bg-[#f7f8fc]"
                     >
