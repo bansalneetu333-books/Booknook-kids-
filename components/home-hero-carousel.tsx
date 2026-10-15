@@ -54,9 +54,9 @@ export function HomeHeroCarousel({ books }: HeroProps) {
   const book = slide?.book;
 
   return (
-    <section className="px-3 pb-5 pt-4 sm:px-6 sm:pb-8 sm:pt-6 lg:px-8">
+    <section className="px-3 pb-3 pt-3 sm:px-6 sm:pb-5 sm:pt-4 lg:px-8">
       <div
-        className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#102b50] text-white shadow-[0_24px_70px_rgba(16,43,80,.18)] sm:rounded-[2.5rem]"
+        className="home-hero relative mx-auto max-w-7xl overflow-hidden rounded-[1.5rem] bg-[#102b50] text-white shadow-[0_24px_70px_rgba(16,43,80,.18)] sm:rounded-[2rem]"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocus={() => setPaused(true)}
@@ -67,20 +67,20 @@ export function HomeHeroCarousel({ books }: HeroProps) {
         <div className="pointer-events-none absolute -right-20 -top-28 h-80 w-80 rounded-full bg-[#55c7b5]/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-[28%] h-80 w-80 rounded-full bg-[#ffb98a]/15 blur-3xl" />
 
-        <div className="relative grid min-h-[430px] grid-cols-1 items-center gap-4 px-6 py-8 sm:min-h-[470px] sm:px-10 sm:py-10 lg:min-h-[500px] lg:grid-cols-[1.03fr_.97fr] lg:px-14">
+        <div className="hero-layout relative grid min-h-[360px] grid-cols-1 items-center gap-2 px-5 py-6 sm:min-h-[400px] sm:px-8 sm:py-8 lg:min-h-[360px] lg:grid-cols-[1.03fr_.97fr] lg:px-12">
           <div key={slide.key + "-copy"} className="relative z-10 max-w-xl animate-[heroFadeIn_.5s_ease_both]">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.2em] text-[#bcefe7] sm:text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-[#6ee7d2]" />
               {book ? (book.is_free ? "A free read to begin" : "Discover your next read") : "Welcome to BookNook Kids"}
             </p>
-            <p className="mt-5 text-sm font-bold text-white/70 sm:text-base">{slide.eyebrow}</p>
-            <h1 className="mt-3 max-w-xl text-4xl font-black leading-[1.02] tracking-[-.04em] sm:text-5xl lg:text-6xl">
+            <p className="mt-3 text-sm font-bold text-white/70 sm:text-base">{slide.eyebrow}</p>
+            <h1 className="mt-2 max-w-xl text-3xl font-black leading-[1.02] tracking-[-.04em] sm:text-4xl lg:text-5xl">
               {book ? <>Meet your next <span className="text-[#8fe3d6]">favourite</span> story.</> : slide.title}
             </h1>
-            <p className="mt-4 max-w-lg text-sm leading-6 text-white/75 sm:text-base sm:leading-7">
+            <p className="mt-3 max-w-lg text-sm leading-5 text-white/75 sm:text-base sm:leading-6">
               {book?.description?.trim() || (book ? `Open ${book.title} and step into a new adventure. Digital stories made to be enjoyed on your own screen, at your own pace.` : slide.body)}
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="mt-4 flex flex-wrap items-center gap-3">
               <Link href={book ? `/books/${book.slug}` : "/books"} className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#f9d77e] px-6 py-3 text-sm font-black text-[#172b45] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffe6a0]">
                 {book ? "Explore this e-book" : "Explore all books"} <span className="ml-2">↗</span>
               </Link>
@@ -88,12 +88,12 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                 Browse collection
               </Link>
             </div>
-            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-white/65">
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-white/65">
               <span>✦ Instant digital access</span><span>✦ Read on your device</span>
             </div>
           </div>
 
-          <div key={slide.key + "-art"} className="relative mx-auto flex h-[230px] w-full max-w-[470px] items-center justify-center animate-[heroArtIn_.65s_ease_both] sm:h-[300px] lg:h-[390px]">
+          <div key={slide.key + "-art"} className="relative mx-auto flex h-[190px] w-full max-w-[470px] items-center justify-center animate-[heroArtIn_.65s_ease_both] sm:h-[250px] lg:h-[300px]">
             <div className="absolute h-[220px] w-[220px] rounded-full border border-white/15 bg-white/[.04] sm:h-[290px] sm:w-[290px] lg:h-[350px] lg:w-[350px]" />
             <div className="absolute h-[180px] w-[180px] rounded-full border border-dashed border-[#8fe3d6]/40 sm:h-[245px] sm:w-[245px] lg:h-[295px] lg:w-[295px]" />
             {book ? (
@@ -105,12 +105,12 @@ export function HomeHeroCarousel({ books }: HeroProps) {
                     </div>
                   </div>
                 ))}
-                <Link href={`/books/${book.slug}`} aria-label={`View ${book.title}`} className="relative z-10 block h-[215px] w-[145px] -rotate-2 overflow-hidden rounded-xl border border-white/40 bg-white p-2 shadow-[0_24px_60px_rgba(0,0,0,.38)] transition duration-500 hover:rotate-0 hover:scale-[1.03] sm:h-[285px] sm:w-[195px] lg:h-[345px] lg:w-[235px]">
+                <Link href={`/books/${book.slug}`} aria-label={`View ${book.title}`} className="relative z-10 block h-[180px] w-[120px] -rotate-2 overflow-hidden rounded-xl border border-white/40 bg-white p-2 shadow-[0_24px_60px_rgba(0,0,0,.38)] transition duration-500 hover:rotate-0 hover:scale-[1.03] sm:h-[230px] sm:w-[155px] lg:h-[280px] lg:w-[190px]">
                   <div className="relative h-full w-full overflow-hidden rounded-lg bg-[#f8f5ef]">
                     <Image src={`/api/books/cover?slug=${encodeURIComponent(book.slug)}`} alt={book.title} fill priority sizes="(max-width: 640px) 145px, 235px" className="object-contain" />
                   </div>
                 </Link>
-                <div className="absolute bottom-[5%] right-[3%] z-20 max-w-[170px] rounded-2xl border border-white/25 bg-[#fffdf7] px-4 py-3 text-[#172b45] shadow-xl sm:bottom-[9%] sm:right-[1%]">
+                <div className="absolute bottom-[3%] right-[1%] z-20 max-w-[150px] rounded-2xl border border-white/25 bg-[#fffdf7] px-3 py-2.5 text-[#172b45] shadow-xl sm:bottom-[6%] sm:right-[1%] sm:max-w-[170px]">
                   <p className="text-[9px] font-black uppercase tracking-[.16em] text-[#176e70]">{book.is_free ? "Ready to read" : book.genre || "Featured e-book"}</p>
                   <p className="mt-1 line-clamp-2 text-xs font-black leading-4 sm:text-sm">{book.title}</p>
                   <p className="mt-1 text-[11px] font-bold text-slate-500">{book.is_free ? "Free digital read" : typeof book.price === "number" && book.price > 0 ? `₹${book.price.toFixed(0)} · Digital e-book` : "Explore the book"}</p>
@@ -122,7 +122,7 @@ export function HomeHeroCarousel({ books }: HeroProps) {
           </div>
         </div>
 
-        <div className="relative flex items-center justify-between border-t border-white/10 bg-black/10 px-5 py-3 sm:px-10">
+        <div className="relative flex items-center justify-between border-t border-white/10 bg-black/10 px-5 py-2 sm:px-10">
           <p className="text-[10px] font-bold tracking-wide text-white/60 sm:text-xs">STORIES TO OPEN. WORLDS TO DISCOVER.</p>
           <div className="flex items-center gap-2">
             <button type="button" aria-label="Previous slide" onClick={() => setActive((value) => (value - 1 + slides.length) % slides.length)} className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-sm transition hover:bg-white/10">←</button>
