@@ -1,22 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 
+function normalizeSupabaseUrl(value: string) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    throw new Error(
+      "Invalid NEXT_PUBLIC_SUPABASE_URL. Use the bare Supabase project URL, for example https://your-project.supabase.co."
+    );
+  }
+}
+
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url) {
+  if (!rawUrl || !serviceRoleKey) {
     throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL."
+      "Missing server-only Supabase service-role configuration."
     );
   }
 
-  if (!serviceRoleKey) {
-    throw new Error(
-      "Missing SUPABASE_SERVICE_ROLE_KEY."
-    );
-  }
-
-  return createClient(url, serviceRoleKey, {
+  return createClient(normalizeSupabaseUrl(rawUrl), serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
