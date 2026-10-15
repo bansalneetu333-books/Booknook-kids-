@@ -1,6 +1,9 @@
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// Re-export for existing API routes that import this helper from "@/lib/admin".
+export { createAdminClient };
+
 export const ADMIN_EMAIL = "bansalneetu333@gmail.com";
 
 export async function requireAdmin() {
