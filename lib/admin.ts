@@ -1,36 +1,7 @@
 import { createClient as createServerSupabaseClient } from "@/lib/supabase/server";
-import { createClient as createSupabaseAdminClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const ADMIN_EMAIL = "bansalneetu333@gmail.com";
-
-export function createAdminClient() {
-  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!rawUrl || !serviceRoleKey) {
-    throw new Error(
-      "Missing server-only Supabase service-role configuration."
-    );
-  }
-
-  let url: string;
-
-  try {
-    url = new URL(rawUrl).origin;
-  } catch {
-    throw new Error(
-      "Invalid NEXT_PUBLIC_SUPABASE_URL. Use the bare Supabase project URL, for example https://your-project.supabase.co."
-    );
-  }
-
-  return createSupabaseAdminClient(url, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-  });
-}
 
 export async function requireAdmin() {
   const supabase = await createServerSupabaseClient();
