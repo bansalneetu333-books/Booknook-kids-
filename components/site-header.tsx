@@ -1,149 +1,19 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-
-const navigation = [
-  { label: "Home", href: "/" },
-  { label: "Comics", href: "/books" },
-  { label: "Library", href: "/library" },
-  { label: "Wishlist", href: "/wishlist" },
-  { label: "Cart", href: "/cart" },
-];
-
-export function SiteHeader() {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
-
-  const refreshCartCount = () => {
-    try {
-      const local = JSON.parse(localStorage.getItem("booknook_cart") || "[]");
-      if (Array.isArray(local)) {
-        setCartCount(local.length);
-      }
-    } catch {
-      setCartCount(0);
-    }
-
-    fetch("/api/cart", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = await response.json();
-        if (typeof data.count === "number") setCartCount(data.count);
-      })
-      .catch(() => {});
-  };
-
-  useEffect(() => {
-    refreshCartCount();
-    window.addEventListener("booknook-cart-updated", refreshCartCount);
-    window.addEventListener("storage", refreshCartCount);
-    return () => {
-      window.removeEventListener("booknook-cart-updated", refreshCartCount);
-      window.removeEventListener("storage", refreshCartCount);
-    };
-  }, [pathname]);
-
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
-
-  return (
-    <header className="sticky top-0 z-50 border-b border-[var(--booknook-border)] bg-white/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--booknook-primary)] via-[var(--booknook-secondary)] to-[var(--booknook-sky)] text-xl shadow-md">
-            📚
-          </span>
-          <span className="truncate text-base font-black tracking-tight text-[var(--booknook-ink)] sm:text-lg">
-            BookNook Kids
-          </span>
-        </Link>
-
-        <nav className="ml-auto hidden items-center gap-1 md:flex">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={
-                "rounded-xl px-3 py-2 text-sm font-extrabold transition " +
-                (isActive(item.href)
-                  ? "bg-[rgba(109,93,252,0.10)] text-[var(--booknook-primary)]"
-                  : "text-[var(--booknook-muted)] hover:bg-[#f1f2f7] hover:text-[var(--booknook-ink)]")
-              }
-            >
-              {item.label === "Cart" ? (
-                <span className="inline-flex items-center gap-1.5">
-                  Cart
-                  {cartCount > 0 && <span className="rounded-full bg-[var(--booknook-primary)] px-1.5 py-0.5 text-[10px] leading-none text-white">{cartCount}</span>}
-                </span>
-              ) : item.label}
-            </Link>
-          ))}
-          <Link
-            href="/account"
-            className="ml-1 rounded-full bg-[var(--booknook-ink)] px-4 py-2 text-sm font-black text-white shadow-sm transition hover:opacity-90"
-          >
-            Account
-          </Link>
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2 md:hidden">
-          <Link
-            href="/cart"
-            aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
-            className="relative flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--booknook-border)] bg-white text-lg shadow-sm"
-          >
-            🛒
-            {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[var(--booknook-primary)] px-1.5 py-0.5 text-[10px] font-black leading-4 text-white">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-          <button
-            type="button"
-            aria-label={open ? "Close navigation menu" : "Open navigation menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((value) => !value)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--booknook-border)] bg-white text-lg font-black text-[var(--booknook-ink)] shadow-sm"
-          >
-            {open ? "✕" : "☰"}
-          </button>
-        </div>
-      </div>
-
-      {open && (
-        <div className="border-t border-[var(--booknook-border)] bg-white px-4 py-3 shadow-lg md:hidden">
-          <nav className="mx-auto grid max-w-7xl grid-cols-2 gap-2">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={
-                  "rounded-2xl px-4 py-3 text-sm font-black " +
-                  (isActive(item.href)
-                    ? "bg-[rgba(109,93,252,0.10)] text-[var(--booknook-primary)]"
-                    : "bg-[#f7f8fc] text-slate-700")
-                }
-              >
-                {item.label === "Cart" ? `Cart${cartCount ? ` (${cartCount})` : ""}` : item.label}
-              </Link>
-            ))}
-            <Link
-              href="/account"
-              onClick={() => setOpen(false)}
-              className="col-span-2 rounded-2xl bg-[var(--booknook-ink)] px-4 py-3 text-center text-sm font-black text-white"
-            >
-              Account
-            </Link>
-          </nav>
-        </div>
-      )}
-    </header>
-  );
+const navigation=[{label:"Home",href:"/"},{label:"Books",href:"/books"},{label:"Categories",href:"/books"},{label:"Free Reads",href:"/free-reading"},{label:"About",href:"/about"}];
+export function SiteHeader(){
+ const pathname=usePathname(); const [open,setOpen]=useState(false); const [cartCount,setCartCount]=useState(0); const [search,setSearch]=useState("");
+ useEffect(()=>{const refresh=()=>{try{const v=JSON.parse(localStorage.getItem("booknook_cart")||"[]");if(Array.isArray(v))setCartCount(v.length)}catch{setCartCount(0)}fetch("/api/cart",{cache:"no-store"}).then(async r=>{if(!r.ok)return;const d=await r.json();if(typeof d.count==="number")setCartCount(d.count)}).catch(()=>{})};refresh();window.addEventListener("booknook-cart-updated",refresh);window.addEventListener("storage",refresh);return()=>{window.removeEventListener("booknook-cart-updated",refresh);window.removeEventListener("storage",refresh)}},[pathname]);
+ function submitSearch(e:React.FormEvent<HTMLFormElement>){e.preventDefault();window.location.href="/books"+(search.trim()?"?q="+encodeURIComponent(search.trim()):"")}
+ const active=(href:string)=>href==="/" ? pathname==="/" : pathname===href||pathname.startsWith(href+"/");
+ return <header className="site-header"><div className="site-header-inner">
+ <Link href="/" className="brand" aria-label="BookNook Kids home" onClick={()=>setOpen(false)}><span className="brand-mark">📖</span><span className="brand-copy"><strong>BookNook <em>Kids</em></strong><small>A little world of big imagination</small></span></Link>
+ <nav className="desktop-nav" aria-label="Main navigation">{navigation.map(n=><Link key={n.label} href={n.href} className={active(n.href)?"active":""}>{n.label}</Link>)}</nav>
+ <form className="header-search" onSubmit={submitSearch}><span aria-hidden="true">⌕</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search e-books..." aria-label="Search e-books"/></form>
+ <Link href="/wishlist" className="header-icon" aria-label="Wishlist">♡</Link><Link href="/cart" className="header-icon cart-icon" aria-label="Cart">🛒{cartCount>0&&<span>{cartCount}</span>}</Link><Link href="/login" className="login-button">Login</Link>
+ <button type="button" className="mobile-menu-button" aria-expanded={open} aria-label="Toggle menu" onClick={()=>setOpen(v=>!v)}>{open?"×":"☰"}</button></div>
+ {open&&<nav className="mobile-nav" aria-label="Mobile navigation">{navigation.map(n=><Link key={n.label} href={n.href} onClick={()=>setOpen(false)}>{n.label}</Link>)}<Link href="/wishlist">Wishlist</Link><Link href="/cart">Cart {cartCount||""}</Link><Link href="/account">My Account</Link><form className="mobile-search" onSubmit={submitSearch}><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search e-books..." aria-label="Search e-books"/><button>Search</button></form></nav>}</header>
 }
-
 export default SiteHeader;
