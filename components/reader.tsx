@@ -350,18 +350,18 @@ export function EpubReader({
               Math.min(window.innerHeight - 220, 900)
             );
 
+            // BookNook Kids fixed-layout pages are portrait 9:16.
+            // The previous 2:3 sizing clipped pages and could leave
+            // the reader looking blank on mobile Safari.
             const pageWidth = Math.max(
               1,
               Math.floor(
-                Math.min(
-                  availableWidth,
-                  availableHeight * (1024 / 1536)
-                )
+                Math.min(availableWidth, availableHeight * (9 / 16))
               )
             );
             const pageHeight = Math.max(
               1,
-              Math.floor(pageWidth * (1536 / 1024))
+              Math.floor(pageWidth * (16 / 9))
             );
 
             el.style.height = pageHeight + "px";
@@ -369,78 +369,9 @@ export function EpubReader({
             el.style.maxHeight = pageHeight + "px";
             el.style.width = "100%";
 
+            // Let epub.js manage its own stage, views and iframe geometry.
+            // Overriding those internals after display can hide page content.
             rendition.resize(pageWidth, pageHeight);
-
-            const stage =
-              el.querySelector<HTMLElement>(".epub-container");
-
-            if (stage) {
-              stage.style.setProperty(
-                "width",
-                pageWidth + "px",
-                "important"
-              );
-              stage.style.setProperty(
-                "height",
-                pageHeight + "px",
-                "important"
-              );
-              stage.style.setProperty(
-                "overflow",
-                "hidden",
-                "important"
-              );
-            }
-
-            el.querySelectorAll<HTMLElement>(".epub-view").forEach(
-              (view) => {
-                view.style.setProperty(
-                  "width",
-                  pageWidth + "px",
-                  "important"
-                );
-                view.style.setProperty(
-                  "height",
-                  pageHeight + "px",
-                  "important"
-                );
-                view.style.setProperty(
-                  "max-width",
-                  pageWidth + "px",
-                  "important"
-                );
-                view.style.setProperty(
-                  "max-height",
-                  pageHeight + "px",
-                  "important"
-                );
-              }
-            );
-
-            el.querySelectorAll<HTMLIFrameElement>("iframe").forEach(
-              (iframe) => {
-                iframe.style.setProperty(
-                  "width",
-                  pageWidth + "px",
-                  "important"
-                );
-                iframe.style.setProperty(
-                  "height",
-                  pageHeight + "px",
-                  "important"
-                );
-                iframe.style.setProperty(
-                  "max-width",
-                  pageWidth + "px",
-                  "important"
-                );
-                iframe.style.setProperty(
-                  "max-height",
-                  pageHeight + "px",
-                  "important"
-                );
-              }
-            );
           };
 
           resizeReader();
