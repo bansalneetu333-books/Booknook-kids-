@@ -18,6 +18,7 @@ type SlideBook = {
 };
 
 type HeroProps = { books: SlideBook[] };
+type HeroSlide = { key: string; book?: SlideBook; eyebrow: string; title: string; body: string };
 
 const fallbackMessages = [
   { eyebrow: "A little wonder, every day", title: "Big stories for curious minds.", body: "Explore illustrated adventures, smart ideas and stories that stay with you." },
@@ -28,12 +29,12 @@ const fallbackMessages = [
 export function HomeHeroCarousel({ books }: HeroProps) {
   const slides = useMemo(() => {
     const sorted = [...books].sort((a, b) => Number(Boolean(b.is_free)) - Number(Boolean(a.is_free)));
-    const bookSlides = sorted.slice(0, 5).map((book, index) => ({
+    const bookSlides: HeroSlide[] = sorted.slice(0, 5).map((book, index) => ({
       key: book.id,
       book,
       ...fallbackMessages[index % fallbackMessages.length],
     }));
-    return bookSlides.length ? bookSlides : fallbackMessages.map((message, index) => ({ key: `welcome-${index}`, book: undefined, ...message }));
+    return bookSlides.length ? bookSlides : fallbackMessages.map((message, index): HeroSlide => ({ key: `welcome-${index}`, book: undefined, ...message }));
   }, [books]);
 
   const [active, setActive] = useState(0);
