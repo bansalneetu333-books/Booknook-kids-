@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
 
 type BookCardProps = {
@@ -20,26 +21,25 @@ type BookCardProps = {
 };
 
 export function BookCard({ book }: BookCardProps) {
-  const cover =
-    book.cover_url ||
-    (book.cover_path
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/${book.cover_path}`
-      : null);
+  const [coverFailed, setCoverFailed] = useState(false);
+  const cover = "/api/books/cover?slug=" + encodeURIComponent(book.slug);
 
   return (
     <article className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl">
       <Link href={`/books/${book.slug}`} className="block">
         <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-violet-100 via-pink-100 to-sky-100">
-          {cover ? (
+          {!coverFailed ? (
             <Image
               src={cover}
+              unoptimized
+              onError={() => setCoverFailed(true)}
               alt={book.title}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 220px"
               className="object-cover transition duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full items-center justify-center p-6 text-center">
+            <div className="flex h-full flex-col items-center justify-center p-6 text-center">
               <div>
                 <div className="mb-3 text-5xl">📚</div>
 
