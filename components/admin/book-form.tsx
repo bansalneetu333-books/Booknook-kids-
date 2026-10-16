@@ -443,8 +443,8 @@ export function BookForm({ book }: { book?: Book }) {
   }
 
   return (
-    <div className="rounded-[2rem] border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
-      <div className="grid gap-5">
+    <div className="min-w-0 max-w-full overflow-hidden rounded-[2rem] border border-slate-100 bg-white p-3 shadow-sm sm:p-7">
+      <div className="grid min-w-0 gap-5">
 
         <div className="grid gap-4 sm:grid-cols-2">
 
@@ -452,7 +452,7 @@ export function BookForm({ book }: { book?: Book }) {
             Title
 
             <input
-              className="rounded-2xl border p-3.5"
+              className="box-border w-full min-w-0 max-w-full rounded-2xl border p-3.5"
               value={form.title}
               onChange={(e) => {
                 const value =
@@ -523,18 +523,18 @@ export function BookForm({ book }: { book?: Book }) {
             />
           </label>
 
-          <div className="grid gap-2 text-sm font-bold sm:col-span-2">
+          <div className="grid min-w-0 gap-2 text-sm font-bold sm:col-span-2">
             <span>Categories <span className="text-red-500">*</span></span>
             <span className="text-xs font-medium text-slate-500">
               Choose one or more categories.
             </span>
-            <div className="grid grid-cols-2 gap-2 rounded-2xl border bg-slate-50 p-3 sm:grid-cols-3">
+            <div className="grid min-w-0 grid-cols-2 gap-2 rounded-2xl border bg-slate-50 p-2 sm:grid-cols-3 sm:p-3">
               {BOOK_CATEGORIES.map((category) => {
                 const checked = selectedCategories.includes(category.name);
                 return (
                   <label
                     key={category.slug}
-                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${
+                    className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-xl border px-2 py-2 text-xs font-bold transition ${
                       checked
                         ? "border-violet-300 bg-violet-100 text-violet-800"
                         : "border-slate-200 bg-white text-slate-700"
