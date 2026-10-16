@@ -191,8 +191,24 @@ export function EpubReader({
           }
         );
 
-        // Preserve epub.js native layout. Global iframe and XHTML sizing
-        // overrides can shrink or hide fixed-layout pages on mobile Safari.
+        // Center fixed-layout page content inside the reader viewport.
+        // Keep the EPUB's own page dimensions/aspect ratio; only correct
+        // the horizontal alignment that can leave a large blank strip on mobile.
+        rendition.themes.default({
+          "html": {
+            "margin": "0 auto",
+          },
+          "body": {
+            "margin": "0 auto",
+            "text-align": "center",
+          },
+          "img": {
+            "display": "block",
+            "margin-left": "auto",
+            "margin-right": "auto",
+          },
+        });
+
         renditionRef.current = rendition;
 
         rendition.on(
