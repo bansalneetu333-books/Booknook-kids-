@@ -55,7 +55,7 @@ async function findExistingStorageFile(bookSlug: string) {
 }
 
 async function storageObjectExists(path: string, bucket = PRIVATE_EBOOK_BUCKET) {
-  const normalized = String(path || "").replace(/^\\/+/, "");
+  const normalized = String(path || "").replace(/^\/+/, "");
   if (!normalized || normalized.includes("..")) return false;
   const { data, error } = await createAdminClient().storage.from(bucket).createSignedUrl(normalized, 60);
   return !error && Boolean(data?.signedUrl);
