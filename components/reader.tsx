@@ -205,7 +205,22 @@ export function EpubReader({
 
         rendition.hooks.content.register((contents: any) => {
           const doc = contents?.document;
-          if (!doc || !isFixedLayout) return;
+          if (!doc) return;
+
+          // Some image-page EPUBs omit the fixed-layout metadata flag.
+          // Detect image-led pages individually so they still fit the viewport,
+          // without changing the layout of normal reflowable text chapters.
+          const images = Array.from(doc.querySelectorAll("img")) as HTMLImageElement[];
+          const bodyText = (doc.body?.textContent ?? "").replace(/\\s+/g, " ").trim();
+          const imageLedPage =
+            images.length > 0 &&
+            (isFixedLayout ||
+              bodyText.length < 120 ||
+              images.some((img) => {
+                const rect = img.getBoundingClientRect();
+                return rect.width >= doc.documentElement.clientWidth * 0.65;
+              }));
+          if (!isFixedLayout && !imageLedPage) return;
 
           const styleId = "booknook-fixed-layout-fit";
           if (doc.getElementById(styleId)) return;
