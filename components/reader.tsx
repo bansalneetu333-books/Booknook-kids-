@@ -76,7 +76,7 @@ export function EpubReader({
         800
       );
     },
-    [bookId]
+    [bookId, preview]
   );
 
   useEffect(() => {
@@ -164,10 +164,6 @@ export function EpubReader({
           book.destroy();
           return;
         }
-        if (!book.spine || !book.spine.spineItems?.length) {
-          throw new Error("This EPUB contains no readable pages. Please re-export it as a valid EPUB and upload it again.");
-        }
-
         // Booknook Kids books are fixed-layout EPUBs. Keep every
         // EPUB page as a single page and let epub.js scale it
         // proportionally to the available reader viewport.
@@ -389,7 +385,7 @@ export function EpubReader({
       renditionRef.current = null;
       bookRef.current = null;
     };
-  }, [bookId, saveProgress]);
+  }, [bookId, preview, saveProgress]);
 
   function goPrevious() {
     void renditionRef.current?.prev();
