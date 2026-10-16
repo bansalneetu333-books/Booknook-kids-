@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     const file = await getReadableBookFile(bookId);
     if (!file) return NextResponse.json({ error: "No EPUB file is attached to this book." }, { status: 404 });
 
-    const url = await createEpubSignedUrl(file.path, 60 * 60);
+    const url = await createEpubSignedUrl(file.path, 60 * 60, file.bucket);
     return NextResponse.json({
       url,
       fileType: file.fileType,
