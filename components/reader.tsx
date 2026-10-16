@@ -140,7 +140,7 @@ export function EpubReader({
           throw new Error(errorData.error || `Unable to download the book file (HTTP ${fileResponse.status}).`);
         }
 
-        const epubBytes = await epubResponse.arrayBuffer();
+        const epubBytes = await fileResponse.arrayBuffer();
 
         if (!epubBytes.byteLength) {
           throw new Error("The EPUB file is empty.");
