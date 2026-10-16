@@ -205,12 +205,47 @@ export function EpubReader({
             html, body {
               margin: 0 !important;
               padding: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
               overflow: hidden !important;
               background: #ffffff !important;
             }
 
             *, *::before, *::after {
               box-sizing: border-box !important;
+            }
+
+            /* Make fixed-layout image pages use the full EPUB viewport.
+               Keep the image proportional; never crop or stretch the artwork. */
+            body > img:only-child,
+            body > svg:only-child,
+            body > picture:only-child,
+            body > div:only-child {
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              width: 100% !important;
+              height: 100% !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+              margin: 0 auto !important;
+            }
+
+            body img {
+              max-width: 100% !important;
+              max-height: 100% !important;
+              object-fit: contain !important;
+            }
+
+            body > img:only-child {
+              width: 100% !important;
+              height: 100% !important;
+              object-fit: contain !important;
+            }
+
+            body svg {
+              max-width: 100% !important;
+              max-height: 100% !important;
             }
           `;
           doc.head.appendChild(style);
