@@ -131,15 +131,13 @@ export function EpubReader({
         // bytes. This avoids a common mobile/Safari failure mode where
         // epub.js waits indefinitely while trying to fetch an archived
         // EPUB directly from a signed cross-origin URL.
-        const epubResponse = await fetch(data.url, {
-          method: "GET",
-          cache: "no-store",
-        });
-
-        if (!epubResponse.ok) {
-          throw new Error(
-            `Unable to download the book file (HTTP ${epubResponse.status}).`
-          );
+        const fileResponse = await fetch(
+          `/api/reader/file?bookId=${encodeURIComponent(bookId)}&preview=${preview ? "true" : "false"}`,
+          { method: "GET", cache: "no-store" }
+        );
+        if (!fileResponse.ok) {
+          const errorData = await fileResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || `Unable to download the book file (HTTP ${fileResponse.status}).`);
         }
 
         const epubBytes = await epubResponse.arrayBuffer();
