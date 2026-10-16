@@ -193,42 +193,48 @@ export function EpubReader({
           }
         );
 
-        // Protect fixed-layout pages from browser/device margins
-        // and accidental horizontal overflow. The EPUB's own
-        // viewport and page ratio remain the source of truth.
+        // Apply layout corrections only to pre-paginated/image-based EPUBs.
+        // Reflowable text books keep their own natural layout and typography.
+        const isFixedLayout =
+          String((book as any)?.packaging?.metadata?.layout ??
+            (book as any)?.package?.metadata?.layout ??
+            "").toLowerCase() === "pre-paginated" ||
+          String((book as any)?.packaging?.metadata?.renditionLayout ??
+            (book as any)?.package?.metadata?.renditionLayout ??
+            "").toLowerCase() === "pre-paginated";
+
         rendition.hooks.content.register((contents: any) => {
           const doc = contents?.document;
-          if (!doc) return;
+          if (!doc || !isFixedLayout) return;
+
+          const styleId = "booknook-fixed-layout-fit";
+          if (doc.getElementById(styleId)) return;
 
           const style = doc.createElement("style");
+          style.id = styleId;
           style.textContent = `
             html, body {
-              margin: 0 !important;
-              padding: 0 !important;
               width: 100% !important;
               height: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
               overflow: hidden !important;
-              background: #ffffff !important;
+              background: #fff !important;
             }
 
             *, *::before, *::after {
               box-sizing: border-box !important;
             }
 
-            /* Make fixed-layout image pages use the full EPUB viewport.
-               Keep the image proportional; never crop or stretch the artwork. */
-            /* Fixed-layout EPUB XHTML often wraps each full-page image
-               in a body-sized div. Scale both the wrapper and its artwork;
-               max-width alone leaves the image at its original pixel size. */
-            body > img:only-child,
-            body > svg:only-child,
-            body > picture:only-child,
-            body > div:only-child,
-            body > section:only-child,
-            body > article:only-child {
+            /* Full-page artwork may be nested in XHTML div/section wrappers.
+               Make wrappers fill the viewport and center the page artwork. */
+            body {
               display: flex !important;
               align-items: center !important;
               justify-content: center !important;
+            }
+
+            body > * {
               width: 100% !important;
               height: 100% !important;
               max-width: 100% !important;
@@ -238,38 +244,21 @@ export function EpubReader({
               overflow: hidden !important;
             }
 
-            body img,
-            body picture,
-            body svg,
-            body canvas {
+            body img, body > * img,
+            body svg, body > * svg,
+            body picture, body > * picture {
               display: block !important;
+              width: 100% !important;
+              height: 100% !important;
               max-width: 100% !important;
               max-height: 100% !important;
-              object-fit: contain !important;
-              margin-left: auto !important;
-              margin-right: auto !important;
-            }
-
-            body > img:only-child,
-            body > div:only-child > img:only-child,
-            body > section:only-child > img:only-child,
-            body > article:only-child > img:only-child,
-            body > picture:only-child img {
-              width: 100% !important;
-              height: 100% !important;
+              margin: 0 auto !important;
               object-fit: contain !important;
             }
 
-            body > div:only-child > picture:only-child,
-            body > section:only-child > picture:only-child,
-            body > article:only-child > picture:only-child {
-              width: 100% !important;
-              height: 100% !important;
-            }
-
-            body > div:only-child > svg:only-child {
-              width: 100% !important;
-              height: 100% !important;
+            body > * > * {
+              max-width: 100% !important;
+              max-height: 100% !important;
             }
           `;
           doc.head.appendChild(style);
@@ -547,8 +536,8 @@ export function EpubReader({
 
         <div
           ref={containerRef}
-          className="h-[min(78vh,calc(100dvh-220px))] min-h-[420px] w-full overflow-hidden bg-white"
-          style={{ width: "min(100%, 56.25vh)", maxWidth: "100%" }}
+          className="h-[min(78dvh,calc(100dvh-220px))] min-h-[420px] w-full max-w-full overflow-hidden bg-white"
+          style={{ width: "100%", minWidth: 0 }}
         />
 
       </div>
