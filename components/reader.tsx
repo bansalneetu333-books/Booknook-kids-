@@ -466,7 +466,7 @@ export function EpubReader({
 
       </header>
 
-      <div className="relative min-h-0 flex-1 bg-white">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#0f172a]">
 
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
@@ -489,6 +489,7 @@ export function EpubReader({
         <div
           ref={containerRef}
           className="h-[min(78vh,calc(100dvh-220px))] min-h-[420px] w-full overflow-hidden bg-white"
+          style={{ width: "min(100%, 56.25vh)", maxWidth: "100%" }}
         />
 
       </div>
