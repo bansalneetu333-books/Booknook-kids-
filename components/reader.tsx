@@ -217,10 +217,15 @@ export function EpubReader({
 
             /* Make fixed-layout image pages use the full EPUB viewport.
                Keep the image proportional; never crop or stretch the artwork. */
+            /* Fixed-layout EPUB XHTML often wraps each full-page image
+               in a body-sized div. Scale both the wrapper and its artwork;
+               max-width alone leaves the image at its original pixel size. */
             body > img:only-child,
             body > svg:only-child,
             body > picture:only-child,
-            body > div:only-child {
+            body > div:only-child,
+            body > section:only-child,
+            body > article:only-child {
               display: flex !important;
               align-items: center !important;
               justify-content: center !important;
@@ -228,24 +233,43 @@ export function EpubReader({
               height: 100% !important;
               max-width: 100% !important;
               max-height: 100% !important;
-              margin: 0 auto !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: hidden !important;
             }
 
-            body img {
+            body img,
+            body picture,
+            body svg,
+            body canvas {
+              display: block !important;
               max-width: 100% !important;
               max-height: 100% !important;
               object-fit: contain !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
             }
 
-            body > img:only-child {
+            body > img:only-child,
+            body > div:only-child > img:only-child,
+            body > section:only-child > img:only-child,
+            body > article:only-child > img:only-child,
+            body > picture:only-child img {
               width: 100% !important;
               height: 100% !important;
               object-fit: contain !important;
             }
 
-            body svg {
-              max-width: 100% !important;
-              max-height: 100% !important;
+            body > div:only-child > picture:only-child,
+            body > section:only-child > picture:only-child,
+            body > article:only-child > picture:only-child {
+              width: 100% !important;
+              height: 100% !important;
+            }
+
+            body > div:only-child > svg:only-child {
+              width: 100% !important;
+              height: 100% !important;
             }
           `;
           doc.head.appendChild(style);
