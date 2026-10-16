@@ -193,6 +193,42 @@ export function EpubReader({
           }
         );
 
+        // epub.js can retain the intrinsic fixed-layout view size on Safari
+        // even when the host container is wider. Keep its generated view and
+        // iframe filling the stage; the page artwork itself remains contained
+        // proportionally by the EPUB's own viewport.
+        const stage = containerRef.current;
+        stage.style.position = "relative";
+        stage.style.width = "100%";
+        stage.style.height = "100%";
+        stage.style.minWidth = "0";
+        stage.style.minHeight = "0";
+        const stageStyleId = "booknook-epub-stage-sizing";
+        if (!stage.querySelector(`style#${stageStyleId}`)) {
+          const stageStyle = document.createElement("style");
+          stageStyle.id = stageStyleId;
+          stageStyle.textContent = `
+            .epub-container {
+              width: 100% !important;
+              height: 100% !important;
+              min-width: 0 !important;
+              min-height: 0 !important;
+              overflow: hidden !important;
+            }
+            .epub-container > .epub-view {
+              max-width: 100% !important;
+              max-height: 100% !important;
+            }
+            .epub-container iframe {
+              display: block !important;
+              max-width: 100% !important;
+              max-height: 100% !important;
+              border: 0 !important;
+            }
+          `;
+          stage.appendChild(stageStyle);
+        }
+
         // Apply layout corrections only to pre-paginated/image-based EPUBs.
         // Reflowable text books keep their own natural layout and typography.
         const isFixedLayout =
