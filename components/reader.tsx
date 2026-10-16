@@ -277,6 +277,48 @@ export function EpubReader({
             }
           `;
           doc.head.appendChild(style);
+
+          // EPUB page XHTML can contain its own fixed pixel dimensions.
+          // Explicitly override those inline/embedded dimensions after load;
+          // CSS alone may lose to publisher-provided page sizing in Safari.
+          const setImportant = (
+            element: HTMLElement,
+            property: string,
+            value: string
+          ) => element.style.setProperty(property, value, "important");
+
+          for (const element of [doc.documentElement, doc.body]) {
+            setImportant(element, "width", "100%");
+            setImportant(element, "height", "100%");
+            setImportant(element, "max-width", "100%");
+            setImportant(element, "max-height", "100%");
+            setImportant(element, "margin", "0");
+            setImportant(element, "padding", "0");
+            setImportant(element, "overflow", "hidden");
+          }
+
+          for (const element of Array.from(
+            doc.querySelectorAll("img, svg, picture")
+          ) as HTMLElement[]) {
+            setImportant(element, "display", "block");
+            setImportant(element, "width", "100%");
+            setImportant(element, "height", "100%");
+            setImportant(element, "max-width", "100%");
+            setImportant(element, "max-height", "100%");
+            setImportant(element, "object-fit", "contain");
+            setImportant(element, "margin", "0 auto");
+          }
+
+          // Make wrapper elements fill the iframe viewport too. Fixed-layout
+          // books often put their page image inside a sized wrapper.
+          for (const element of Array.from(doc.body.children) as HTMLElement[]) {
+            setImportant(element, "width", "100%");
+            setImportant(element, "height", "100%");
+            setImportant(element, "max-width", "100%");
+            setImportant(element, "max-height", "100%");
+            setImportant(element, "margin", "0");
+            setImportant(element, "padding", "0");
+          }
         });
 
         renditionRef.current = rendition;
