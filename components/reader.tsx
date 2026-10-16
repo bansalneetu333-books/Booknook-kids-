@@ -164,7 +164,7 @@ export function EpubReader({
           book.destroy();
           return;
         }
-        if (!book.spine?.items?.length) {
+        if (!book.spine || !book.spine.spineItems?.length) {
           throw new Error("This EPUB contains no readable pages. Please re-export it as a valid EPUB and upload it again.");
         }
 
