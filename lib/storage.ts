@@ -49,7 +49,7 @@ async function findExistingStorageFile(bookSlug: string) {
   return candidates[0] ?? null;
 }
 async function storageObjectExists(path: string) {
-  const normalized = String(path || "").replace(/^\\/+/, "");
+  const normalized = String(path || "").replace(/^\/+/, "");
   if (!normalized || normalized.includes("..")) return false;
   const { data, error } = await createAdminClient().storage.from(PRIVATE_EBOOK_BUCKET).createSignedUrl(normalized, 60);
   return !error && Boolean(data?.signedUrl);
