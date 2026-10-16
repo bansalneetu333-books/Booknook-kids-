@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     if (!book) return NextResponse.json({ error: "Book is not available." }, { status: 404 });
     if (!preview && !(book.published === true || (book as any).is_published === true)) return NextResponse.json({ error: "Book is not available." }, { status: 404 });
 
-    if (!preview) {
+    if (!preview && (book as any).is_free !== true) {
       const { data: purchase, error: purchaseError } = await supabase
         .from("order_items")
         .select("id,orders!inner(id,user_id,status)")
