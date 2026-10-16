@@ -20,7 +20,7 @@ type HeroCarouselProps = {
 };
 
 export function HomeHeroCarousel({ books }: HeroCarouselProps) {
-  const slides = useMemo(() => books.filter((book) => book.cover_path || book.cover_url).slice(0, 8), [books]);
+  const slides = useMemo(() => books.filter((book) => book.slug && (book.cover_path || book.cover_url)).slice(0, 8), [books]);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
           <p className="text-sm font-black uppercase tracking-[0.2em] text-white/80">Welcome to Booknook Kids</p>
           <h1 className="mt-3 text-4xl font-black leading-tight sm:text-6xl">Discover Amazing Stories! 📚✨</h1>
           <p className="mt-4 text-base leading-7 text-white/85 sm:text-lg">Read, explore and enjoy wonderful e-books for young readers.</p>
-          <Link href="/books" className="mt-7 inline-flex rounded-full bg-white px-6 py-3 font-black text-indigo-700 shadow-lg">Start Reading</Link>
+          <Link href="/books" className="mt-7 inline-flex rounded-full bg-[#ffe17d] px-6 py-3 font-black text-[#102b50] shadow-lg">Start Reading</Link>
         </div>
       </section>
     );
@@ -49,14 +49,10 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
   const book = slides[active];
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-slate-950 shadow-xl">
+    <section className="relative overflow-hidden rounded-[2rem] bg-sky-800 shadow-xl">
       <div className="relative min-h-[390px] sm:min-h-[470px]">
         {slides.map((item, index) => {
-          const itemCover =
-            item.cover_url ||
-            (item.cover_path
-              ? `\${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/book-covers/\${item.cover_path}`
-              : null);
+          const itemCover = "/api/books/cover?slug=" + encodeURIComponent(item.slug);
 
           return itemCover ? (
             <div
@@ -64,9 +60,9 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
               className={`absolute inset-0 transition-opacity duration-1000 ${index === active ? "opacity-100" : "opacity-0"}`}
               aria-hidden={index !== active}
             >
-              <Image src={itemCover} alt="" fill sizes="100vw" className="object-cover object-center" priority={index === 0} />
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/10" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+              <Image src={itemCover} alt={item.title + " book cover"} fill sizes="100vw" className="object-cover object-center" priority={index === 0} unoptimized />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#102b50]/85 via-[#102b50]/55 to-[#102b50]/10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#102b50]/60 via-transparent to-transparent" />
             </div>
           ) : null;
         })}
