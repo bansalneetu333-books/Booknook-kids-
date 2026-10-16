@@ -26,12 +26,32 @@ export function BookDetailShowcase({ title, coverUrl, description, genre, slug }
   }, [slug]);
 
   const total = 1 + previews.length + promoSlides.length;
+
+  // Automatically cycle through the cover, uploaded sample pages, and promo slides.
+  // The interval resets when the number of available sample pages changes.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setActive((current) => (current + 1) % total);
+    }, 4000);
+
+    return () => window.clearInterval(timer);
+  }, [total]);
+
+  // If sample pages finish loading and reduce the slide count, keep the
+  // active index inside the new range.
+  useEffect(() => {
+    setActive((current) => Math.min(current, total - 1));
+  }, [total]);
   const currentPreview = active > 0 && active <= previews.length ? previews[active - 1] : null;
   const promoIndex = active - previews.length - 1;
   const promo = promoSlides[promoIndex];
 
   return (
-    <div className="mx-auto w-full max-w-md">
+    <div className="mx-auto w-full max-w-md" aria-label={"Book preview slideshow for " + title}>
       <div className="relative overflow-hidden rounded-[1.5rem] border border-white/80 bg-white p-3 shadow-xl sm:p-4">
         {active === 0 ? (
           <div className="relative aspect-[3/4]">
