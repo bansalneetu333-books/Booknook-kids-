@@ -150,9 +150,23 @@ export function EpubReader({
 
         if (cancelled) return;
 
+        // Wait for EPUB package metadata before creating its visual rendition.
         const book = ePub(epubBytes);
-
         bookRef.current = book;
+        await Promise.race([
+          book.ready,
+          new Promise((_, reject) => window.setTimeout(
+            () => reject(new Error("This EPUB did not finish loading. The file may be incomplete or incompatible.")),
+            20000
+          )),
+        ]);
+        if (cancelled) {
+          book.destroy();
+          return;
+        }
+        if (!book.spine?.items?.length) {
+          throw new Error("This EPUB contains no readable pages. Please re-export it as a valid EPUB and upload it again.");
+        }
 
         // Booknook Kids books are fixed-layout EPUBs. Keep every
         // EPUB page as a single page and let epub.js scale it
@@ -260,22 +274,6 @@ export function EpubReader({
           }
         );
 
-        // Do not leave the customer on "Opening your book..." forever
-        // if a malformed/incompatible EPUB never resolves its ready promise.
-        await Promise.race([
-          book.ready,
-          new Promise((_, reject) =>
-            setTimeout(
-              () => reject(new Error("The EPUB could not be opened. Please try again or upload a valid fixed-layout EPUB.")),
-              20000
-            )
-          ),
-        ]);
-
-        if (cancelled) {
-          book.destroy();
-          return;
-        }
 
         let initialLocation:
           string | null = null;
@@ -337,48 +335,23 @@ export function EpubReader({
           ),
         ]);
 
-        // Keep the reader viewport stable, but do not overwrite epub.js's
-        // internal transforms. The source pages are 1024x1536 (2:3).
+        // Match epub.js to the real reader stage. Do not force a separate
+        // 9:16 viewport: the EPUB package's declared layout controls page ratio.
         if (!cancelled) {
           const resizeReader = () => {
             const el = containerRef.current;
-            if (!el) return;
-
-            const availableWidth = Math.max(1, el.clientWidth);
-            const availableHeight = Math.max(
-              420,
-              Math.min(window.innerHeight - 220, 900)
+            const activeRendition = renditionRef.current;
+            if (!el || !activeRendition) return;
+            activeRendition.resize(
+              Math.max(1, el.clientWidth),
+              Math.max(420, el.clientHeight)
             );
-
-            // BookNook Kids fixed-layout pages are portrait 9:16.
-            // The previous 2:3 sizing clipped pages and could leave
-            // the reader looking blank on mobile Safari.
-            const pageWidth = Math.max(
-              1,
-              Math.floor(
-                Math.min(availableWidth, availableHeight * (9 / 16))
-              )
-            );
-            const pageHeight = Math.max(
-              1,
-              Math.floor(pageWidth * (16 / 9))
-            );
-
-            el.style.height = pageHeight + "px";
-            el.style.minHeight = pageHeight + "px";
-            el.style.maxHeight = pageHeight + "px";
-            el.style.width = "100%";
-
-            // Let epub.js manage its own stage, views and iframe geometry.
-            // Overriding those internals after display can hide page content.
-            rendition.resize(pageWidth, pageHeight);
           };
 
           resizeReader();
           requestAnimationFrame(resizeReader);
-          window.setTimeout(resizeReader, 100);
+          window.setTimeout(resizeReader, 150);
           window.setTimeout(resizeReader, 500);
-
           setLoading(false);
         }
       } catch (err) {
