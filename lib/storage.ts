@@ -48,57 +48,40 @@ async function findExistingStorageFile(bookSlug: string) {
   candidates.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   return candidates[0] ?? null;
 }
+async function storageObjectExists(path: string) {
+  const normalized = String(path || "").replace(/^\\/+/, "");
+  if (!normalized || normalized.includes("..")) return false;
+  const { data, error } = await createAdminClient().storage.from(PRIVATE_EBOOK_BUCKET).createSignedUrl(normalized, 60);
+  return !error && Boolean(data?.signedUrl);
+}
+
 export async function getReadableBookFile(bookId: string) {
   const supabase = createAdminClient();
   const version = await getActiveBookVersion(bookId);
-
-  if (version) {
-    const path = version.epub_path || version.file_path || null;
-    if (path && path.toLowerCase().endsWith(".epub") && !String(version.file_type || "").toLowerCase().includes("pdf")) {
-      return {
-        path,
-        fileType: version.file_type || "application/epub+zip",
-        version: version.version_number || version.version || null,
-        fileSize: version.file_size ?? null,
-        source: "version" as const,
-      };
-    }
-  }
-
-  const { data, error } = await supabase
-    .from("books")
-    .select("slug,epub_path")
-    .eq("id", bookId)
-    .maybeSingle();
-
+  const { data: book, error } = await supabase.from("books").select("slug,epub_path").eq("id", bookId).maybeSingle();
   if (error) {
     console.error("Legacy book file lookup error:", error);
     throw new Error("Unable to load book file.");
   }
 
-  if (data?.epub_path && data.epub_path.toLowerCase().endsWith(".epub")) {
-    return {
-      path: data.epub_path,
-      fileType: "application/epub+zip",
-      version: null,
-      fileSize: null,
-      source: "legacy" as const,
-    };
-  }
-
-  if (data?.slug) {
-    const fallback = await findExistingStorageFile(data.slug);
-    if (fallback) {
-      return {
-        path: fallback.path,
-        fileType: fallback.fileType,
-        version: null,
-        fileSize: fallback.fileSize,
-        source: "storage-fallback" as const,
-      };
+  if (version) {
+    const path = version.epub_path || version.file_path || null;
+    const type = String(version.file_type || "").toLowerCase();
+    if (path && path.toLowerCase().endsWith(".epub") && !type.includes("pdf") && await storageObjectExists(path)) {
+      return { path, fileType: version.file_type || "application/epub+zip", version: version.version_number || version.version || null, fileSize: version.file_size ?? null, source: "version" as const };
     }
   }
 
+  if (book?.epub_path && book.epub_path.toLowerCase().endsWith(".epub") && await storageObjectExists(book.epub_path)) {
+    return { path: book.epub_path, fileType: "application/epub+zip", version: null, fileSize: null, source: "legacy" as const };
+  }
+
+  if (book?.slug) {
+    const fallback = await findExistingStorageFile(book.slug);
+    if (fallback && await storageObjectExists(fallback.path)) {
+      return { path: fallback.path, fileType: fallback.fileType, version: null, fileSize: fallback.fileSize, source: "storage-fallback" as const };
+    }
+  }
   return null;
 }
 
