@@ -1,106 +1,177 @@
-import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { createClient } from "@/lib/supabase/server";
 
-export const runtime = "nodejs";
-
-type PublishPayload = {
-  bookId?: string;
-  published?: boolean;
+export type Book = {
+  id: string;
+  title: string;
+  slug: string;
+  author: string;
+  description: string | null;
+  price: number;
+  currency?: string | null;
+  genre: string | null;
+  age_category: string | null;
+  cover_path: string | null;
+  published: boolean;
+  is_published?: boolean | null;
+  featured: boolean;
+  is_free: boolean;
+  created_at: string;
+  categories?: { name: string; slug: string }[];
 };
 
-export async function PATCH(request: Request) {
-  try {
-    const { supabase, user, isAdmin } = await requireAdmin();
+const BOOK_FIELDS = `
+  id,
+  title,
+  slug,
+  author,
+  description,
+  price,
+  currency,
+  genre,
+  age_category,
+  cover_path,
+  published,
+  is_published,
+  featured,
+  is_free,
+  created_at
+`;
 
-    if (!user || !isAdmin) {
-      return NextResponse.json(
-        { error: "Admin access required." },
-        { status: 403 }
-      );
-    }
-
-    const body = (await request.json()) as PublishPayload;
-
-    const bookId =
-      typeof body.bookId === "string" ? body.bookId.trim() : "";
-
-    if (!bookId) {
-      return NextResponse.json(
-        { error: "Book ID is required." },
-        { status: 400 }
-      );
-    }
-
-    if (typeof body.published !== "boolean") {
-      return NextResponse.json(
-        { error: "Published must be true or false." },
-        { status: 400 }
-      );
-    }
-
-    // Make sure the book exists.
-    const { data: existingBook, error: findError } = await supabase
-      .from("books")
-      .select("id,title,published,is_published")
-      .eq("id", bookId)
-      .maybeSingle();
-
-    if (findError) {
-      console.error("Publish book lookup error:", findError);
-
-      return NextResponse.json(
-        { error: "Unable to find the book." },
-        { status: 500 }
-      );
-    }
-
-    if (!existingBook) {
-      return NextResponse.json(
-        { error: "Book not found." },
-        { status: 404 }
-      );
-    }
-
-    // Update only the existing published field.
-    const { data: book, error: updateError } = await supabase
-      .from("books")
-      .update({
-        published: body.published,
-        is_published: body.published,
+function normalizeBook(book: any): Book {
+  return {
+    id: book.id,
+    title: book.title,
+    slug: book.slug,
+    author: book.author,
+    description: book.description ?? null,
+    price: Number(book.price ?? 0),
+    currency: book.currency ?? "INR",
+    genre: book.genre ?? null,
+    age_category: book.age_category ?? null,
+    cover_path: book.cover_path ?? null,
+    published: Boolean(book.published ?? book.is_published),
+    is_published: book.is_published ?? null,
+    featured: Boolean(book.featured ?? book.is_featured),
+    is_free: Boolean(book.is_free),
+    created_at: book.created_at,
+    categories: (book.book_categories ?? [])
+      .map((item: any) => {
+        const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
+        return category ? { name: category.name, slug: category.slug } : null;
       })
-      .eq("id", bookId)
-      .select(
-        "id,title,slug,author,description,price,genre,age_category,published,featured,cover_path"
+      .filter(Boolean),
+  };
+}
+
+export async function getPublishedBooks(): Promise<Book[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("books")
+    .select(`${BOOK_FIELDS},
+      book_categories (
+        categories (
+          name,
+          slug
+        )
       )
-      .single();
+    `)
+    .or("published.eq.true,is_published.eq.true")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
 
-    if (updateError) {
-      console.error("Publish book update error:", updateError);
-
-      return NextResponse.json(
-        { error: updateError.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      ok: true,
-      book,
-      message: body.published
-        ? "Book published successfully."
-        : "Book unpublished successfully.",
-    });
-  } catch (error) {
-    console.error("Admin publish book API error:", error);
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to update book publication status.",
-      },
-      { status: 500 }
-    );
+  if (error) {
+    console.error("Unable to load published books:", error);
+    return [];
   }
+
+  return (data ?? []).map(normalizeBook);
+}
+
+export async function getBookBySlug(slug: string): Promise<Book | null> {
+  const supabase = await createClient();
+
+  const { data: bySlug, error: slugError } = await supabase
+    .from("books")
+    .select(BOOK_FIELDS)
+    .eq("slug", slug)
+    .or("published.eq.true,is_published.eq.true")
+    .maybeSingle();
+
+  if (slugError) {
+    console.error("Unable to load book by slug:", slugError);
+  }
+  if (bySlug) return normalizeBook(bySlug);
+
+  const { data: byId, error: idError } = await supabase
+    .from("books")
+    .select(BOOK_FIELDS)
+    .eq("id", slug)
+    .or("published.eq.true,is_published.eq.true")
+    .maybeSingle();
+
+  if (idError) {
+    console.error("Unable to load book by ID:", idError);
+    return null;
+  }
+
+  return byId ? normalizeBook(byId) : null;
+}
+
+export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("books")
+    .select(`${BOOK_FIELDS},
+      book_categories (
+        categories (
+          name,
+          slug,
+          icon
+        )
+      )
+    `)
+    .or("published.eq.true,is_published.eq.true")
+    .eq("is_free", true)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Unable to load free books:", error);
+    return [];
+  }
+
+  const books = (data ?? []).map(normalizeBook);
+
+  if (!categorySlug) return books;
+
+  const wanted = categorySlug.toLowerCase();
+  return (data ?? [])
+    .filter((book: any) =>
+      (book.book_categories ?? []).some((item: any) => {
+        const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
+        return category?.slug?.toLowerCase() === wanted;
+      })
+    )
+    .map(normalizeBook);
+}
+
+export async function getFeaturedBooks(): Promise<Book[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("books")
+    .select(BOOK_FIELDS)
+    .eq("published", true)
+    .or("featured.eq.true,is_featured.eq.true")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Unable to load featured books:", error);
+    return [];
+  }
+
+  return (data ?? []).map(normalizeBook);
 }

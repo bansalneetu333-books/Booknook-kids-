@@ -1,256 +1,190 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 
-const PRIVATE_EBOOK_BUCKET = "ebooks-private";
-const PUBLIC_MEDIA_BUCKET = "book-covers";
+export const runtime = "nodejs";
 
-const MAX_FILE_SIZE = 150 * 1024 * 1024;
-const MAX_COVER_SIZE = 8 * 1024 * 1024;
-
-type UploadKind = "cover" | "epub" | "preview";
-
-type UploadRequest = {
+type BookPayload = {
   bookId?: string;
-  version?: string;
-  files?: Array<{
-    kind: UploadKind;
-    size: number;
-    type: string;
-    extension: string;
-    name?: string;
-  }>;
+  title?: string;
+  slug?: string;
+  author?: string;
+  description?: string;
+  price?: number;
+  genre?: string;
+  ageCategory?: string;
+  published?: boolean;
+  featured?: boolean;
+  isFree?: boolean;
+  categorySlugs?: string[];
+  coverPath?: string | null;
 };
 
-function cleanPart(value: string) {
-  return value
-    .trim()
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .replace(/-+/g, "-");
+function cleanString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+const CATEGORY_NAMES: Record<string, string> = {
+  adventure: "Adventure",
+  science: "Science",
+  money: "Money",
+  friendship: "Friendship",
+  history: "History",
+  superheroes: "Superheroes",
+  fantasy: "Fantasy",
+  comics: "Comics",
+  learning: "Learning",
+  "life-skills": "Life Skills",
+};
+
+function normalizeCategorySlugs(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of raw) {
+    if (typeof value !== "string") continue;
+    const slug = value.trim().toLowerCase();
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    result.push(slug);
+  }
+
+  return result;
 }
 
 export async function POST(request: Request) {
   try {
-    const { supabase, user, isAdmin } =
-      await requireAdmin();
+    const { supabase, user, isAdmin } = await requireAdmin();
+    if (!user || !isAdmin) return NextResponse.json({ error: "Admin access required." }, { status: 403 });
 
-    if (!user || !isAdmin) {
-      return NextResponse.json(
-        { error: "Admin access required." },
-        { status: 403 }
-      );
-    }
+    const body = (await request.json()) as BookPayload;
+    const title = cleanString(body.title);
+    const slug = cleanString(body.slug);
+    const author = cleanString(body.author);
+    const description = cleanString(body.description);
+    const genre = cleanString(body.genre);
+    const ageCategory = cleanString(body.ageCategory);
+    const coverPath = cleanString(body.coverPath);
+    const categorySlugs = normalizeCategorySlugs(body.categorySlugs);
 
-    const body =
-      (await request.json()) as UploadRequest;
+    if (!title) return NextResponse.json({ error: "Book title is required." }, { status: 400 });
+    if (!slug) return NextResponse.json({ error: "Book slug is required." }, { status: 400 });
+    if (!author) return NextResponse.json({ error: "Author is required." }, { status: 400 });
+    if (categorySlugs.length === 0) return NextResponse.json({ error: "Select at least one category." }, { status: 400 });
 
-    const bookId =
-      typeof body.bookId === "string"
-        ? body.bookId.trim()
-        : "";
+    const price = Number(body.price ?? 0);
+    if (!Number.isFinite(price) || price < 0) return NextResponse.json({ error: "Price must be a valid non-negative number." }, { status: 400 });
 
-    const version =
-      typeof body.version === "string"
-        ? body.version.trim()
-        : "";
-
-    const files = Array.isArray(body.files)
-      ? body.files
-      : [];
-
-    if (!bookId) {
-      return NextResponse.json(
-        { error: "Book ID is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!version) {
-      return NextResponse.json(
-        { error: "Version is required." },
-        { status: 400 }
-      );
-    }
-
-    if (!files.length) {
-      return NextResponse.json(
-        { error: "No files were provided." },
-        { status: 400 }
-      );
-    }
-
-    const { data: book, error: bookError } =
-      await supabase
-        .from("books")
+    async function syncCategories(bookId: string) {
+      let { data: categories, error } = await supabase
+        .from("categories")
         .select("id,slug")
-        .eq("id", bookId)
+        .in("slug", categorySlugs);
+
+      if (error) throw error;
+
+      const found = new Set((categories ?? []).map((c) => c.slug));
+      const missing = categorySlugs.filter((slug) => !found.has(slug));
+
+      if (missing.length) {
+        const { error: insertError } = await supabase.from("categories").insert(
+          missing.map((slug) => ({ slug, name: CATEGORY_NAMES[slug] ?? slug }))
+        );
+
+        if (insertError && insertError.code !== "23505") throw insertError;
+
+        const refreshed = await supabase
+          .from("categories")
+          .select("id,slug")
+          .in("slug", categorySlugs);
+
+        if (refreshed.error) throw refreshed.error;
+        categories = refreshed.data;
+      }
+
+      if (!categories || categories.length !== categorySlugs.length) {
+        throw new Error("One or more selected categories could not be saved.");
+      }
+
+      const { error: deleteError } = await supabase.from("book_categories").delete().eq("book_id", bookId);
+      if (deleteError) throw deleteError;
+
+      const { error: insertRelationError } = await supabase.from("book_categories").insert(
+        categories.map((category) => ({ book_id: bookId, category_id: category.id }))
+      );
+      if (insertRelationError) throw insertRelationError;
+    }
+
+    const bookData = {
+      title,
+      slug,
+      author,
+      description,
+      price,
+      genre: genre || categorySlugs.map((slug) => CATEGORY_NAMES[slug] ?? slug).join(" / "),
+      age_category: ageCategory || "",
+      published: Boolean(body.published),
+      is_published: Boolean(body.published),
+      featured: Boolean(body.featured),
+      is_featured: Boolean(body.featured),
+      is_free: Boolean(body.isFree),
+      ...(coverPath ? { cover_path: coverPath, cover_url: "/api/books/cover?path=" + encodeURIComponent(coverPath) } : {}),
+    };
+
+    if (body.bookId) {
+      const { data: existing, error: existingError } = await supabase
+        .from("books")
+        .select("id")
+        .eq("id", body.bookId)
         .maybeSingle();
 
-    if (bookError) {
-      console.error(bookError);
+      if (existingError) return NextResponse.json({ error: "Unable to find the existing book." }, { status: 500 });
+      if (!existing) return NextResponse.json({ error: "Book not found." }, { status: 404 });
 
-      return NextResponse.json(
-        { error: "Unable to verify the book." },
-        { status: 500 }
-      );
+      const { data, error } = await supabase
+        .from("books")
+        .update(bookData)
+        .eq("id", body.bookId)
+        .select("id,title,slug,author,description,price,genre,age_category,published,featured,cover_path")
+        .single();
+
+      if (error) {
+        if (error.code === "23505") return NextResponse.json({ error: "A book with this slug already exists." }, { status: 409 });
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      try {
+        await syncCategories(data.id);
+      } catch (error) {
+        console.error("Book category sync failed:", error);
+        return NextResponse.json({ error: "Book was saved, but its categories could not be synchronized. Please try again." }, { status: 500 });
+      }
+
+      return NextResponse.json({ ok: true, id: data.id, book: data });
     }
 
-    if (!book) {
-      return NextResponse.json(
-        { error: "Book not found." },
-        { status: 404 }
-      );
+    const { data, error } = await supabase
+      .from("books")
+      .insert(bookData)
+      .select("id,title,slug,author,description,price,genre,age_category,published,featured,cover_path")
+      .single();
+
+    if (error) {
+      if (error.code === "23505") return NextResponse.json({ error: "A book with this slug already exists." }, { status: 409 });
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const uploads: Array<{
-      kind: UploadKind;
-      bucket: string;
-      path: string;
-      token: string;
-      name?: string;
-    }> = [];
-
-    const usedKinds = new Set<UploadKind>();
-
-    for (const file of files) {
-      if (
-        !file ||
-        !["cover", "epub", "preview"].includes(
-          file.kind
-        )
-      ) {
-        return NextResponse.json(
-          { error: "Invalid upload type." },
-          { status: 400 }
-        );
-      }
-
-      // A book may have multiple preview images, but only one cover and EPUB per request.
-      if (
-        file.kind !== "preview" &&
-        usedKinds.has(file.kind)
-      ) {
-        return NextResponse.json(
-          {
-            error: `Duplicate ${file.kind} upload.`,
-          },
-          { status: 400 }
-        );
-      }
-
-      if (file.kind !== "preview") {
-        usedKinds.add(file.kind);
-      }
-
-      if (
-        !Number.isFinite(file.size) ||
-        file.size <= 0
-      ) {
-        return NextResponse.json(
-          {
-            error: `Invalid ${file.kind} file size.`,
-          },
-          { status: 400 }
-        );
-      }
-
-      if (
-        file.kind !== "epub" &&
-        file.size > MAX_COVER_SIZE
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "Cover and preview images must be 8 MB or smaller.",
-          },
-          { status: 400 }
-        );
-      }
-
-      if (
-        file.kind === "epub" &&
-        file.size > MAX_FILE_SIZE
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "EPUB files must be 150 MB or smaller.",
-          },
-          { status: 400 }
-        );
-      }
-
-      const safeBookSlug =
-        cleanPart(book.slug || book.id);
-
-      const safeVersion =
-        cleanPart(version);
-
-      const extension =
-        cleanPart(file.extension || "bin");
-
-      let bucket: string;
-      let path: string;
-
-      if (file.kind === "cover") {
-        bucket = PUBLIC_MEDIA_BUCKET;
-        path = `${safeBookSlug}/cover-${Date.now()}.${extension}`;
-      } else if (file.kind === "preview") {
-        bucket = PUBLIC_MEDIA_BUCKET;
-        const safeName = cleanPart(file.name || `preview-${Date.now()}.${extension}`);
-        path = `${safeBookSlug}/previews/${Date.now()}-${safeName}`;
-      } else {
-        bucket = PRIVATE_EBOOK_BUCKET;
-        path = `${safeBookSlug}/v${safeVersion}/epub.${extension}`;
-      }
-
-      const { data, error } =
-        await supabase.storage
-          .from(bucket)
-          .createSignedUploadUrl(path);
-
-      if (error || !data?.token) {
-        console.error(
-          "Signed upload error:",
-          error
-        );
-
-        return NextResponse.json(
-          {
-            error:
-              error?.message ??
-              `Unable to prepare ${file.kind} upload.`,
-          },
-          { status: 500 }
-        );
-      }
-
-      uploads.push({
-        kind: file.kind,
-        bucket,
-        path,
-        token: data.token,
-        ...(file.kind === "preview" && file.name ? { name: file.name } : {}),
-      });
+    try {
+      await syncCategories(data.id);
+    } catch (error) {
+      console.error("Book category sync failed:", error);
+      await supabase.from("books").delete().eq("id", data.id);
+      return NextResponse.json({ error: "Book could not be completed because its categories could not be saved." }, { status: 500 });
     }
 
-    return NextResponse.json({
-      ok: true,
-      uploads,
-    });
+    return NextResponse.json({ ok: true, id: data.id, book: data }, { status: 201 });
   } catch (error) {
-    console.error(
-      "Admin upload signing error:",
-      error
-    );
-
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to prepare uploads.",
-      },
-      { status: 500 }
-    );
+    console.error("Admin books API error:", error);
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to save the book." }, { status: 500 });
   }
 }

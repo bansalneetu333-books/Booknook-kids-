@@ -1,216 +1,142 @@
-import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin";
 
-export type Book = {
-  id: string;
-  title: string;
-  slug: string;
-  author: string;
-  description: string | null;
-  price: number;
-  currency?: string | null;
-  genre: string | null;
-  age_category: string | null;
-  cover_path: string | null;
-  published: boolean;
-  is_published?: boolean | null;
-  featured: boolean;
-  is_free: boolean;
-  created_at: string;
-  categories?: { name: string; slug: string }[];
+const PRIVATE_EBOOK_BUCKET = "ebooks-private";
+const PUBLIC_MEDIA_BUCKET = "book-covers";
+
+const MAX_FILE_SIZE = 150 * 1024 * 1024;
+const MAX_COVER_SIZE = 8 * 1024 * 1024;
+
+type UploadKind = "cover" | "epub" | "preview";
+
+type UploadRequest = {
+  bookId?: string;
+  version?: string;
+  files?: Array<{
+    kind: UploadKind;
+    size: number;
+    type: string;
+    extension: string;
+    name?: string;
+  }>;
 };
 
-const BOOK_FIELDS = `
-  id,
-  title,
-  slug,
-  author,
-  description,
-  price,
-  currency,
-  genre,
-  age_category,
-  cover_path,
-  published,
-  is_published,
-  featured,
-  is_free,
-  created_at
-`;
-
-function normalizeBook(
-  book: any
-): Book {
-  return {
-    id: book.id,
-    title: book.title,
-    slug: book.slug,
-    author: book.author,
-    description:
-      book.description ?? null,
-    price: Number(book.price ?? 0),
-    currency:
-      book.currency ?? "INR",
-    genre: book.genre ?? null,
-    age_category:
-      book.age_category ?? null,
-    cover_path:
-      book.cover_path ?? null,
-    published: Boolean(
-      book.published ?? book.is_published
-    ),
-    is_published: book.is_published ?? null,
-    featured: Boolean(
-      book.featured
-    ),
-    is_free: Boolean(book.is_free),
-    created_at:
-      book.created_at,
-    categories: (book.book_categories ?? [])
-      .map((item: any) => {
-        const category = Array.isArray(item.categories)
-          ? item.categories[0]
-          : item.categories;
-        return category
-          ? { name: category.name, slug: category.slug }
-          : null;
-      })
-      .filter(Boolean),
-  };
+function cleanPart(value: string) {
+  return value
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]/g, "-")
+    .replace(/-+/g, "-");
 }
 
-export async function getPublishedBooks(): Promise<Book[]> {
-  const supabase = await createClient();
+export async function POST(request: Request) {
+  try {
+    const { supabase, user, isAdmin } = await requireAdmin();
 
-  const { data, error } = await supabase
-    .from("books")
-    .select(`${BOOK_FIELDS},
-      book_categories (
-        categories (
-          name,
-          slug
-        )
-      )
-    `)
-    .or("published.eq.true,is_published.eq.true")
-    .order("sort_order", {
-      ascending: true,
-    })
-    .order("created_at", {
-      ascending: false,
-    });
+    if (!user || !isAdmin) {
+      return NextResponse.json({ error: "Admin access required." }, { status: 403 });
+    }
 
-  if (error) {
-    console.error(
-      "Unable to load published books:",
-      error
-    );
+    const body = (await request.json()) as UploadRequest;
 
-    return [];
+    const bookId = typeof body.bookId === "string" ? body.bookId.trim() : "";
+    const version = typeof body.version === "string" ? body.version.trim() : "";
+    const files = Array.isArray(body.files) ? body.files : [];
+
+    if (!bookId) return NextResponse.json({ error: "Book ID is required." }, { status: 400 });
+    if (!version) return NextResponse.json({ error: "Version is required." }, { status: 400 });
+    if (!files.length) return NextResponse.json({ error: "No files were provided." }, { status: 400 });
+
+    const { data: book, error: bookError } = await supabase
+      .from("books")
+      .select("id,slug")
+      .eq("id", bookId)
+      .maybeSingle();
+
+    if (bookError) {
+      console.error(bookError);
+      return NextResponse.json({ error: "Unable to verify the book." }, { status: 500 });
+    }
+
+    if (!book) {
+      return NextResponse.json({ error: "Book not found." }, { status: 404 });
+    }
+
+    const uploads: Array<{
+      kind: UploadKind;
+      bucket: string;
+      path: string;
+      token: string;
+      name?: string;
+    }> = [];
+
+    const usedKinds = new Set<UploadKind>();
+
+    for (const file of files) {
+      if (!file || !["cover", "epub", "preview"].includes(file.kind)) {
+        return NextResponse.json({ error: "Invalid upload type." }, { status: 400 });
+      }
+
+      if (file.kind !== "preview" && usedKinds.has(file.kind)) {
+        return NextResponse.json({ error: `Duplicate ${file.kind} upload.` }, { status: 400 });
+      }
+
+      if (file.kind !== "preview") usedKinds.add(file.kind);
+
+      if (!Number.isFinite(file.size) || file.size <= 0) {
+        return NextResponse.json({ error: `Invalid ${file.kind} file size.` }, { status: 400 });
+      }
+
+      if (file.kind !== "epub" && file.size > MAX_COVER_SIZE) {
+        return NextResponse.json({ error: "Cover and preview images must be 8 MB or smaller." }, { status: 400 });
+      }
+
+      if (file.kind === "epub" && file.size > MAX_FILE_SIZE) {
+        return NextResponse.json({ error: "EPUB files must be 150 MB or smaller." }, { status: 400 });
+      }
+
+      const safeBookSlug = cleanPart(book.slug || book.id);
+      const safeVersion = cleanPart(version);
+      const extension = cleanPart(file.extension || "bin");
+
+      let bucket: string;
+      let path: string;
+
+      if (file.kind === "cover") {
+        bucket = PUBLIC_MEDIA_BUCKET;
+        path = `${safeBookSlug}/cover-${Date.now()}.${extension}`;
+      } else if (file.kind === "preview") {
+        bucket = PUBLIC_MEDIA_BUCKET;
+        const safeName = cleanPart(file.name || `preview-${Date.now()}.${extension}`);
+        path = `${safeBookSlug}/previews/${Date.now()}-${safeName}`;
+      } else {
+        bucket = PRIVATE_EBOOK_BUCKET;
+        path = `${safeBookSlug}/v${safeVersion}/epub.${extension}`;
+      }
+
+      const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path);
+
+      if (error || !data?.token) {
+        console.error("Signed upload error:", error);
+        return NextResponse.json(
+          { error: error?.message ?? `Unable to prepare ${file.kind} upload.` },
+          { status: 500 }
+        );
+      }
+
+      uploads.push({
+        kind: file.kind,
+        bucket,
+        path,
+        token: data.token,
+        ...(file.kind === "preview" && file.name ? { name: file.name } : {}),
+      });
+    }
+
+    return NextResponse.json({ ok: true, uploads });
+  } catch (error) {
+    console.error("Admin upload signing error:", error);
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : "Unable to prepare uploads.",
+    }, { status: 500 });
   }
-
-  return (data ?? []).map(
-    normalizeBook
-  );
-}
-
-export async function getBookBySlug(
-  slug: string
-): Promise<Book | null> {
-  const supabase = await createClient();
-
-  // Older catalogue links may contain a book UUID instead of its slug.
-  // Resolve by slug first, then by ID so existing links do not lead to 404.
-  const { data: bySlug, error: slugError } = await supabase
-    .from("books")
-    .select(BOOK_FIELDS)
-    .eq("slug", slug)
-    .or("published.eq.true,is_published.eq.true")
-    .maybeSingle();
-
-  if (slugError) {
-    console.error("Unable to load book by slug:", slugError);
-  }
-  if (bySlug) return normalizeBook(bySlug);
-
-  const { data: byId, error: idError } = await supabase
-    .from("books")
-    .select(BOOK_FIELDS)
-    .eq("id", slug)
-    .or("published.eq.true,is_published.eq.true")
-    .maybeSingle();
-
-  if (idError) {
-    console.error("Unable to load book by ID:", idError);
-    return null;
-  }
-
-  return byId ? normalizeBook(byId) : null;
-}
-
-export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("books")
-    .select(`${BOOK_FIELDS},
-      book_categories (
-        categories (
-          name,
-          slug,
-          icon
-        )
-      )
-    `)
-    .or("published.eq.true,is_published.eq.true")
-    .eq("is_free", true)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Unable to load free books:", error);
-    return [];
-  }
-
-  const books = (data ?? []).map(normalizeBook);
-
-  if (!categorySlug) return books;
-
-  const wanted = categorySlug.toLowerCase();
-  return (data ?? [])
-    .filter((book: any) =>
-      (book.book_categories ?? []).some((item: any) => {
-        const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
-        return category?.slug?.toLowerCase() === wanted;
-      })
-    )
-    .map(normalizeBook);
-}
-
-export async function getFeaturedBooks(): Promise<Book[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("books")
-    .select(BOOK_FIELDS)
-    .eq("published", true)
-    .eq("featured", true)
-    .order("sort_order", {
-      ascending: true,
-    })
-    .order("created_at", {
-      ascending: false,
-    });
-
-  if (error) {
-    console.error(
-      "Unable to load featured books:",
-      error
-    );
-
-    return [];
-  }
-
-  return (data ?? []).map(
-    normalizeBook
-  );
 }

@@ -1,63 +1,108 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/admin";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, requireAdmin } from "@/lib/admin";
+import { getReadableBookFile } from "@/lib/storage";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-function isImage(name: string) {
-  return /\.(jpg|jpeg|png|webp|gif|avif)$/i.test(name);
+function jsonError(message: string, status: number) {
+  return NextResponse.json(
+    { error: message },
+    { status, headers: { "Cache-Control": "no-store" } }
+  );
 }
 
 export async function GET(request: Request) {
-  const params = new URL(request.url).searchParams;
-  const requestedPath = params.get("path")?.trim() || "";
-  const slug = params.get("slug")?.trim() || "";
-
-  if (!requestedPath && !slug) return new NextResponse("Missing cover path.", { status: 400 });
-  if (requestedPath && (requestedPath.includes("..") || requestedPath.startsWith("/"))) {
-    return new NextResponse("Invalid cover path.", { status: 400 });
-  }
-
   try {
-    const supabase = createAdminClient();
+    const url = new URL(request.url);
+    const bookId = (url.searchParams.get("bookId") || "").trim();
+    const preview = url.searchParams.get("preview") === "true";
 
-    // First try the exact storage path supplied by the book record.
-    if (requestedPath) {
-      const { data } = await supabase.storage.from("book-covers").createSignedUrl(requestedPath, 3600);
-      if (data?.signedUrl) return NextResponse.redirect(data.signedUrl, 302);
+    if (!bookId) return jsonError("Book ID is required.", 400);
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) return jsonError("Authentication required.", 401);
+
+    const adminCheck = preview ? await requireAdmin() : null;
+    if (preview && (!adminCheck?.user || !adminCheck.isAdmin)) {
+      return jsonError("Admin preview access required.", 403);
     }
 
-    if (slug) {
-      // Resolve the current record first so covers stored outside a slug folder work too.
-      const { data: book } = await supabase.from("books")
-        .select("cover_url,cover_path")
-        .eq("slug", slug)
+    const bookClient = preview ? createAdminClient() : supabase;
+    const { data: book, error: bookError } = await bookClient
+      .from("books")
+      .select("id,title,slug,published,is_published,is_free")
+      .eq("id", bookId)
+      .maybeSingle();
+
+    if (bookError) {
+      console.error("Reader file book lookup failed:", bookError);
+      return jsonError("Unable to verify book access.", 500);
+    }
+    if (!book) return jsonError("Book is not available.", 404);
+
+    const isPublished = book.published === true || book.is_published === true;
+    if (!preview && !isPublished) return jsonError("Book is not available.", 404);
+
+    if (!preview && book.is_free !== true) {
+      const { data: purchase, error: purchaseError } = await supabase
+        .from("order_items")
+        .select("id,orders!inner(id,user_id,status)")
+        .eq("book_id", bookId)
+        .eq("orders.user_id", user.id)
+        .eq("orders.status", "paid")
+        .limit(1)
         .maybeSingle();
 
-      if (book?.cover_path) {
-        const { data } = await supabase.storage.from("book-covers").createSignedUrl(book.cover_path, 3600);
-        if (data?.signedUrl) return NextResponse.redirect(data.signedUrl, 302);
+      if (purchaseError) {
+        console.error("Reader file ownership check failed:", purchaseError);
+        return jsonError("Unable to verify book ownership.", 500);
       }
-
-      if (book?.cover_url && /^https?:\/\//i.test(book.cover_url)) {
-        return NextResponse.redirect(book.cover_url, 302);
-      }
-
-      // Legacy uploads may be stored inside a folder named after the book slug.
-      const { data: files } = await supabase.storage.from("book-covers").list(slug, {
-        limit: 100,
-        sortBy: { column: "created_at", order: "desc" },
-      });
-      const cover = (files ?? []).find((file) => isImage(String(file.name || "")));
-      if (cover) {
-        const { data } = await supabase.storage.from("book-covers")
-          .createSignedUrl(slug + "/" + cover.name, 3600);
-        if (data?.signedUrl) return NextResponse.redirect(data.signedUrl, 302);
+      if (!purchase) {
+        return jsonError("You need to purchase this book before reading it.", 403);
       }
     }
 
-    return new NextResponse("Cover not found.", { status: 404 });
+    const file = await getReadableBookFile(bookId);
+    if (!file) return jsonError("No EPUB file is attached to this book.", 404);
+
+    const admin = createAdminClient();
+    const { data: blob, error: downloadError } = await admin.storage
+      .from(file.bucket)
+      .download(file.path);
+
+    if (downloadError || !blob) {
+      console.error("Private ebook download failed:", {
+        bookId,
+        bucket: file.bucket,
+        path: file.path,
+        message: downloadError?.message,
+      });
+      return jsonError("The book file could not be downloaded from storage.", 502);
+    }
+
+    const safeFileName = (file.path.split("/").pop() || "book.epub").replace(/[\r\n"]/g, "");
+    return new Response(blob, {
+      status: 200,
+      headers: {
+        "Content-Type": file.fileType || "application/epub+zip",
+        "Content-Length": String(blob.size),
+        "Content-Disposition": `inline; filename="${safeFileName}"`,
+        "Cache-Control": "private, no-store, max-age=0",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch (error) {
-    console.error("Cover route error:", error);
-    return new NextResponse("Unable to load cover.", { status: 500 });
+    console.error("Reader file route error:", error);
+    return jsonError(
+      error instanceof Error ? error.message : "Unable to load the book file.",
+      500
+    );
   }
 }
