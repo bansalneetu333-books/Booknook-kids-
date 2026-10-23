@@ -37,6 +37,25 @@ export function EpubReader({
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(100);
+
+  // Fixed-layout pages are images/pages, so font-size controls cannot enlarge
+  // their embedded lettering. Scale the EPUB iframe itself and allow scrolling
+  // around the enlarged page instead of changing or re-uploading the EPUB.
+  useEffect(() => {
+    const stage = containerRef.current;
+    if (!stage) return;
+    const applyZoom = () => {
+      stage.querySelectorAll<HTMLIFrameElement>("iframe").forEach((frame) => {
+        frame.style.transform = zoom === 100 ? "" : `scale(${zoom / 100})`;
+        frame.style.transformOrigin = "top center";
+      });
+    };
+    applyZoom();
+    const observer = new MutationObserver(applyZoom);
+    observer.observe(stage, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [zoom, loading]);
 
   const saveProgress = useCallback(
     (
@@ -459,7 +478,7 @@ export function EpubReader({
 
       </header>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-[#0f172a]">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a]">\n\n        <div className="flex flex-wrap items-center justify-center gap-2 border-b border-white/10 px-3 py-2 text-white" aria-label="Page zoom controls">\n          <span className="mr-1 text-xs font-bold text-white/70">Page zoom</span>\n          <button type="button" disabled={loading || zoom <= 100} onClick={() => setZoom((value) => Math.max(100, value - 25))} className="rounded-full bg-white/10 px-3 py-2 text-sm font-bold disabled:opacity-40" aria-label="Zoom out">−</button>\n          <span className="min-w-12 text-center text-sm font-bold" aria-live="polite">{zoom}%</span>\n          <button type="button" disabled={loading || zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))} className="rounded-full bg-white/10 px-3 py-2 text-sm font-bold disabled:opacity-40" aria-label="Zoom in">+</button>\n          <button type="button" disabled={loading || zoom === 100} onClick={() => setZoom(100)} className="rounded-full bg-teal-700 px-3 py-2 text-sm font-bold disabled:opacity-40">Fit page</button>\n        </div>
 
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
@@ -481,7 +500,7 @@ export function EpubReader({
 
         <div
           ref={containerRef}
-          className="h-[min(78dvh,calc(100dvh-220px))] min-h-[420px] w-full max-w-full overflow-hidden bg-white"
+          className="h-[min(70dvh,calc(100dvh-280px))] min-h-[320px] w-full max-w-full flex-1 overflow-auto bg-white"
           style={{ width: "100%", minWidth: 0 }}
         />
 
