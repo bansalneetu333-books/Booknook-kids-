@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -59,8 +58,8 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
 
   return (
     <section className="w-full overflow-hidden">
-      <div className="grid grid-cols-1 items-center gap-5 sm:grid-cols-[1fr_260px] sm:gap-8 md:grid-cols-[1fr_300px] lg:grid-cols-[1fr_340px]">
-        <div className="flex flex-col items-start justify-center py-2 sm:py-5">
+      <div className="grid grid-cols-1 items-center gap-5 sm:grid-cols-[minmax(0,1fr)_300px] sm:gap-8 md:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="flex min-w-0 flex-col items-start justify-center py-2 sm:py-5">
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-700">Featured story</p>
           <h1 className="mt-2 max-w-2xl text-2xl font-black leading-tight text-slate-950 sm:text-4xl">
             {book.title}
@@ -87,23 +86,23 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
           </div>
         </div>
 
-        <div className="relative mx-auto h-[245px] w-full max-w-[190px] sm:h-[285px] sm:max-w-[220px] md:h-[320px] md:max-w-[245px] lg:h-[350px] lg:max-w-[265px]">
+        <div className="relative mx-auto flex h-[280px] w-full max-w-[220px] items-center justify-center sm:h-[330px] sm:max-w-[260px] md:h-[380px] md:max-w-[300px] lg:h-[420px] lg:max-w-[330px]">
           {slides.map((item, index) => {
             const cover = "/api/books/cover?slug=" + encodeURIComponent(item.slug);
             return (
               <div
                 key={item.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${index === active ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${index === active ? "opacity-100" : "pointer-events-none opacity-0"}`}
                 aria-hidden={index !== active}
               >
-                <Image
+                {/* Natural image sizing preserves each uploaded cover's own aspect ratio. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={cover}
                   alt={item.title + " book cover"}
-                  fill
-                  sizes="(max-width: 640px) 190px, (max-width: 1024px) 245px, 265px"
-                  className="object-contain"
-                  priority={index === 0}
-                  unoptimized
+                  className="block max-h-full max-w-full object-contain"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
                 />
               </div>
             );
