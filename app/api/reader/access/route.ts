@@ -17,8 +17,6 @@ export async function POST(request: Request) {
     if (preview && (!adminCheck?.user || !adminCheck?.isAdmin)) return NextResponse.json({ error: "Admin preview access required." }, { status: 403 });
     if (!bookId) return NextResponse.json({ error: "Book ID is required." }, { status: 400 });
 
-    // Admin preview must be able to read unpublished books even when
-    // regular customer row-level security hides them.
     const bookClient =
       preview && adminCheck?.isAdmin
         ? adminCheck.supabase
@@ -26,7 +24,7 @@ export async function POST(request: Request) {
 
     const { data: book, error: bookError } = await bookClient
       .from("books")
-      .select("id,title,published,is_published")
+      .select("id,title,published,is_published,is_free")
       .eq("id", bookId)
       .maybeSingle();
 
@@ -34,7 +32,7 @@ export async function POST(request: Request) {
     if (!book) return NextResponse.json({ error: "Book is not available." }, { status: 404 });
     if (!preview && !(book.published === true || (book as any).is_published === true)) return NextResponse.json({ error: "Book is not available." }, { status: 404 });
 
-    if (!preview && (book as any).is_free !== true) {
+    if (!preview && book.is_free !== true) {
       const { data: purchase, error: purchaseError } = await supabase
         .from("order_items")
         .select("id,orders!inner(id,user_id,status)")
