@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 type HeroCarouselProps = { books?: unknown[] };
 
 const HERO_SLIDES = [
-  { src: "/hero-slides/slide-1.png", alt: "BookNook Kids digital story library and reading categories" },
-  { src: "/hero-slides/slide-2.png", alt: "BookNook Kids e-book features and reading experience" },
-  { src: "/hero-slides/slide-3.png", alt: "Children discovering illustrated digital stories" },
-  { src: "/hero-slides/slide-4.png", alt: "BookNook Kids e-books including science, friendship, money skills and adventure" },
-  { src: "/hero-slides/slide-5.png", alt: "BookNook Kids benefits: illustrations, curiosity, life skills and reading on devices" },
+  { src: "/hero-slides/slide-1.webp", alt: "BookNook Kids digital story library and reading categories" },
+  { src: "/hero-slides/slide-2.webp", alt: "BookNook Kids e-book features and reading experience" },
+  { src: "/hero-slides/slide-3.webp", alt: "Children discovering illustrated digital stories" },
+  { src: "/hero-slides/slide-4.webp", alt: "BookNook Kids e-books including science, friendship, money skills and adventure" },
+  { src: "/hero-slides/slide-5.webp", alt: "BookNook Kids benefits: illustrations, curiosity, life skills and reading on devices" },
 ];
 
 export function HomeHeroCarousel(_props: HeroCarouselProps) {
