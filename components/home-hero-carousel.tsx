@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+type HeroCarouselProps = { books?: unknown[] };
+
 const HERO_SLIDES = [
   { src: "/hero-slides/slide-1.png", alt: "BookNook Kids digital story library and reading categories" },
   { src: "/hero-slides/slide-2.png", alt: "BookNook Kids e-book features and reading experience" },
@@ -10,9 +12,8 @@ const HERO_SLIDES = [
   { src: "/hero-slides/slide-5.png", alt: "BookNook Kids benefits: illustrations, curiosity, life skills and reading on devices" },
 ];
 
-export function HomeHeroCarousel() {
+export function HomeHeroCarousel(_props: HeroCarouselProps) {
   const [active, setActive] = useState(0);
-  const [failedSlides, setFailedSlides] = useState<string[]>([]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -20,8 +21,6 @@ export function HomeHeroCarousel() {
     }, 5000);
     return () => window.clearInterval(timer);
   }, []);
-
-  const currentSlide = HERO_SLIDES[active];
 
   return (
     <section className="w-full bg-transparent py-2 sm:py-3" aria-label="BookNook Kids highlights">
@@ -39,15 +38,9 @@ export function HomeHeroCarousel() {
               className="block h-auto max-h-[460px] w-full object-contain"
               loading={index === 0 ? "eager" : "lazy"}
               decoding="async"
-              onError={() => setFailedSlides((current) => current.includes(slide.src) ? current : [...current, slide.src])}
             />
           </div>
         ))}
-        {failedSlides.includes(currentSlide.src) && (
-          <p className="py-8 text-center text-sm text-slate-600">
-            Add the five slide images to the public/hero-slides folder to display the slideshow.
-          </p>
-        )}
         <div className="mt-3 flex items-center justify-center gap-2" aria-label="Choose slideshow image">
           {HERO_SLIDES.map((slide, index) => (
             <button
