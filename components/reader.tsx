@@ -478,7 +478,15 @@ export function EpubReader({
 
       </header>
 
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a]">\n\n        <div className="flex flex-wrap items-center justify-center gap-2 border-b border-white/10 px-3 py-2 text-white" aria-label="Page zoom controls">\n          <span className="mr-1 text-xs font-bold text-white/70">Page zoom</span>\n          <button type="button" disabled={loading || zoom <= 100} onClick={() => setZoom((value) => Math.max(100, value - 25))} className="rounded-full bg-white/10 px-3 py-2 text-sm font-bold disabled:opacity-40" aria-label="Zoom out">−</button>\n          <span className="min-w-12 text-center text-sm font-bold" aria-live="polite">{zoom}%</span>\n          <button type="button" disabled={loading || zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))} className="rounded-full bg-white/10 px-3 py-2 text-sm font-bold disabled:opacity-40" aria-label="Zoom in">+</button>\n          <button type="button" disabled={loading || zoom === 100} onClick={() => setZoom(100)} className="rounded-full bg-teal-700 px-3 py-2 text-sm font-bold disabled:opacity-40">Fit page</button>\n        </div>
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#0f172a]">
+
+        <div className="flex flex-wrap items-center justify-center gap-2 border-b border-white/10 px-3 py-2 text-white" aria-label="Page zoom controls">
+          <span className="mr-1 text-xs font-bold text-white/70">Page zoom</span>
+          <button type="button" disabled={loading || zoom <= 100} onClick={() => setZoom((value) => Math.max(100, value - 25))} className="rounded-full bg-white/10 px-3 py-2 text-sm font-bold disabled:opacity-40" aria-label="Zoom out">−</button>
+          <span className="min-w-12 text-center text-sm font-bold" aria-live="polite">{zoom}%</span>
+          <button type="button" disabled={loading || zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 25))} className="rounded-full bg-white/10 px-3 py-2 text-sm font-bold disabled:opacity-40" aria-label="Zoom in">+</button>
+          <button type="button" disabled={loading || zoom === 100} onClick={() => setZoom(100)} className="rounded-full bg-teal-700 px-3 py-2 text-sm font-bold disabled:opacity-40">Fit page</button>
+        </div>
 
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
