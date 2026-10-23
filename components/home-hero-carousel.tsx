@@ -20,28 +20,33 @@ type HeroCarouselProps = {
 };
 
 export function HomeHeroCarousel({ books }: HeroCarouselProps) {
-  const slides = useMemo(() => books.filter((book) => book.slug && (book.cover_path || book.cover_url)).slice(0, 8), [books]);
+  const slides = useMemo(
+    () => books.filter((book) => book.slug && (book.cover_path || book.cover_url)).slice(0, 8),
+    [books],
+  );
   const [active, setActive] = useState(0);
 
   useEffect(() => {
     if (slides.length < 2) return;
-
     const timer = window.setInterval(() => {
       setActive((current) => (current + 1) % slides.length);
     }, 4500);
-
     return () => window.clearInterval(timer);
   }, [slides.length]);
 
   if (!slides.length) {
     return (
-      <section className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-pink-500 p-6 text-white shadow-xl sm:p-10">
-        <div className="max-w-3xl">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-white/80">Welcome to Booknook Kids</p>
-          <h1 className="mt-3 text-4xl font-black leading-tight sm:text-6xl">Discover Amazing Stories! 📚✨</h1>
-          <p className="mt-4 text-base leading-7 text-white/85 sm:text-lg">Read, explore and enjoy wonderful e-books for young readers.</p>
-          <Link href="/books" className="mt-7 inline-flex rounded-full bg-[#ffe17d] px-6 py-3 font-black text-[#102b50] shadow-lg">Start Reading</Link>
-        </div>
+      <section className="overflow-hidden rounded-3xl border border-orange-100 bg-[#fff4e8] px-5 py-6 sm:px-8 sm:py-7">
+        <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-700">Welcome to Booknook Kids</p>
+        <h1 className="mt-2 max-w-2xl text-2xl font-black leading-tight text-slate-900 sm:text-4xl">
+          Little readers. Big adventures. <span aria-hidden="true">📚</span>
+        </h1>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
+          Discover stories, comics and brilliant ideas for curious young minds.
+        </p>
+        <Link href="/books" className="mt-4 inline-flex rounded-full bg-orange-600 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-orange-700">
+          Browse books
+        </Link>
       </section>
     );
   }
@@ -49,54 +54,71 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
   const book = slides[active];
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] bg-sky-800 shadow-xl">
-      <div className="relative min-h-[390px] sm:min-h-[470px]">
-        {slides.map((item, index) => {
-          const itemCover = "/api/books/cover?slug=" + encodeURIComponent(item.slug);
-
-          return itemCover ? (
-            <div
-              key={item.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ${index === active ? "opacity-100" : "opacity-0"}`}
-              aria-hidden={index !== active}
+    <section className="overflow-hidden rounded-3xl border border-orange-100 bg-[#fff4e8] shadow-sm">
+      <div className="grid min-h-[350px] grid-cols-1 sm:min-h-[285px] sm:grid-cols-[1.15fr_0.85fr]">
+        <div className="flex flex-col items-start justify-center px-5 pb-3 pt-6 sm:px-8 sm:py-7">
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-orange-700">Featured story</p>
+          <h1 className="mt-2 line-clamp-2 max-w-xl text-2xl font-black leading-tight text-slate-950 sm:text-4xl">
+            {book.title}
+          </h1>
+          {book.author && <p className="mt-1.5 text-sm font-semibold text-slate-600">By {book.author}</p>}
+          {book.description && (
+            <p className="mt-2 line-clamp-2 max-w-lg text-sm leading-5 text-slate-600">
+              {book.description}
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href={`/books/${book.slug}`}
+              className="rounded-full bg-orange-600 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-orange-700"
             >
-              <Image src={itemCover} alt={item.title + " book cover"} fill sizes="100vw" className="object-cover object-center" priority={index === 0} unoptimized onError={() => { /* keep gradient fallback visible if this cover is unavailable */ }} />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#102b50]/85 via-[#102b50]/55 to-[#102b50]/10" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#102b50]/60 via-transparent to-transparent" />
-            </div>
-          ) : null;
-        })}
-
-        <div className="relative z-10 flex min-h-[390px] items-end p-6 sm:min-h-[470px] sm:p-10">
-          <div className="max-w-xl text-white">
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-white/75">Featured on Booknook Kids</p>
-            <h1 className="mt-3 text-4xl font-black leading-tight sm:text-6xl">{book.title}</h1>
-            {book.author && <p className="mt-2 text-sm font-bold text-white/80 sm:text-base">By {book.author}</p>}
-            {book.description && <p className="mt-4 line-clamp-2 max-w-lg text-sm leading-6 text-white/85 sm:text-base">{book.description}</p>}
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={`/books/\${book.slug}`} className="rounded-full bg-white px-6 py-3 font-black text-indigo-700 shadow-lg">
-                {book.is_free ? "Read Free" : "Explore Book"}
-              </Link>
-              <Link href="/books" className="rounded-full border border-white/40 bg-white/10 px-6 py-3 font-black text-white backdrop-blur">
-                Browse Books
-              </Link>
-            </div>
+              {book.is_free ? "Read free" : "Explore book"}
+            </Link>
+            <Link
+              href="/books"
+              className="rounded-full border border-slate-300 bg-white/80 px-5 py-2.5 text-sm font-extrabold text-slate-800 transition hover:bg-white"
+            >
+              Browse all
+            </Link>
           </div>
         </div>
 
-        {slides.length > 1 && (
-          <div className="absolute bottom-5 right-5 z-20 flex items-center gap-2 sm:bottom-7 sm:right-8">
-            {slides.map((item, index) => (
-              <button
+        <div className="relative min-h-[185px] overflow-hidden bg-[#ffead5] sm:min-h-[285px]">
+          {slides.map((item, index) => {
+            const cover = "/api/books/cover?slug=" + encodeURIComponent(item.slug);
+            return (
+              <div
                 key={item.id}
-                type="button"
-                aria-label={`Show \${item.title}`}
-                onClick={() => setActive(index)}
-                className={`h-2.5 rounded-full transition-all ${index === active ? "w-8 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"}`}
-              />
-            ))}
-          </div>
-        )}
+                className={`absolute inset-0 flex items-center justify-center p-3 transition-opacity duration-700 sm:p-5 ${index === active ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                aria-hidden={index !== active}
+              >
+                <Image
+                  src={cover}
+                  alt={item.title + " book cover"}
+                  fill
+                  sizes="(max-width: 640px) 100vw, 40vw"
+                  className="object-contain p-3 sm:p-5"
+                  priority={index === 0}
+                  unoptimized
+                />
+              </div>
+            );
+          })}
+          {slides.length > 1 && (
+            <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-2 shadow-sm" aria-label="Featured books">
+              {slides.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-label={`Show ${item.title}`}
+                  aria-pressed={index === active}
+                  onClick={() => setActive(index)}
+                  className={`h-2 rounded-full transition-all ${index === active ? "w-6 bg-orange-600" : "w-2 bg-slate-300 hover:bg-slate-500"}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
