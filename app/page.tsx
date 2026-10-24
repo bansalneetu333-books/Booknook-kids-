@@ -17,7 +17,7 @@ export default async function HomePage() {
 
   return <>
     <SiteHeader />
-    <main className="comic-home min-h-screen overflow-x-hidden bg-[#fffdf8]">
+    <main className="comic-home min-h-screen overflow-x-hidden bg-white">
       {map.announcement && <div className="bg-violet-600 px-4 py-2 text-center text-sm font-bold text-white">{map.announcement}</div>}
       <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 sm:py-7">
         <HomeHeroCarousel books={heroBooks.slice(0,8)} />
