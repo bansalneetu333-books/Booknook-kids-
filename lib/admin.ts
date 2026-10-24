@@ -6,6 +6,13 @@ export { createAdminClient };
 
 export const ADMIN_EMAIL = "bansalneetu333@gmail.com";
 
+type Profile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  role: "customer" | "admin";
+};
+
 export async function requireAdmin() {
   const supabase = await createServerSupabaseClient();
 
@@ -25,31 +32,26 @@ export async function requireAdmin() {
   const emailIsAdmin =
     user.email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  let profile: {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-  } | null = null;
+  let profile: Profile | null = null;
 
   try {
-    const admin = createAdminClient();
-
-    const { data } = await admin
+    const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email")
+      .select("id, full_name, email, role")
       .eq("id", user.id)
       .maybeSingle();
 
     profile = data;
   } catch {
-    // Admin authorization is based on the configured admin email.
-    // A missing profile must not prevent the admin account from working.
+    // A missing or unreadable profile must never grant admin access.
   }
 
+  const isAdmin = emailIsAdmin && profile?.role === "admin";
+
   return {
-    supabase: emailIsAdmin ? createAdminClient() : supabase,
+    supabase: isAdmin ? createAdminClient() : supabase,
     user,
     profile,
-    isAdmin: emailIsAdmin,
+    isAdmin,
   };
 }
