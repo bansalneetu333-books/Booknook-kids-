@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
+const ADMIN_EMAIL = "bansalneetu333@gmail.com";
+
 function getErrorMessage(value: string | null) {
   if (!value) return null;
 
@@ -112,6 +114,16 @@ export default function LoginForm() {
         return;
       }
 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      const isAdmin =
+        data.user.email?.trim().toLowerCase() === ADMIN_EMAIL &&
+        profile?.role === "admin";
+
       const requestedNext = searchParams.get("next");
       const safeNext =
         requestedNext &&
@@ -121,7 +133,7 @@ export default function LoginForm() {
           ? requestedNext
           : "/library";
 
-      router.replace(safeNext);
+      router.replace(isAdmin ? "/admin" : safeNext);
       router.refresh();
     } catch (error) {
       setMessage(
