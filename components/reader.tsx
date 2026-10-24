@@ -111,7 +111,6 @@ function sizeFromMarkup(doc: Document): PageSize | null {
 }
 
 /** Last resort once a page is on screen: use the artwork's real pixel size. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function sizeFromRenderedContents(contents: any): PageSize | null {
   try {
     const doc: Document | undefined = contents?.document;
@@ -358,7 +357,6 @@ export function EpubReader({
       // if it already has a reading location. A resize that lands before the
       // first location is reported (typical when the page size is only learnt
       // from the first paint) would otherwise leave a permanently blank stage.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const known = (rendition as any).location?.start;
       if (displayRef.current.started && !known) {
         void rendition.display(displayRef.current.target).catch(() => undefined);
@@ -498,7 +496,6 @@ export function EpubReader({
           return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyBook = book as any;
         const packaging = anyBook.packaging ?? anyBook.package;
         const meta = packaging?.metadata ?? {};
@@ -565,7 +562,6 @@ export function EpubReader({
           resizeOnOrientationChange: false, // we resize from our own measurements
         });
         renditionRef.current = rendition;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyRendition = rendition as any;
 
         // Safety net: if a page is on screen but still has no usable size,
