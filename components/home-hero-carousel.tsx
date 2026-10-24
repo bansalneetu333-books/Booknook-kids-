@@ -60,8 +60,8 @@ export function HomeHeroCarousel({ books }: HeroCarouselProps) {
               className={`absolute inset-0 transition-opacity duration-1000 ${index === active ? "opacity-100" : "opacity-0"}`}
               aria-hidden={index !== active}
             >
-              <Image src={itemCover} alt={item.title + " book cover"} fill sizes="100vw" className="object-cover object-center" priority={index === 0} unoptimized onError={() => { /* keep gradient fallback visible if this cover is unavailable */ }} />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#102b50]/85 via-[#102b50]/55 to-[#102b50]/10" />
+              <Image src={itemCover} alt={item.title + " book cover"} fill sizes="100vw" className="object-cover object-[center_60%]" priority={index === 0} unoptimized onError={() => { /* keep gradient fallback visible if this cover is unavailable */ }} />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#102b50]/90 via-[#102b50]/70 to-[#102b50]/25" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#102b50]/60 via-transparent to-transparent" />
             </div>
           ) : null;
