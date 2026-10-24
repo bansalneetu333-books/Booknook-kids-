@@ -61,22 +61,12 @@ export default async function ReaderPage({
 
   return (
     <main className="min-h-screen bg-[#0f172a]">
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3">
-          <a
-            href="/library"
-            className="text-sm font-bold text-indigo-600"
-          >
-            ← Back to Library
-          </a>
-
-        </div>
-
-        <EpubReader
-          bookId={book.id}
-          title={book.title}
-        />
-      </div>
+      <EpubReader
+        bookId={book.id}
+        title={book.title}
+        backHref="/library"
+        backLabel="Library"
+      />
     </main>
   );
 }
