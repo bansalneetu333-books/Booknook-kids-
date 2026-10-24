@@ -17,19 +17,19 @@ export default async function HomePage() {
 
   return <>
     <SiteHeader />
-    <main className="comic-home min-h-screen overflow-x-hidden bg-[#fffdf8]">
+    <main className="comic-home min-h-screen overflow-x-hidden bg-white">
       {map.announcement && <div className="bg-violet-600 px-4 py-2 text-center text-sm font-bold text-white">{map.announcement}</div>}
       <div className="mx-auto max-w-[1440px] px-4 py-5 sm:px-6 sm:py-7">
         <HomeHeroCarousel books={heroBooks.slice(0,8)} />
-        <section className="mt-8 sm:mt-10">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div><p className="text-xs font-black uppercase tracking-[.28em] text-violet-600">Explore</p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Explore by Category</h2></div>
-            <Link href="/books" className="shrink-0 text-sm font-black text-violet-700">See all →</Link>
+        <section className="mt-5 sm:mt-10">
+          <div className="mb-3 flex items-end justify-between gap-3 sm:mb-4">
+            <div><p className="text-[10px] font-black uppercase tracking-[.24em] text-violet-600 sm:text-xs">Explore</p><h2 className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-3xl">Explore by Category</h2></div>
+            <Link href="/books" className="shrink-0 text-xs font-black text-violet-700 sm:text-sm">View all →</Link>
           </div>
-          <div className="grid grid-cols-4 gap-3 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10">
-            {BOOK_CATEGORIES.slice(0,10).map((category,index)=><Link key={category.slug} href={"/books?category="+encodeURIComponent(category.slug)} className="flex min-w-0 flex-col items-center gap-2 text-center">
-              <span className={`flex h-[76px] w-[76px] items-center justify-center rounded-full border-2 border-white text-3xl shadow-sm ring-1 ring-slate-100 sm:h-[92px] sm:w-[92px] sm:text-4xl ${["bg-sky-100","bg-lime-100","bg-amber-100","bg-pink-100","bg-orange-100","bg-fuchsia-100","bg-violet-100","bg-blue-100","bg-cyan-100","bg-emerald-100"][index]}`}>{category.icon}</span>
-              <span className="text-xs font-extrabold text-slate-700 sm:text-sm">{category.name}</span>
+          <div className="grid grid-cols-4 gap-x-2 gap-y-3 sm:grid-cols-5 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">
+            {BOOK_CATEGORIES.slice(0,10).map((category,index)=><Link key={category.slug} href={"/books?category="+encodeURIComponent(category.slug)} className={`min-w-0 flex-col items-center gap-1.5 text-center sm:gap-2 ${index < 4 ? "flex" : "hidden sm:flex"}`}>
+              <span className={`flex h-[54px] w-[54px] items-center justify-center rounded-full border-2 border-white text-2xl shadow-sm ring-1 ring-slate-100 sm:h-[76px] sm:w-[76px] sm:text-3xl md:h-[84px] md:w-[84px] md:text-4xl ${["bg-sky-100","bg-lime-100","bg-amber-100","bg-pink-100","bg-orange-100","bg-fuchsia-100","bg-violet-100","bg-blue-100","bg-cyan-100","bg-emerald-100"][index]}`}>{category.icon}</span>
+              <span className="text-[11px] font-extrabold leading-tight text-slate-700 sm:text-xs md:text-sm">{category.name}</span>
             </Link>)}
           </div>
         </section>

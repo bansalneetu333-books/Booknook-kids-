@@ -11,6 +11,7 @@ export type Book = {
   genre: string | null;
   age_category: string | null;
   cover_path: string | null;
+  cover_url: string | null;
   published: boolean;
   is_published?: boolean | null;
   featured: boolean;
@@ -30,6 +31,7 @@ const BOOK_FIELDS = `
   genre,
   age_category,
   cover_path,
+  cover_url,
   published,
   is_published,
   featured,
@@ -37,42 +39,28 @@ const BOOK_FIELDS = `
   created_at
 `;
 
-function normalizeBook(
-  book: any
-): Book {
+function normalizeBook(book: any): Book {
   return {
     id: book.id,
     title: book.title,
     slug: book.slug,
     author: book.author,
-    description:
-      book.description ?? null,
+    description: book.description ?? null,
     price: Number(book.price ?? 0),
-    currency:
-      book.currency ?? "INR",
+    currency: book.currency ?? "INR",
     genre: book.genre ?? null,
-    age_category:
-      book.age_category ?? null,
-    cover_path:
-      book.cover_path ?? null,
-    published: Boolean(
-      book.published ?? book.is_published
-    ),
+    age_category: book.age_category ?? null,
+    cover_path: book.cover_path ?? null,
+    cover_url: book.cover_url ?? null,
+    published: Boolean(book.published ?? book.is_published),
     is_published: book.is_published ?? null,
-    featured: Boolean(
-      book.featured
-    ),
+    featured: Boolean(book.featured),
     is_free: Boolean(book.is_free),
-    created_at:
-      book.created_at,
+    created_at: book.created_at,
     categories: (book.book_categories ?? [])
       .map((item: any) => {
-        const category = Array.isArray(item.categories)
-          ? item.categories[0]
-          : item.categories;
-        return category
-          ? { name: category.name, slug: category.slug }
-          : null;
+        const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
+        return category ? { name: category.name, slug: category.slug } : null;
       })
       .filter(Boolean),
   };
@@ -80,7 +68,6 @@ function normalizeBook(
 
 export async function getPublishedBooks(): Promise<Book[]> {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("books")
     .select(`${BOOK_FIELDS},
@@ -92,34 +79,18 @@ export async function getPublishedBooks(): Promise<Book[]> {
       )
     `)
     .or("published.eq.true,is_published.eq.true")
-    .order("sort_order", {
-      ascending: true,
-    })
-    .order("created_at", {
-      ascending: false,
-    });
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(
-      "Unable to load published books:",
-      error
-    );
-
+    console.error("Unable to load published books:", error);
     return [];
   }
-
-  return (data ?? []).map(
-    normalizeBook
-  );
+  return (data ?? []).map(normalizeBook);
 }
 
-export async function getBookBySlug(
-  slug: string
-): Promise<Book | null> {
+export async function getBookBySlug(slug: string): Promise<Book | null> {
   const supabase = await createClient();
-
-  // Older catalogue links may contain a book UUID instead of its slug.
-  // Resolve by slug first, then by ID so existing links do not lead to 404.
   const { data: bySlug, error: slugError } = await supabase
     .from("books")
     .select(BOOK_FIELDS)
@@ -127,9 +98,7 @@ export async function getBookBySlug(
     .or("published.eq.true,is_published.eq.true")
     .maybeSingle();
 
-  if (slugError) {
-    console.error("Unable to load book by slug:", slugError);
-  }
+  if (slugError) console.error("Unable to load book by slug:", slugError);
   if (bySlug) return normalizeBook(bySlug);
 
   const { data: byId, error: idError } = await supabase
@@ -143,13 +112,11 @@ export async function getBookBySlug(
     console.error("Unable to load book by ID:", idError);
     return null;
   }
-
   return byId ? normalizeBook(byId) : null;
 }
 
 export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("books")
     .select(`${BOOK_FIELDS},
@@ -172,7 +139,6 @@ export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
   }
 
   const books = (data ?? []).map(normalizeBook);
-
   if (!categorySlug) return books;
 
   const wanted = categorySlug.toLowerCase();
@@ -181,36 +147,24 @@ export async function getFreeBooks(categorySlug?: string): Promise<Book[]> {
       (book.book_categories ?? []).some((item: any) => {
         const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
         return category?.slug?.toLowerCase() === wanted;
-      })
+      }),
     )
     .map(normalizeBook);
 }
 
 export async function getFeaturedBooks(): Promise<Book[]> {
   const supabase = await createClient();
-
   const { data, error } = await supabase
     .from("books")
     .select(BOOK_FIELDS)
     .eq("published", true)
     .eq("featured", true)
-    .order("sort_order", {
-      ascending: true,
-    })
-    .order("created_at", {
-      ascending: false,
-    });
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(
-      "Unable to load featured books:",
-      error
-    );
-
+    console.error("Unable to load featured books:", error);
     return [];
   }
-
-  return (data ?? []).map(
-    normalizeBook
-  );
+  return (data ?? []).map(normalizeBook);
 }
