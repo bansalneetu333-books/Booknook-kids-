@@ -10,7 +10,7 @@ type Profile = {
   id: string;
   full_name: string | null;
   email: string | null;
-  role: "customer" | "admin";
+  is_admin: boolean | null;
 };
 
 export async function requireAdmin() {
@@ -37,7 +37,7 @@ export async function requireAdmin() {
   try {
     const { data } = await supabase
       .from("profiles")
-      .select("id, full_name, email, role")
+      .select("id, full_name, email, is_admin")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -46,7 +46,7 @@ export async function requireAdmin() {
     // A missing or unreadable profile must never grant admin access.
   }
 
-  const isAdmin = emailIsAdmin && profile?.role === "admin";
+  const isAdmin = emailIsAdmin && profile?.is_admin === true;
 
   return {
     supabase: isAdmin ? createAdminClient() : supabase,
