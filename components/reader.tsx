@@ -33,6 +33,8 @@ type ReaderProps = {
   backLabel?: string;
   /** Small label next to the title, e.g. "Admin preview". */
   badge?: string;
+  /** Initial zoom for contexts such as an admin review of tall fixed-layout pages. */
+  initialZoom?: number;
 };
 
 type AccessResponse = { url?: string; fileType?: string; error?: string };
@@ -174,6 +176,7 @@ export function EpubReader({
   backHref = "/library",
   backLabel = "Library",
   badge,
+  initialZoom = 1,
 }: ReaderProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null); // measured, scrollable
@@ -198,7 +201,9 @@ export function EpubReader({
     atEnd: false,
   });
   const [percent, setPercent] = useState(0);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(() =>
+    ZOOM_STEPS.includes(initialZoom) ? initialZoom : 1
+  );
   const [avail, setAvail] = useState<Avail>({ w: 0, h: 0 });
   const [pageSize, setPageSize] = useState<PageSize | null>(null);
   const [spreadAllowed, setSpreadAllowed] = useState(false);
