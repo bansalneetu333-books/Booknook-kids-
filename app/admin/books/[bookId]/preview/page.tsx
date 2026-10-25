@@ -29,6 +29,7 @@ export default async function AdminBookPreviewPage({
         backHref={`/admin/books/${book.id}`}
         backLabel="Edit book"
         badge="Admin preview"
+        initialZoom={1.5}
       />
     </main>
   );
