@@ -653,10 +653,25 @@ export function EpubReader({
         const total: number =
           anyBook.spine?.length ?? anyBook.spine?.spineItems?.length ?? 0;
 
+        let lastPageIndex = -1;
         rendition.on("relocated", (location: any) => {
           if (cancelled) return;
           const startIndex: number = location?.start?.index ?? 0;
           const endIndex: number = location?.end?.index ?? startIndex;
+          // A zoomed page scrolls inside the stage. When the reader moves to a
+          // different page, start at its top (not wherever the last one ended).
+          if (startIndex !== lastPageIndex) {
+            lastPageIndex = startIndex;
+            requestAnimationFrame(() => {
+              const stage = stageRef.current;
+              if (!stage || cancelled) return;
+              stage.scrollTop = 0;
+              stage.scrollLeft =
+                live.current.zoom > 1
+                  ? Math.max(0, (stage.scrollWidth - stage.clientWidth) / 2)
+                  : 0;
+            });
+          }
           const displayed = location?.start?.displayed;
           const fraction = fixed
             ? 1
