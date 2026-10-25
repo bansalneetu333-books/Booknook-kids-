@@ -184,7 +184,7 @@ export async function DELETE(request: Request) {
     }
 
     const { error: wishlistError } = await supabase
-      .from("wishlists")
+      .from("wishlist")
       .delete()
       .eq("book_id", bookId);
 

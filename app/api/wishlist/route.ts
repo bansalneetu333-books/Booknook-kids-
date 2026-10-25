@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     }
 
     const { data, error } = await supabase
-      .from("wishlists")
+      .from("wishlist")
       .select("id")
       .eq("user_id", user.id)
       .eq("book_id", bookId)
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
     const { data: existing, error: existingError } =
       await supabase
-        .from("wishlists")
+        .from("wishlist")
         .select("id")
         .eq("user_id", user.id)
         .eq("book_id", bookId)
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
 
     const { error: insertError } =
       await supabase
-        .from("wishlists")
+        .from("wishlist")
         .insert({
           user_id: user.id,
           book_id: bookId,
@@ -195,7 +195,7 @@ export async function DELETE(request: Request) {
     }
 
     const { error } = await supabase
-      .from("wishlists")
+      .from("wishlist")
       .delete()
       .eq("user_id", user.id)
       .eq("book_id", bookId);

@@ -29,7 +29,7 @@ export default async function WishlistPage() {
   }
 
   const { data: rows, error } = await supabase
-    .from("wishlists")
+    .from("wishlist")
     .select(
       "created_at, book:books(id,title,slug,author,price,genre,age_category,cover_path,published,featured)"
     )
