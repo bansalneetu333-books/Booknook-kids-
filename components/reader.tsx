@@ -157,6 +157,24 @@ function fitBox(avail: Avail, page: PageSize | null, columns: number): Avail {
   };
 }
 
+/**
+ * Tall single pages (comic-style, ~9:16) fitted whole into a wide, short window
+ * end up only a few hundred pixels wide, which makes small text unreadable.
+ * For those cases only, return a zoom that gives the page a comfortable reading
+ * width (it then scrolls vertically; "Fit" still shows the whole page).
+ * Portrait screens (phones, tablets) and two-page spreads keep the plain fit.
+ */
+const COMFORT_PAGE_PX = 720;
+const READING_WIDTH_PX = 960;
+
+function readableZoom(avail: Avail, fit: Avail, columns: number): number {
+  if (columns > 1 || avail.w <= avail.h * 1.1 || fit.w >= COMFORT_PAGE_PX) return 1;
+  const targetW = Math.min(avail.w - 24, READING_WIDTH_PX);
+  const zoom = targetW / Math.max(1, fit.w);
+  const max = ZOOM_STEPS[ZOOM_STEPS.length - 1];
+  return Math.round(Math.min(max, Math.max(1, zoom)) * 100) / 100;
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<never>((_, reject) => {
@@ -204,6 +222,8 @@ export function EpubReader({
   const [zoom, setZoom] = useState(() =>
     ZOOM_STEPS.includes(initialZoom) ? initialZoom : 1
   );
+  // Once the reader zooms by hand, never auto-zoom again for this session.
+  const userZoomed = useRef(false);
   const [avail, setAvail] = useState<Avail>({ w: 0, h: 0 });
   const [pageSize, setPageSize] = useState<PageSize | null>(null);
   const [spreadAllowed, setSpreadAllowed] = useState(false);
@@ -282,6 +302,7 @@ export function EpubReader({
   navRef.current = { goPrev, goNext };
 
   const changeZoom = useCallback((direction: 1 | -1 | 0) => {
+    userZoomed.current = true;
     setZoom((current) => {
       if (direction === 0) return 1;
       const index = ZOOM_STEPS.findIndex((z) => z >= current - 0.001);
@@ -370,6 +391,14 @@ export function EpubReader({
       // Rendition may be mid-teardown.
     }
   }, [stageW, stageH, columns, avail.w, avail.h]);
+
+  // Open tall fixed-layout pages at a readable width (see readableZoom).
+  useEffect(() => {
+    if (userZoomed.current || !isFixed || !pageSize || avail.w <= 0) return;
+    const fit = fitBox(avail, pageSize, columns);
+    const target = Math.max(initialZoom, readableZoom(avail, fit, columns));
+    setZoom((current) => (Math.abs(current - target) < 0.01 ? current : target));
+  }, [avail, pageSize, isFixed, columns, initialZoom]);
 
   // After zooming in, start from the middle of the page horizontally.
   useEffect(() => {
