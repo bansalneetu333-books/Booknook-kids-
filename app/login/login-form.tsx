@@ -116,13 +116,13 @@ export default function LoginForm() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("is_admin")
         .eq("id", data.user.id)
         .maybeSingle();
 
       const isAdmin =
         data.user.email?.trim().toLowerCase() === ADMIN_EMAIL &&
-        profile?.role === "admin";
+        profile?.is_admin === true;
 
       const requestedNext = searchParams.get("next");
       const safeNext =

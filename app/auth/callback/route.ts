@@ -39,13 +39,13 @@ export async function GET(request: Request) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
   const isAdmin =
     user.email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-    profile?.role === "admin";
+    profile?.is_admin === true;
 
   if (isAdmin) {
     return NextResponse.redirect(new URL("/admin", requestUrl.origin));

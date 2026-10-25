@@ -24,7 +24,7 @@ export async function GET() {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id,full_name,email,role")
+      .select("id,full_name,email,is_admin")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -43,7 +43,7 @@ export async function GET() {
         id: user.id,
         email: profile?.email ?? user.email ?? null,
         fullName: profile?.full_name ?? null,
-        role: profile?.role ?? "customer",
+        role: profile?.is_admin === true ? "admin" : "customer",
       },
     });
   } catch (error) {
@@ -103,7 +103,7 @@ export async function PATCH(request: Request) {
         full_name: fullName,
       })
       .eq("id", user.id)
-      .select("id,full_name,email,role")
+      .select("id,full_name,email,is_admin")
       .maybeSingle();
 
     if (updateError) {
@@ -131,7 +131,7 @@ export async function PATCH(request: Request) {
         id: profile.id,
         email: profile.email ?? user.email ?? null,
         fullName: profile.full_name,
-        role: profile.role ?? "customer",
+        role: profile.is_admin === true ? "admin" : "customer",
       },
       message: "Account updated successfully.",
     });
